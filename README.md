@@ -1,6 +1,6 @@
 # 🔨 Marido de Aluguel Carioca
 
-![Banner do Projeto](./banner.png)
+![Banner do Projeto](../banner.png)
 
 [![Deploy Status](https://img.shields.io/badge/Deploy-Live-brightgreen)](https://wngalbve.manus.space)
 [![PWA](https://img.shields.io/badge/PWA-Enabled-blue)](https://wngalbve.manus.space)
