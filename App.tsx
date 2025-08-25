@@ -7,6 +7,7 @@ import ProviderPage from './pages/ProviderPage';
 import { ServiceRequest, User, SignUpData } from './types';
 import * as api from './services/apiService';
 import { AuthContext } from './src/context/AuthContext';
+import Toast from './components/Toast';
 
 type Page = 'role-selection' | 'login' | 'signup' | 'client' | 'provider';
 
@@ -56,20 +57,37 @@ const App: React.FC = () => {
   };
   
   const handleLogin = async (email: string, password?: string) => {
-    const user = await login(email, password);
-    if (user) {
-      setCurrentPage(user.role);
-    } else {
-      alert('E-mail ou senha inválidos.');
+    try {
+      const user = await login(email, password);
+      if (user) {
+        setCurrentPage(user.role);
+      } else {
+        // login returned null (invalid credentials)
+        window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: 'E-mail ou senha inválidos.', type: 'error' } }));
+      }
+    } catch (err: any) {
+      console.error('Login error (frontend):', err);
+      window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: err?.message || 'E-mail ou senha inválidos.', type: 'error' } }));
     }
   };
 
   const handleSignUp = async (data: SignUpData) => {
-    const user = await signUp(data);
-    if (user) {
-      setCurrentPage(data.role);
-    } else {
-      alert('Erro no cadastro.');
+    try {
+      const user = await signUp(data);
+      if (user) {
+  // Show a friendly success toast before navigating
+  const displayName = (user && (user.name || data.name)) ? (user.name || data.name) : '';
+  window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: `Cadastro realizado com sucesso${displayName ? `, ${displayName}` : ''}! Seja bem-vind${displayName ? 'o(a)' : ''} ao Marido de Aluguel.`, type: 'success' } }));
+  setCurrentPage(data.role);
+      } else {
+        // Unexpected null/undefined response
+  window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: 'Erro no cadastro.', type: 'error' } }));
+        setCurrentPage('login');
+      }
+    } catch (err: any) {
+  console.error('Sign up error (frontend):', err);
+  // Show backend message when available
+  window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: err?.message || 'Erro no cadastro.', type: 'error' } }));
       setCurrentPage('login');
     }
   };
@@ -142,6 +160,7 @@ const App: React.FC = () => {
   
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800">
+      <Toast />
       <main>
         {renderPage()}
       </main>
