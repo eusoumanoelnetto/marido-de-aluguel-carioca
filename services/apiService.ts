@@ -12,15 +12,62 @@ export const getToken = () => localStorage.getItem(TOKEN_KEY);
 export const clearToken = () => localStorage.removeItem(TOKEN_KEY);
 
 // Wrapper for fetch that injects Authorization header when token is present
+// Decode JWT payload (naive) to inspect exp claim
+const decodeJwt = (token: string | null) => {
+  if (!token) return null;
+  try {
+    const parts = token.split('.');
+    if (parts.length < 2) return null;
+    const payload = atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'));
+    return JSON.parse(payload);
+  } catch (e) {
+    return null;
+  }
+};
+
+const emitLogout = () => {
+  try {
+    window.dispatchEvent(new CustomEvent('mdac:logout'));
+  } catch (e) {
+    // ignore in non-browser environments
+  }
+};
+
+// authFetch: inject Authorization header, pre-check token expiry, and on 401 emit logout event
 const authFetch = async (input: RequestInfo, init: RequestInit = {}) => {
   const token = getToken();
+
+  // If token exists, check expiry
+  if (token) {
+    const payload = decodeJwt(token);
+    if (payload && typeof payload.exp === 'number') {
+      const now = Math.floor(Date.now() / 1000);
+      if (payload.exp <= now) {
+        // token expired — clear and notify
+        clearToken();
+        emitLogout();
+        // fail fast
+        return new Response(JSON.stringify({ message: 'Token expirado.' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+      }
+    }
+  }
+
   const headers: Record<string, string> = {
     ...(init.headers as Record<string, string> || {}),
   };
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
-  return fetch(input, { ...init, headers });
+
+  const response = await fetch(input, { ...init, headers });
+
+  if (response.status === 401) {
+    // unauthorized — clear token and emit global logout so AuthProvider can react
+    clearToken();
+    emitLogout();
+  }
+
+  return response;
 }
 
 /**

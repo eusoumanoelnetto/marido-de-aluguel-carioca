@@ -40,6 +40,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, [user]);
 
+  // Listen for global logout events (emitted by the API wrapper on 401 or expiry)
+  useEffect(() => {
+    const handler = () => {
+      console.log('AuthContext: received global logout event');
+      logout();
+    };
+    window.addEventListener('mdac:logout', handler as EventListener);
+    return () => window.removeEventListener('mdac:logout', handler as EventListener);
+  }, []);
+
   const login = async (email: string, password?: string) => {
     const u = await api.login(email, password);
     if (u) {
