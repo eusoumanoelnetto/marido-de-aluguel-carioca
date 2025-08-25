@@ -49,11 +49,19 @@ export const login = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'A senha é obrigatória.' });
   }
 
+  if (!email) {
+    return res.status(400).json({ message: 'O e-mail é obrigatório.' });
+  }
+
   try {
-    const result = await pool.query(
-        'SELECT * FROM users WHERE email = $1',
-        [email.toLowerCase()]
-    );
+  const normalizedEmail = String(email).trim().toLowerCase();
+  // Log the attempting email (do not log the password)
+  console.debug('Attempting login for:', normalizedEmail);
+
+  const result = await pool.query(
+    'SELECT * FROM users WHERE email = $1',
+    [normalizedEmail]
+  );
     
     if (result.rowCount === 0) {
         return res.status(401).json({ message: 'E-mail ou senha inválidos.' });
@@ -78,7 +86,9 @@ export const login = async (req: Request, res: Response) => {
     res.status(401).json({ message: 'E-mail ou senha inválidos.' });
   }
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ message: 'Erro interno do servidor ao tentar fazer login.' });
+  // Log the full error stack to help debugging
+  const errAny: any = error;
+  console.error('Login error:', errAny?.stack || errAny);
+  res.status(500).json({ message: 'Erro interno do servidor ao tentar fazer login.' });
   }
 };
