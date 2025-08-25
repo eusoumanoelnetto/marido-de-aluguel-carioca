@@ -5,8 +5,9 @@ import * as api from '../../services/apiService';
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
-  login: (email: string, password?: string) => Promise<boolean>;
-  signUp: (data: SignUpData) => Promise<boolean>;
+  // now returns the user on success, null on failure
+  login: (email: string, password?: string) => Promise<User | null>;
+  signUp: (data: SignUpData) => Promise<User | null>;
   logout: () => void;
   updateUser: (u: User) => Promise<User | null>;
 }
@@ -14,8 +15,8 @@ interface AuthContextType {
 export const AuthContext = createContext<AuthContextType>({
   user: null,
   isAuthenticated: false,
-  login: async () => false,
-  signUp: async () => false,
+  login: async () => null,
+  signUp: async () => null,
   logout: () => {},
   updateUser: async () => null,
 });
@@ -54,19 +55,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const u = await api.login(email, password);
     if (u) {
       setUser(u);
-      return true;
+      return u;
     }
-    return false;
+    return null;
   };
 
   const signUp = async (data: SignUpData) => {
     try {
       const u = await api.signUp(data);
       setUser(u);
-      return true;
+      return u;
     } catch (err) {
       console.error('SignUp failed', err);
-      return false;
+      return null;
     }
   };
 

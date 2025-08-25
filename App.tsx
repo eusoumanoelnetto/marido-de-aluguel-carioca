@@ -56,17 +56,17 @@ const App: React.FC = () => {
   };
   
   const handleLogin = async (email: string, password?: string) => {
-    const ok = await login(email, password);
-    if (ok && currentUser) {
-      setCurrentPage(currentUser.role);
+    const user = await login(email, password);
+    if (user) {
+      setCurrentPage(user.role);
     } else {
       alert('E-mail ou senha inválidos.');
     }
   };
 
   const handleSignUp = async (data: SignUpData) => {
-    const ok = await signUp(data);
-    if (ok && currentUser) {
+    const user = await signUp(data);
+    if (user) {
       setCurrentPage(data.role);
     } else {
       alert('Erro no cadastro.');
