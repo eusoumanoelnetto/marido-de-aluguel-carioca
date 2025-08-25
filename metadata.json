@@ -1,0 +1,5 @@
+{
+  "name": "Marido de Aluguel Carioca",
+  "description": "Uma plataforma para conectar clientes com prestadores de serviços de 'marido de aluguel'. Clientes podem solicitar serviços e prestadores podem visualizar e gerenciar os pedidos.",
+  "requestFramePermissions": []
+}
