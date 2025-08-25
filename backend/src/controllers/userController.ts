@@ -6,6 +6,11 @@ import { User } from '../types';
 export const updateUser = async (req: Request, res: Response) => {
     const { email } = req.params;
     const { name, phone, cep, services, profilePictureBase64 }: User = req.body;
+    const requesterEmail = (req as any).userEmail;
+
+    if (!requesterEmail || requesterEmail.toLowerCase() !== email.toLowerCase()) {
+        return res.status(403).json({ message: 'Não autorizado a atualizar este usuário.' });
+    }
   
     try {
         const result = await pool.query(

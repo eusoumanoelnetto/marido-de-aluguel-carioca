@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import pool from '../db';
 import { User, SignUpData } from '../types';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
 export const signUp = async (req: Request, res: Response) => {
   const data: SignUpData = req.body;
@@ -27,10 +28,14 @@ export const signUp = async (req: Request, res: Response) => {
     );
 
     const newUser: User = result.rows[0];
-    delete newUser.password; // Don't send password hash back
+  delete newUser.password; // Don't send password hash back
 
-    console.log('New user signed up:', newUser.email);
-    res.status(201).json(newUser);
+  // generate token
+  const secret = process.env.JWT_SECRET || 'dev_secret';
+  const token = jwt.sign({ email: newUser.email }, secret, { expiresIn: '7d' });
+
+  console.log('New user signed up:', newUser.email);
+  res.status(201).json({ user: newUser, token });
   } catch (error) {
     console.error('Sign up error:', error);
     res.status(500).json({ message: 'Erro interno do servidor ao tentar cadastrar.' });
@@ -63,13 +68,15 @@ export const login = async (req: Request, res: Response) => {
 
     const isMatch = await bcrypt.compare(password, user.password);
 
-    if (isMatch) {
-        delete user.password; // Don't send password hash to client
-        console.log('User logged in:', user.email);
-        res.status(200).json(user);
-    } else {
-        res.status(401).json({ message: 'E-mail ou senha inválidos.' });
-    }
+  if (isMatch) {
+    delete user.password; // Don't send password hash to client
+    const secret = process.env.JWT_SECRET || 'dev_secret';
+    const token = jwt.sign({ email: user.email }, secret, { expiresIn: '7d' });
+    console.log('User logged in:', user.email);
+    res.status(200).json({ user, token });
+  } else {
+    res.status(401).json({ message: 'E-mail ou senha inválidos.' });
+  }
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ message: 'Erro interno do servidor ao tentar fazer login.' });
