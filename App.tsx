@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import RoleSelectionPage from './pages/RoleSelectionPage';
 import LoginPage from './pages/LoginPage';
 import SignUpPage from './pages/SignUpPage';
@@ -6,14 +6,14 @@ import ClientPage from './pages/ClientPage';
 import ProviderPage from './pages/ProviderPage';
 import { ServiceRequest, User, SignUpData } from './types';
 import * as api from './services/apiService';
+import { AuthContext } from './src/context/AuthContext';
 
 type Page = 'role-selection' | 'login' | 'signup' | 'client' | 'provider';
 
 const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<Page>('role-selection');
   const [selectedRoleForAuth, setSelectedRoleForAuth] = useState<'client' | 'provider'>('client');
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const { user: currentUser, isAuthenticated, login, signUp, logout, updateUser: contextUpdateUser } = useContext(AuthContext);
   const [serviceRequests, setServiceRequests] = useState<ServiceRequest[]>([]);
 
   // This effect will run when a provider logs in to fetch their requests
@@ -56,42 +56,28 @@ const App: React.FC = () => {
   };
   
   const handleLogin = async (email: string, password?: string) => {
-    try {
-      const user = await api.login(email, password);
-      if (user) {
-        setIsAuthenticated(true);
-        setCurrentUser(user);
-        setCurrentPage(user.role);
-      } else {
-        alert('E-mail ou senha inválidos.');
-      }
-    } catch (error) {
-      console.error('Login error:', error);
-      alert('Ocorreu um erro ao tentar fazer login.');
+    const ok = await login(email, password);
+    if (ok && currentUser) {
+      setCurrentPage(currentUser.role);
+    } else {
+      alert('E-mail ou senha inválidos.');
     }
   };
 
   const handleSignUp = async (data: SignUpData) => {
-    try {
-      const newUser = await api.signUp(data);
-      // Log in the user right after signing up
-      setIsAuthenticated(true);
-      setCurrentUser(newUser);
+    const ok = await signUp(data);
+    if (ok && currentUser) {
       setCurrentPage(data.role);
-    } catch(error) {
-      if (error instanceof Error) {
-        alert(error.message);
-      } else {
-        alert('Ocorreu um erro desconhecido durante o cadastro.');
-      }
+    } else {
+      alert('Erro no cadastro.');
       setCurrentPage('login');
     }
   };
   
   const handleUpdateUser = async (updatedUser: User) => {
     try {
-      const savedUser = await api.updateUser(updatedUser);
-      setCurrentUser(savedUser);
+      const savedUser = await contextUpdateUser(updatedUser);
+      // currentUser is handled by context
     } catch (error) {
       console.error("Failed to update user:", error);
       alert('Houve um erro ao atualizar seu perfil.');
@@ -100,8 +86,7 @@ const App: React.FC = () => {
 
 
   const handleLogout = () => {
-    setIsAuthenticated(false);
-    setCurrentUser(null);
+    logout();
     setCurrentPage('role-selection');
   };
 
