@@ -3,16 +3,44 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import { AuthProvider } from './src/context/AuthContext';
 
-// PWA Service Worker Registration
+// Patch global alert -> toast (evita popups nativos remanescentes de bundle antigo)
+declare global {
+  interface Window { __mdacAlertPatched?: boolean }
+}
+if (typeof window !== 'undefined' && !window.__mdacAlertPatched) {
+  window.__mdacAlertPatched = true;
+  const originalAlert = window.alert; // guard se quiser usar depois
+  window.alert = (message?: any) => {
+    try {
+      window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: String(message ?? ''), type: 'error' } }));
+    } catch {
+      // fallback silencioso
+      originalAlert(message);
+    }
+  };
+}
+
+// PWA Service Worker handling: unregister in dev to avoid cached old bundles; register only in production
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then(registration => {
-        console.log('ServiceWorker registration successful with scope: ', registration.scope);
-      })
-      .catch(err => {
-        console.log('ServiceWorker registration failed: ', err);
-      });
+  window.addEventListener('load', async () => {
+    try {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+  // In development, unregister all service workers to avoid stale cached bundles causing old alerts/popups
+  const isProd = (process && process.env && process.env.NODE_ENV === 'production');
+  if (!isProd) {
+        for (const reg of registrations) {
+          try { await reg.unregister(); } catch (e) { /* ignore */ }
+        }
+        console.log('Service workers unregistered (dev mode)');
+        return;
+      }
+
+      // In production, register the service worker normally
+      await navigator.serviceWorker.register('/sw.js');
+      console.log('Service worker registered (production)');
+    } catch (err) {
+      console.log('Service worker handling error:', err);
+    }
   });
 }
 

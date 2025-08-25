@@ -1026,7 +1026,7 @@ const ProviderPage: React.FC<ProviderPageProps> = ({ currentUser, requests, onLo
     const handleAccept = () => {
       const quoteValue = parseFloat(quote);
       if (isNaN(quoteValue) || quoteValue <= 0) {
-        alert("Por favor, insira um valor de orçamento válido.");
+    window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: 'Por favor, insira um valor de orçamento válido.', type: 'error' } }));
         return;
       }
       updateRequestStatus(request.id, 'Aceito', quoteValue);

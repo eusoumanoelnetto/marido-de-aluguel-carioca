@@ -40,7 +40,7 @@ const App: React.FC = () => {
       // Here, we don't need to do anything as the provider will fetch on next login/refresh.
     } catch (error) {
       console.error("Failed to create service request:", error);
-      alert('Houve um erro ao criar sua solicitação. Tente novamente.');
+  window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: 'Houve um erro ao criar sua solicitação. Tente novamente.', type: 'error' } }));
     }
   };
 
@@ -52,7 +52,7 @@ const App: React.FC = () => {
       );
     } catch (error) {
       console.error("Failed to update request status:", error);
-      alert('Houve um erro ao atualizar a solicitação. Tente novamente.');
+  window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: 'Houve um erro ao atualizar a solicitação. Tente novamente.', type: 'error' } }));
     }
   };
   
@@ -98,7 +98,7 @@ const App: React.FC = () => {
       // currentUser is handled by context
     } catch (error) {
       console.error("Failed to update user:", error);
-      alert('Houve um erro ao atualizar seu perfil.');
+  window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: 'Houve um erro ao atualizar seu perfil.', type: 'error' } }));
     }
   };
 
