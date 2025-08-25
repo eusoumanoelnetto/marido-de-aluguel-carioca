@@ -1,0 +1,24 @@
+{
+  "name": "Marido de Aluguel Hub",
+  "short_name": "Marido Hub",
+  "description": "Encontre os melhores profissionais para resolver seus problemas domésticos.",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#0b3051",
+  "theme_color": "#0b3051",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "https://wngalbve.manus.space/assets/logo_marido_aluguel_3-CqPHQ69B.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://wngalbve.manus.space/assets/logo_marido_aluguel_3-CqPHQ69B.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
