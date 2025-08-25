@@ -87,7 +87,7 @@ const App: React.FC = () => {
 
   const handleLogout = () => {
     logout();
-    setCurrentPage('role-selection');
+  setCurrentPage('login');
   };
 
   const renderPage = () => {
