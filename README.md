@@ -14,7 +14,10 @@ Você pode instalar o Marido de Aluguel Carioca como aplicativo no seu celular A
 - Selecione "Adicionar à Tela de Início"
 
 O ícone do app será igual ao favicon do site!
-# ![Capa do Projeto](public/assets/banner-capa.png)
+
+# <div align="center">
+   <img src="public/assets/banner-capa.png" alt="Banner Marido de Aluguel Carioca" style="max-width:100%;height:auto;" />
+</div>
 
 # Marido de Aluguel Carioca
 
@@ -77,13 +80,7 @@ Este projeto é uma plataforma completa para conectar clientes e prestadores de 
 ## Licença
 
 MIT
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="./docs/assets/logo_marido_aluguel.png" />
-</div>
 
-# Run and deploy your AI Studio app
-
-This contains everything you need to run your app locally.
 
 View your app in AI Studio: https://ai.studio/apps/drive/1n5qqfZR86dV2YJaGQhbbN14p8ivaTKd4
 
