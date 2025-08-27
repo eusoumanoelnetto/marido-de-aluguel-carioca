@@ -73,22 +73,22 @@ const App: React.FC = () => {
 
   const handleSignUp = async (data: SignUpData) => {
     try {
-      const user = await signUp(data);
+      const user = await signUp(data); // signUp agora lança erro em caso de falha
       if (user) {
-  // Show a friendly success toast before navigating
-  const displayName = (user && (user.name || data.name)) ? (user.name || data.name) : '';
-  window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: `Cadastro realizado com sucesso${displayName ? `, ${displayName}` : ''}! Seja bem-vind${displayName ? 'o(a)' : ''} ao Marido de Aluguel.`, type: 'success' } }));
-  setCurrentPage(data.role);
+        const displayName = user.name || data.name || '';
+        window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: `Cadastro realizado com sucesso${displayName ? `, ${displayName}` : ''}! Seja bem-vind${displayName ? 'o(a)' : ''}!`, type: 'success' } }));
+        setCurrentPage(data.role);
       } else {
-        // Unexpected null/undefined response
-  window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: 'Erro no cadastro.', type: 'error' } }));
-        setCurrentPage('login');
+        window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: 'Erro no cadastro.', type: 'error' } }));
       }
     } catch (err: any) {
-  console.error('Sign up error (frontend):', err);
-  // Show backend message when available
-  window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: err?.message || 'Erro no cadastro.', type: 'error' } }));
-      setCurrentPage('login');
+      const msg = String(err?.message || '').toLowerCase();
+      if (msg.includes('cadastrado') || msg.includes('409')) {
+        window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: 'Este e-mail já está cadastrado. Tente fazer login ou use outro e-mail.', type: 'error' } }));
+      } else {
+        window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: err?.message || 'Erro no cadastro.', type: 'error' } }));
+      }
+      // Não redireciona automaticamente; usuário corrige e tenta novamente
     }
   };
   

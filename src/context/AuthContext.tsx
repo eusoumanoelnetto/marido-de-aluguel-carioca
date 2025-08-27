@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
-import { User, SignUpData } from '../types';
+import { User, SignUpData } from '../../types';
 import * as api from '../../services/apiService';
 
 interface AuthContextType {
@@ -65,9 +65,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const u = await api.signUp(data);
       setUser(u);
       return u;
-    } catch (err) {
-      console.error('SignUp failed', err);
-      return null;
+    } catch (err: any) {
+      // Re-lança erro para camada superior poder mostrar mensagem específica (ex: 409 e-mail já cadastrado)
+      throw err;
     }
   };
 
