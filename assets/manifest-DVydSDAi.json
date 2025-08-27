@@ -8,17 +8,17 @@
   "theme_color": "#0b3051",
   "orientation": "portrait-primary",
   "icons": [
-    {
-      "src": "./assets/favicon.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "./assets/favicon.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
-    }
+      {
+        "src": "public/assets/favicon.png",
+        "sizes": "192x192",
+        "type": "image/png",
+        "purpose": "any"
+      },
+      {
+        "src": "public/assets/favicon.png",
+        "sizes": "512x512",
+        "type": "image/png",
+        "purpose": "maskable"
+      }
   ]
 }
