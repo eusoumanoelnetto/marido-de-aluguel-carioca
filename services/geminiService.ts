@@ -1,10 +1,13 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { SuggestedEquipment, SuggestedQuote } from '../types';
 
-const API_KEY = process.env.API_KEY;
+// In the frontend bundle use Vite's `import.meta.env` prefixed vars.
+const API_KEY = (import.meta.env.VITE_GEMINI_API_KEY as string) || '';
 
+// If no API key is provided in the frontend, we should avoid throwing here because
+// the frontend can still function without the AI features. Log a warning instead.
 if (!API_KEY) {
-  throw new Error("API_KEY environment variable not set.");
+  console.warn('VITE_GEMINI_API_KEY not provided; Gemini features will be disabled in the frontend.');
 }
 
 const ai = new GoogleGenAI({ apiKey: API_KEY });

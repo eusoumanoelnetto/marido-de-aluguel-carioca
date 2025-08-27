@@ -19,6 +19,13 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Inline safeguard: sobrescreve alert e limpa service workers/caches antes do app carregar -->
     <script>
+      // Provide a minimal `process` stub for libraries that reference `process` at runtime in the browser.
+      // This prevents ReferenceError: process is not defined when an older bundle or third-party
+      // code checks `process` at runtime. It's intentionally minimal.
+      (function(){
+        try { window.process = window.process || { env: {} }; } catch(e) { /* noop */ }
+      })();
+
       (function(){
         try {
           // Overwrite alert to dispatch toast event
