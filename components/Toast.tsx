@@ -25,13 +25,26 @@ const Toast: React.FC = () => {
 
   const bg = type === 'success' ? 'bg-green-600' : type === 'error' ? 'bg-red-600' : 'bg-sky-600';
 
+  // Escuta evento para navegação ao login
+  useEffect(() => {
+    const handler = () => {
+      setVisible(false);
+      // Navegação ao login pode ser feita via window.location ou evento customizado
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('mdac:gotoLogin'));
+      }
+    };
+    window.addEventListener('mdac:gotoLogin', handler);
+    return () => window.removeEventListener('mdac:gotoLogin', handler);
+  }, []);
+
   return (
     <div className="fixed inset-0 flex items-start justify-center pointer-events-none z-50 p-6">
       <div className={`pointer-events-auto ${bg} text-white rounded-lg shadow-lg px-6 py-4 max-w-xl w-full`}> 
         <div className="flex items-start gap-3">
           <div className="flex-1">
             <div className="font-semibold">{type === 'success' ? 'Sucesso' : type === 'error' ? 'Erro' : 'Informação'}</div>
-            <div className="mt-1 text-sm">{message}</div>
+            <div className="mt-1 text-sm" dangerouslySetInnerHTML={{ __html: message }} />
           </div>
           <button onClick={() => setVisible(false)} className="text-white opacity-90 hover:opacity-100">✕</button>
         </div>

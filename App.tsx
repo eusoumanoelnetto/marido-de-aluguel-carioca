@@ -84,7 +84,7 @@ const App: React.FC = () => {
     } catch (err: any) {
       const msg = String(err?.message || '').toLowerCase();
       if (msg.includes('cadastrado') || msg.includes('409')) {
-        window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: 'Este e-mail já está cadastrado. Tente fazer login ou use outro e-mail.', type: 'error' } }));
+        window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: 'Este e-mail já está cadastrado. <a href="#" onclick="window.dispatchEvent(new CustomEvent(\'mdac:gotoLogin\'))">Clique aqui para fazer login</a> ou use outro e-mail.', type: 'error' } }));
       } else {
         window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: err?.message || 'Erro no cadastro.', type: 'error' } }));
       }
@@ -158,6 +158,12 @@ const App: React.FC = () => {
     }
   };
   
+  useEffect(() => {
+    const handler = () => setCurrentPage('login');
+    window.addEventListener('mdac:gotoLogin', handler);
+    return () => window.removeEventListener('mdac:gotoLogin', handler);
+  }, []);
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800">
       <Toast />
