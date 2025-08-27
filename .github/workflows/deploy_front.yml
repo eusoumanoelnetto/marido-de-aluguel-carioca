@@ -44,7 +44,10 @@ jobs:
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # Prefer a user-provided PAT (GH_PAGES_PAT) if defined. This helps when branch protection
+          # blocks the default GITHUB_TOKEN from pushing. If GH_PAGES_PAT is not set, fall back to
+          # the automatically provided GITHUB_TOKEN.
+          github_token: ${{ secrets.GH_PAGES_PAT || secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
           publish_branch: gh-pages
           allow_empty_commit: true
