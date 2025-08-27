@@ -1,9 +1,8 @@
 import { ServiceRequest, User, SignUpData } from '../types';
 
-// The base URL for our new backend API.
-// Using a relative path makes the app environment-agnostic.
-// It will work in development (with a proxy) and in production.
-const API_BASE_URL = '/api';
+// The base URL for our backend API. Use Vite env var when provided so the
+// built frontend can call a remote API (e.g. Render) when hosted on GitHub Pages.
+const API_BASE_URL = (import.meta.env.VITE_API_BASE as string) || '/api';
 
 // Token helpers (localStorage)
 const TOKEN_KEY = 'mdac_token';

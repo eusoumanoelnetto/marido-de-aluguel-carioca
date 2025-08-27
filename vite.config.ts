@@ -4,10 +4,9 @@ import { defineConfig, loadEnv } from 'vite';
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
     return {
-  // Use base path only in production; in dev use root to allow proxy '/api' to work correctly
-  // Base path must be root for deploy em Render e testes locais
-  // Definindo base path relativo para que os assets sejam carregados corretamente
-  base: './',
+  // Base path is configurable via VITE_BASE so we can build for GitHub Pages
+  // (e.g. '/owner/repo/') or use a relative base for local/backend-serving ('./').
+  base: env.VITE_BASE || './',
       define: {
         'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
         'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)

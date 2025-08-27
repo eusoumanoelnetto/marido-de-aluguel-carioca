@@ -1,0 +1,8 @@
+Run these commands in the `backend` folder to commit and push the dependency fix:
+
+cd backend
+git add package.json package-lock.json
+git commit -m "fix: ensure @types/node installed during Render build"
+git push origin main
+
+After push, check Render dashboard for automatic redeploy and watch the build logs.

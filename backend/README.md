@@ -65,4 +65,7 @@ Para colocar seu backend no ar, siga estes passos:
 5.  Vá para a seção **"Environment"** e adicione a variável de ambiente:
     -   **Key**: `DATABASE_URL`
     -   **Value**: Cole a URL do seu banco de dados PostgreSQL do Render, mas desta vez, use a **"Internal Database URL"**. Isso garante a melhor performance entre os serviços do Render.
+7.  Adicione também a variável `NODE_ENV=production` para habilitar o comportamento de produção no servidor.
+
+8.  Se preferir um comando mais explícito para iniciar o servidor, use `node dist/index.js` como **Start Command**.
 6.  Clique em **"Create Web Service"**. O Render irá fazer o build e o deploy da sua aplicação. Após alguns minutos, seu backend estará online!
