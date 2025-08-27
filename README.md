@@ -1,3 +1,66 @@
+# ![Capa do Projeto](public/assets/banner-capa.png)
+
+# Marido de Aluguel Carioca
+
+Conectamos você aos melhores profissionais para resolver seus problemas domésticos.
+
+---
+
+## Sobre o Projeto
+
+Este projeto é uma plataforma completa para conectar clientes e prestadores de serviços domésticos no Rio de Janeiro. O frontend foi desenvolvido em React + Vite, com integração Gemini 2.5 Pro (Google Studio AI) e backend Node.js rodando no Render.
+
+---
+
+## Ferramentas Utilizadas
+
+- **Frontend:** React, Vite, Gemini 2.5 Pro (Google Studio AI)
+- **Backend:** Node.js, Express, GPT-5 Mini (GitHub Copilot)
+- **Correção de bugs:** Cloud Sonnet 4 (GitHub Copilot)
+- **Hospedagem Backend:** Render
+- **Deploy Frontend:** GitHub Pages
+
+---
+
+## Como rodar localmente
+
+1. Clone o repositório:
+   ```bash
+   git clone https://github.com/eusoumanoelnetto/marido-de-aluguel-carioca.git
+   cd marido-de-aluguel-carioca
+   ```
+2. Instale as dependências:
+   ```bash
+   npm install
+   ```
+3. Rode o frontend:
+   ```bash
+   npm run dev
+   ```
+4. Para rodar o backend, acesse a pasta `backend/` e siga as instruções do README lá.
+
+---
+
+## Como fazer deploy
+
+- **Frontend:** O deploy é feito automaticamente via GitHub Actions para a branch `gh-pages`.
+- **Backend:** O deploy é feito no Render. Configure a variável de ambiente `RENDER_BACKEND_URL` no GitHub para apontar para o backend.
+
+---
+
+## Links Úteis
+
+- [Vite - Deploy to GitHub Pages](https://vitejs.dev/guide/static-deploy.html#github-pages)
+- [Render - Hospedagem Backend](https://render.com/)
+- [Google Studio AI](https://studio.bot.google.com/)
+- [GitHub Copilot](https://github.com/features/copilot)
+- [Cloud Sonnet](https://cloud.google.com/vertex-ai/docs/generative-ai/sonnet)
+
+---
+
+## Licença
+
+MIT
 <div align="center">
 <img width="1200" height="475" alt="GHBanner" src="./docs/assets/logo_marido_aluguel.png" />
 </div>
