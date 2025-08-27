@@ -1,3 +1,19 @@
+---
+
+## Instalação como App (PWA)
+
+Você pode instalar o Marido de Aluguel Carioca como aplicativo no seu celular Android ou iPhone:
+
+**Android:**
+- Abra o site no Chrome
+- Toque no menu (⋮) e selecione "Instalar app" ou "Adicionar à tela inicial"
+
+**iPhone (Safari):**
+- Abra o site no Safari
+- Toque no botão de compartilhamento (quadrado com seta para cima)
+- Selecione "Adicionar à Tela de Início"
+
+O ícone do app será igual ao favicon do site!
 # ![Capa do Projeto](public/assets/banner-capa.png)
 
 # Marido de Aluguel Carioca
