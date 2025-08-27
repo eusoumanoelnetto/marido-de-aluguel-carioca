@@ -83,10 +83,12 @@ const App: React.FC = () => {
       }
     } catch (err: any) {
       const msg = String(err?.message || '').toLowerCase();
-      if (msg.includes('cadastrado') || msg.includes('409')) {
-        window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: 'Este e-mail já está cadastrado. <a href="#" onclick="window.dispatchEvent(new CustomEvent(\'mdac:gotoLogin\'))">Clique aqui para fazer login</a> ou use outro e-mail.', type: 'error' } }));
+      if (msg.includes('cadastrado') || msg.includes('409') || msg.includes('conflict')) {
+        window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: 'Este e-mail já está cadastrado. Tente fazer login ou use outro e-mail.', type: 'error' } }));
+      } else if (msg.includes('cors') || msg.includes('network')) {
+        window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: 'Erro de conexão com o servidor. Verifique sua internet e tente novamente.', type: 'error' } }));
       } else {
-        window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: err?.message || 'Erro no cadastro.', type: 'error' } }));
+        window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: err?.message || 'Erro no cadastro. Tente novamente.', type: 'error' } }));
       }
       // Não redireciona automaticamente; usuário corrige e tenta novamente
     }

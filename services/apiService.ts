@@ -92,11 +92,24 @@ const authFetch = async (input: RequestInfo, init: RequestInit = {}) => {
  * @returns The JSON parsed response.
  */
 const handleResponse = async (response: Response) => {
-  const data = await response.json();
-  if (!response.ok) {
-    // If the server returns an error, use its message.
-    throw new Error(data.message || 'Ocorreu um erro na comunicação com o servidor.');
+  console.log('handleResponse: processando resposta, status:', response.status, 'ok:', response.ok);
+  
+  let data;
+  try {
+    data = await response.json();
+  } catch (jsonError) {
+    console.error('handleResponse: erro ao parsear JSON:', jsonError);
+    throw new Error('Resposta do servidor inválida. Tente novamente.');
   }
+  
+  if (!response.ok) {
+    console.error('handleResponse: resposta não ok, dados:', data);
+    // If the server returns an error, use its message.
+    const errorMessage = data.message || data.error || `Erro do servidor (${response.status})`;
+    throw new Error(errorMessage);
+  }
+  
+  console.log('handleResponse: sucesso, dados:', data);
   return data;
 };
 
@@ -116,15 +129,22 @@ export const login = async (email: string, password?: string): Promise<User | nu
 };
 
 export const signUp = async (data: SignUpData): Promise<User> => {
-  const response = await fetch(`${API_BASE_URL}/auth/signup`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  });
-  const resData = await handleResponse(response);
-  // backend returns { user, token }
-  if (resData?.token) setToken(resData.token);
-  return resData.user ?? resData;
+  console.log('signUp: tentando cadastrar com API_BASE_URL:', API_BASE_URL);
+  try {
+    const response = await fetch(`${API_BASE_URL}/auth/signup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    console.log('signUp: resposta recebida, status:', response.status);
+    const resData = await handleResponse(response);
+    // backend returns { user, token }
+    if (resData?.token) setToken(resData.token);
+    return resData.user ?? resData;
+  } catch (error) {
+    console.error('signUp: erro capturado:', error);
+    throw error;
+  }
 };
 
 export const updateUser = async (updatedUser: User): Promise<User> => {
