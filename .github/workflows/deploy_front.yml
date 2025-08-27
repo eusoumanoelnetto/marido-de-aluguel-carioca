@@ -3,6 +3,11 @@ name: Build and Deploy Frontend to GitHub Pages
 on:
   push:
     branches: [ main ]
+ 
+# Grant write permissions so the GITHUB_TOKEN can push to the `gh-pages` branch
+permissions:
+  contents: write
+  pages: write
 
 jobs:
   build-and-deploy:
@@ -33,3 +38,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
           publish_branch: gh-pages
+          allow_empty_commit: true
+          commit_message: "chore: deploy frontend to gh-pages [skip ci]"
+          user_name: "github-actions[bot]"
+          user_email: "41898282+github-actions[bot]@users.noreply.github.com"
