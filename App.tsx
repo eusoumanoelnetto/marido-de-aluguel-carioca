@@ -8,6 +8,7 @@ import { ServiceRequest, User, SignUpData } from './types';
 import * as api from './services/apiService';
 import { AuthContext } from './src/context/AuthContext';
 import Toast from './components/Toast';
+import PWAInstall from './components/PWAInstall';
 
 type Page = 'role-selection' | 'login' | 'signup' | 'client' | 'provider';
 
@@ -169,6 +170,7 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800">
       <Toast />
+      <PWAInstall />
       <main>
         {renderPage()}
       </main>
