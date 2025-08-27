@@ -35,18 +35,44 @@ app.use('/api/requests', serviceRoutes);
 app.use('/api/users', userRoutes);
 
 
-// In development, use health check; in production, serve the front-end
-if (process.env.NODE_ENV !== 'production') {
-  app.get('/', (req: Request, res: Response) => {
-    res.send('Backend Server is running!');
-  });
-} else {
-  const distPath = path.resolve(__dirname, '../../dist');
-  app.use(express.static(distPath));
-  app.get('*', (req: Request, res: Response) => {
-    res.sendFile(path.join(distPath, 'index.html'));
-  });
-}
+// Sempre que existir build em ../../dist servimos o front; se não existir, mostra health simples
+(() => {
+  try {
+    // Procurar build em dist (padrão) ou docs (configuração atual do Vite)
+    const candidates = [path.resolve(__dirname, '../../dist'), path.resolve(__dirname, '../../docs')];
+    const fs = require('fs');
+    let foundIndex: string | null = null;
+    let foundDistPath: string | null = null;
+    for (const cand of candidates) {
+      const indexPath = path.join(cand, 'index.html');
+      try {
+        fs.accessSync(indexPath);
+        foundIndex = indexPath;
+        foundDistPath = cand;
+        break;
+      } catch (err) {
+        // não existe, continuar
+      }
+    }
+    if (foundIndex && foundDistPath) {
+      console.log('🖥  Servindo front-end estático de', foundDistPath);
+      app.use(express.static(foundDistPath));
+      app.get('*', (req: Request, res: Response) => {
+        res.sendFile(foundIndex as string);
+      });
+    } else {
+      console.warn('ℹ️  Build front-end não encontrado (dist/index.html ou docs/index.html). Acesse / para health check. Rode `npm run build` na raiz para gerar.');
+      app.get('/', (req: Request, res: Response) => {
+        res.send('Backend Server is running! (dist/docs ausente)');
+      });
+    }
+  } catch (err) {
+    console.error('Erro ao configurar servidor estático:', err);
+    app.get('/', (req: Request, res: Response) => {
+      res.send('Backend Server is running! (erro ao checar build)');
+    });
+  }
+})();
 
 // Function to start the Express server
 const startServer = () => {

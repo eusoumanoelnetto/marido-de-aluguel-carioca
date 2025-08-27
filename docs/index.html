@@ -7,7 +7,7 @@
     <title>Marido de Aluguel Hub</title>
     
     <!-- PWA Manifest and Theme -->
-    <link rel="manifest" href="/marido-de-aluguel-carioca/assets/manifest-DVCcrEhe.json" />
+    <link rel="manifest" href="./assets/manifest-DVCcrEhe.json" />
     <meta name="theme-color" content="#0b3051" />
 
     <!-- iOS PWA Tags -->
@@ -17,6 +17,29 @@
     <link rel="apple-touch-icon" href="https://wngalbve.manus.space/assets/logo_marido_aluguel_3-CqPHQ69B.png" />
 
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inline safeguard: sobrescreve alert e limpa service workers/caches antes do app carregar -->
+    <script>
+      (function(){
+        try {
+          // Overwrite alert to dispatch toast event
+          var originalAlert = window.alert;
+          window.alert = function(msg){
+            try { window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: String(msg||''), type: 'error' } })); }
+            catch(e){ originalAlert(msg); }
+          };
+
+          // Unregister any service workers and clear caches to avoid stale JS
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(regs){
+              regs.forEach(function(r){ try{ r.unregister(); }catch(_){} });
+            }).catch(function(){});
+          }
+          if (window.caches && window.caches.keys) {
+            caches.keys().then(function(keys){ keys.forEach(function(k){ caches.delete(k); }); }).catch(function(){});
+          }
+        } catch(e) { /* noop */ }
+      })();
+    </script>
     <script>
       tailwind.config = {
         theme: {
@@ -53,7 +76,7 @@
     }
   </style>
 <link rel="stylesheet" href="/index.css">
-  <script type="module" crossorigin src="/marido-de-aluguel-carioca/assets/index-D64u9vR7.js"></script>
+  <script type="module" crossorigin src="./assets/index-CS3jd-pF.js"></script>
 </head>
   <body>
     <div id="root"></div>
