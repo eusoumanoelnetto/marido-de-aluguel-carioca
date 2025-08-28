@@ -4,9 +4,10 @@ interface LoginPageProps {
   onLoginSuccess: (email: string, password?: string) => void;
   onNavigateToSignUp: () => void;
   onBack: () => void;
+  loading?: boolean;
 }
 
-const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onNavigateToSignUp, onBack }) => {
+const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onNavigateToSignUp, onBack, loading = false }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
@@ -64,8 +65,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onNavigateToSignU
             />
           </div>
           
-          <button type="submit" className="w-full bg-brand-red text-white font-semibold p-3.5 rounded-lg text-base cursor-pointer transition hover:opacity-90 hover:scale-[1.02] mt-2.5">
-            Entrar
+          <button type="submit" disabled={loading} className="w-full bg-brand-red text-white font-semibold p-3.5 rounded-lg text-base cursor-pointer transition hover:opacity-90 hover:scale-[1.02] mt-2.5 disabled:opacity-60 disabled:cursor-wait">
+            {loading ? 'Entrando...' : 'Entrar'}
           </button>
         </form>
 

@@ -1074,7 +1074,7 @@ const ProviderPage: React.FC<ProviderPageProps> = ({ currentUser, requests, onLo
     return (
       <div className="max-w-7xl mx-auto p-6">
         <PageHeader onBack={onBack} title="Voltar" />
-        <div className="bg-white rounded-xl border border-gray-200 p-8 shadow-sm">
+    <div className="bg-white rounded-xl border border-gray-200 p-8 shadow-sm overflow-hidden relative">
           <div className="flex justify-between items-start">
             <div>
               <h1 className="text-2xl font-bold mb-1 text-brand-navy">{request.category}</h1>
@@ -1101,22 +1101,24 @@ const ProviderPage: React.FC<ProviderPageProps> = ({ currentUser, requests, onLo
             </div>
           </div>
 
-          {request.status === 'Pendente' && (
-            <div className="mt-8 border-t pt-8">
-              <h2 className="text-lg font-semibold mb-3 text-brand-navy">Enviar Orçamento</h2>
-              <div className="flex items-center gap-4">
-                <input 
-                  type="number" 
-                  value={quote}
-                  onChange={e => setQuote(e.target.value)}
-                  placeholder="Ex: 150.00" 
-                  className="p-3 bg-gray-100 border border-gray-300 rounded-lg text-base w-48 focus:outline-none focus:ring-2 focus:ring-brand-blue"
-                />
-                <button onClick={handleAccept} className="px-6 py-3 rounded-lg font-semibold bg-green-600 text-white hover:bg-green-700">Aceitar e Enviar Orçamento</button>
-                <button onClick={handleDecline} className="px-6 py-3 rounded-lg font-semibold bg-brand-red text-white hover:opacity-90">Recusar</button>
-              </div>
-            </div>
-          )}
+                    {request.status === 'Pendente' && (
+                        <div className="mt-8 border-t pt-8">
+                            <h2 className="text-lg font-semibold mb-3 text-brand-navy">Enviar Orçamento</h2>
+                            <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 w-full min-w-0">
+                                <input 
+                                    type="number" 
+                                    value={quote}
+                                    onChange={e => setQuote(e.target.value)}
+                                    placeholder="Ex: 150.00" 
+                                    className="p-3 bg-gray-100 border border-gray-300 rounded-lg text-base w-full sm:w-48 focus:outline-none focus:ring-2 focus:ring-brand-blue min-w-0"
+                                />
+                                <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto min-w-0">
+                                    <button onClick={handleAccept} className="px-5 py-3 rounded-lg font-semibold bg-green-600 text-white hover:bg-green-700 w-full sm:w-auto text-center whitespace-normal break-words">Aceitar e Enviar Orçamento</button>
+                                    <button onClick={handleDecline} className="px-5 py-3 rounded-lg font-semibold bg-brand-red text-white hover:opacity-90 w-full sm:w-auto">Recusar</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
         </div>
       </div>
     );

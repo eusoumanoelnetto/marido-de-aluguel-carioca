@@ -8,6 +8,7 @@ interface SignUpPageProps {
   onSignUpSuccess: (data: SignUpData) => void;
   onNavigateToLogin: () => void;
   onBack: () => void;
+  loading?: boolean;
 }
 
 const services = [
@@ -21,7 +22,7 @@ const services = [
     { name: 'CFTV', icon: <CctvIcon /> },
 ];
 
-const SignUpPage: React.FC<SignUpPageProps> = ({ initialRole, onSignUpSuccess, onNavigateToLogin, onBack }) => {
+const SignUpPage: React.FC<SignUpPageProps> = ({ initialRole, onSignUpSuccess, onNavigateToLogin, onBack, loading = false }) => {
   const [userType, setUserType] = useState<'client' | 'provider'>(initialRole);
   const [selectedServices, setSelectedServices] = useState<Set<string>>(new Set());
   const [name, setName] = useState('');
@@ -182,8 +183,8 @@ const SignUpPage: React.FC<SignUpPageProps> = ({ initialRole, onSignUpSuccess, o
             />
           </div>
           
-          <button type="submit" className="w-full bg-brand-red text-white font-semibold py-3.5 rounded-lg text-base cursor-pointer transition hover:opacity-90 mt-2.5">
-            Cadastrar
+          <button type="submit" disabled={loading} className="w-full bg-brand-red text-white font-semibold py-3.5 rounded-lg text-base cursor-pointer transition hover:opacity-90 mt-2.5 disabled:opacity-60 disabled:cursor-wait">
+            {loading ? 'Cadastrando...' : 'Cadastrar'}
           </button>
         </form>
 

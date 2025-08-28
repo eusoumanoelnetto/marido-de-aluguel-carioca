@@ -9,6 +9,7 @@ import * as api from './services/apiService';
 import { AuthContext } from './src/context/AuthContext';
 import Toast from './components/Toast';
 import PWAInstall from './components/PWAInstall';
+import LoadingOverlay from './components/LoadingOverlay';
 
 type Page = 'role-selection' | 'login' | 'signup' | 'client' | 'provider';
 
@@ -17,6 +18,7 @@ const App: React.FC = () => {
   const [selectedRoleForAuth, setSelectedRoleForAuth] = useState<'client' | 'provider'>('client');
   const { user: currentUser, isAuthenticated, login, signUp, logout, updateUser: contextUpdateUser } = useContext(AuthContext);
   const [serviceRequests, setServiceRequests] = useState<ServiceRequest[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   // This effect will run when a provider logs in to fetch their requests
   useEffect(() => {
@@ -58,6 +60,7 @@ const App: React.FC = () => {
   };
   
   const handleLogin = async (email: string, password?: string) => {
+    setIsLoading(true);
     try {
       const user = await login(email, password);
       if (user) {
@@ -69,10 +72,13 @@ const App: React.FC = () => {
     } catch (err: any) {
       console.error('Login error (frontend):', err);
       window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: err?.message || 'E-mail ou senha inválidos.', type: 'error' } }));
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleSignUp = async (data: SignUpData) => {
+    setIsLoading(true);
     try {
       const user = await signUp(data); // signUp agora lança erro em caso de falha
       if (user) {
@@ -92,6 +98,8 @@ const App: React.FC = () => {
         window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: err?.message || 'Erro no cadastro. Tente novamente.', type: 'error' } }));
       }
       // Não redireciona automaticamente; usuário corrige e tenta novamente
+    } finally {
+      setIsLoading(false);
     }
   };
   
@@ -119,6 +127,7 @@ const App: React.FC = () => {
                     onLoginSuccess={handleLogin} 
                     onNavigateToSignUp={() => setCurrentPage('signup')}
                     onBack={() => setCurrentPage('role-selection')}
+                    loading={isLoading}
                   />;
         case 'signup':
           return <SignUpPage 
@@ -126,6 +135,7 @@ const App: React.FC = () => {
                     onSignUpSuccess={handleSignUp} 
                     onNavigateToLogin={() => setCurrentPage('login')}
                     onBack={() => setCurrentPage('login')}
+                    loading={isLoading}
                   />;
         case 'role-selection':
         default:
