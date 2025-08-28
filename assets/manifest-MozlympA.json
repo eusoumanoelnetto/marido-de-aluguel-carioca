@@ -2,7 +2,7 @@
   "name": "Marido de Aluguel Carioca",
   "short_name": "Marido Carioca",
   "description": "Conectamos você aos melhores profissionais para resolver seus problemas domésticos.",
-  "start_url": "./",
+  "start_url": "/marido-de-aluguel-carioca/",
   "display": "standalone",
   "background_color": "#0b3051",
   "theme_color": "#0b3051",
