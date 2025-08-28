@@ -16,7 +16,7 @@ Você pode instalar o Marido de Aluguel Carioca como aplicativo no seu celular A
 O ícone do app será igual ao favicon do site!
 
 # <div align="center">
-   <img src="public/assets/banner-capa.png" alt="Banner Marido de Aluguel Carioca" style="max-width:100%;height:auto;" />
+   <img src="public/assets/banner_capa.png" alt="Banner Marido de Aluguel Carioca" style="max-width:100%;height:auto;" />
 </div>
 
 # Marido de Aluguel Carioca
