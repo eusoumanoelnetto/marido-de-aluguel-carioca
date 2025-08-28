@@ -8,6 +8,13 @@ Conectamos você aos melhores profissionais para resolver seus problemas domést
 
 ---
 
+## História
+
+Meu primeiro app — criado numa época em que eu ainda não sabia escrever "PWA" corretamente. Uma amiga sugeriu que eu tentasse desenvolver um aplicativo para "marido de aluguel" porque, no meu condomínio, eu sempre fazia favores para os vizinhos e quase nunca recebia agradecimentos. A partir dessa ideia nasceu o Marido de Aluguel Carioca.
+
+O projeto nasceu para tornar mais fácil conectar moradores do Rio de Janeiro com prestadores de serviços domésticos, priorizando uma experiência leve no celular (PWA), simplicidade no uso e deploy acessível. Se quiser, conte mais detalhes e eu adapto o texto para ficar com a sua voz.
+
+
 ## Instalação como App (PWA)
 
 Você pode instalar o Marido de Aluguel Carioca como aplicativo no seu celular Android ou iPhone:
