@@ -10,6 +10,7 @@ import { AuthContext } from './src/context/AuthContext';
 import Toast from './components/Toast';
 import PWAInstall from './components/PWAInstall';
 import LoadingOverlay from './components/LoadingOverlay';
+import NewRequestAlert from './components/NewRequestAlert';
 
 type Page = 'role-selection' | 'login' | 'signup' | 'client' | 'provider';
 
@@ -19,6 +20,9 @@ const App: React.FC = () => {
   const { user: currentUser, isAuthenticated, login, signUp, logout, updateUser: contextUpdateUser } = useContext(AuthContext);
   const [serviceRequests, setServiceRequests] = useState<ServiceRequest[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [lastPendingIds, setLastPendingIds] = useState<Set<string>>(new Set());
+  const [newPending, setNewPending] = useState<ServiceRequest[]>([]);
+  const [showNewRequestsAlert, setShowNewRequestsAlert] = useState(false);
 
   // This effect will run when a provider logs in to fetch their requests
   useEffect(() => {
@@ -34,6 +38,41 @@ const App: React.FC = () => {
     };
     fetchRequests();
   }, [currentUser]);
+
+  // Polling leve para detectar novos pedidos pendentes enquanto prestador logado
+  useEffect(() => {
+    if (currentUser?.role !== 'provider') return;
+    let cancelled = false;
+    const interval = setInterval(async () => {
+      try {
+        const requests = await api.getServiceRequests();
+        if (cancelled) return;
+        setServiceRequests(requests);
+        const pending = requests.filter(r => r.status === 'Pendente');
+        const pendingIds = new Set(pending.map(p => p.id));
+        // Detectar novos
+        const newlyArrived = pending.filter(p => !lastPendingIds.has(p.id));
+        if (newlyArrived.length) {
+          setNewPending(newlyArrived);
+          setShowNewRequestsAlert(true);
+          // Notification API (permite apenas se usuário concedeu e aba ativa)
+          if ('Notification' in window) {
+            if (Notification.permission === 'granted') {
+              newlyArrived.forEach(n => {
+                try { new Notification('Novo pedido', { body: `${n.clientName} solicitou ${n.category}` }); } catch (_) {}
+              });
+            } else if (Notification.permission === 'default') {
+              try { Notification.requestPermission(); } catch(_){}
+            }
+          }
+        }
+        setLastPendingIds(pendingIds);
+      } catch (e) {
+        // silencioso
+      }
+    }, 15000); // 15s
+    return () => { cancelled = true; clearInterval(interval); };
+  }, [currentUser, lastPendingIds]);
 
 
   const addServiceRequest = async (request: ServiceRequest) => {
@@ -184,6 +223,13 @@ const App: React.FC = () => {
       <main>
         {renderPage()}
       </main>
+      {showNewRequestsAlert && newPending.length > 0 && currentUser?.role === 'provider' && (
+        <NewRequestAlert 
+          requests={newPending}
+          onClose={() => setShowNewRequestsAlert(false)}
+          onView={() => { setShowNewRequestsAlert(false); setCurrentPage('provider'); }}
+        />
+      )}
     </div>
   );
 };
