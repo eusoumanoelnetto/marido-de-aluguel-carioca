@@ -1,3 +1,11 @@
+<div align="center">
+   <img src="public/assets/banner_capa.png" alt="Banner Marido de Aluguel Carioca" style="max-width:100%;height:auto;" />
+</div>
+
+# Marido de Aluguel Carioca
+
+Conectamos você aos melhores profissionais para resolver seus problemas domésticos.
+
 ---
 
 ## Instalação como App (PWA)
@@ -5,23 +13,16 @@
 Você pode instalar o Marido de Aluguel Carioca como aplicativo no seu celular Android ou iPhone:
 
 **Android:**
-- Abra o site no Chrome
-- Toque no menu (⋮) e selecione "Instalar app" ou "Adicionar à tela inicial"
+1. Abra o site no Chrome
+2. Toque no menu (⋮)
+3. Selecione **Instalar app** ou **Adicionar à tela inicial**
 
 **iPhone (Safari):**
-- Abra o site no Safari
-- Toque no botão de compartilhamento (quadrado com seta para cima)
-- Selecione "Adicionar à Tela de Início"
+1. Abra o site no Safari
+2. Toque no botão de compartilhamento (quadrado com seta para cima)
+3. Toque em **Adicionar à Tela de Início**
 
-O ícone do app será igual ao favicon do site!
-
-# <div align="center">
-   <img src="public/assets/banner_capa.png" alt="Banner Marido de Aluguel Carioca" style="max-width:100%;height:auto;" />
-</div>
-
-# Marido de Aluguel Carioca
-
-Conectamos você aos melhores profissionais para resolver seus problemas domésticos.
+O ícone do app será igual ao favicon do site.
 
 ---
 
@@ -44,19 +45,38 @@ Este projeto é uma plataforma completa para conectar clientes e prestadores de 
 ## Como rodar localmente
 
 1. Clone o repositório:
+
    ```bash
    git clone https://github.com/eusoumanoelnetto/marido-de-aluguel-carioca.git
    cd marido-de-aluguel-carioca
    ```
-2. Instale as dependências:
+
+2. Instale as dependências (raiz):
+
    ```bash
    npm install
    ```
+
 3. Rode o frontend:
+
    ```bash
    npm run dev
    ```
-4. Para rodar o backend, acesse a pasta `backend/` e siga as instruções do README lá.
+
+4. Backend:
+
+   ```bash
+   cd backend
+   npm install
+   npm run dev   # (ou npm start, conforme script configurado)
+   ```
+
+5. Crie um arquivo `.env` (exemplo):
+
+   ```bash
+   GEMINI_API_KEY=coloque_sua_chave
+   VITE_BASE=/marido-de-aluguel-carioca/
+   ```
 
 ---
 
@@ -81,25 +101,18 @@ Este projeto é uma plataforma completa para conectar clientes e prestadores de 
 
 MIT
 
+Licença completa em `LICENSE`.
 
-View your app in AI Studio: https://ai.studio/apps/drive/1n5qqfZR86dV2YJaGQhbbN14p8ivaTKd4
+Veja também: [AI Studio App](https://ai.studio/apps/drive/1n5qqfZR86dV2YJaGQhbbN14p8ivaTKd4)
 
-## Run Locally
-
-**Prerequisites:**  Node.js
-
-
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+---
 
 ## Deploy no Render via GitHub
 
 Siga esses passos para configurar deploy automático no [Render](https://render.com/) usando seu repositório GitHub:
 
 ### Backend
+
 1. No dashboard do Render, clique em **New +** e selecione **Web Service**.
 2. Conecte sua conta GitHub e escolha o repositório deste projeto.
 3. Em **Root Directory**, selecione `backend`.
@@ -112,6 +125,7 @@ Siga esses passos para configurar deploy automático no [Render](https://render.
 6. Clique em **Create Web Service**.
 
 ### Frontend
+
 1. No dashboard do Render, clique em **New +** e selecione **Static Site**.
 2. Conecte o mesmo repositório do GitHub.
 3. Em **Root Directory**, deixe em branco (raiz do projeto) ou selecione o diretório onde está o `index.html`.
