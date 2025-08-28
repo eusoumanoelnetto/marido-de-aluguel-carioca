@@ -422,17 +422,17 @@ const StatCard: React.FC<{ icon: string; title: string; color: string; onClick?:
 const AppointmentCard: React.FC<{ request: ServiceRequest; time?: string; onViewDetails: () => void; }> = ({ request, time, onViewDetails }) => {
     const status = getStatusDetails(request.status);
     return (
-        <div className="bg-white border border-gray-200 rounded-xl p-6 flex justify-between items-center transition-shadow hover:shadow-md">
-            <div className="flex items-center gap-4">
-                {time && <span className="font-semibold text-base text-brand-navy">{time}</span>}
-                <div>
-                    <h3 className="font-semibold text-lg text-brand-navy">{`Serviço de ${request.category}`}</h3>
-                    <p className="text-base text-gray-500">Cliente: {request.clientName} - {request.address}</p>
+        <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-shadow hover:shadow-md">
+            <div className="flex items-start sm:items-center gap-4 w-full sm:w-auto">
+                {time && <span className="font-semibold text-base text-brand-navy min-w-[64px]">{time}</span>}
+                <div className="min-w-0">
+                    <h3 className="font-semibold text-lg text-brand-navy truncate">{`Serviço de ${request.category}`}</h3>
+                    <p className="text-sm text-gray-500 truncate">Cliente: {request.clientName} - {request.address}</p>
                 </div>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center sm:items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
               <span className={`px-3 py-1 text-xs font-medium rounded-full ${status.className}`}>{status.text}</span>
-              <button onClick={onViewDetails} className="bg-gray-100 text-gray-800 border border-gray-200 px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-gray-200 transition-colors">
+              <button onClick={onViewDetails} className="bg-gray-100 text-gray-800 border border-gray-200 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-200 transition-colors">
                   Ver Detalhes
               </button>
             </div>
@@ -640,7 +640,8 @@ const DashboardView: React.FC<{
     requests: ServiceRequest[];
     setView: (view: ProviderView) => void;
     onViewDetails: (request: ServiceRequest) => void;
-}> = ({ requests, setView, onViewDetails }) => {
+    updateRequestStatus: (id: string, status: 'Aceito' | 'Recusado', quote?: number) => void;
+}> = ({ requests, setView, onViewDetails, updateRequestStatus }) => {
     
     const [isBannerVisible, setIsBannerVisible] = useState(true);
 
@@ -652,7 +653,8 @@ const DashboardView: React.FC<{
     
     const servicesToday = requests.filter(r => {
         const requestDate = new Date(r.requestDate);
-        return (r.status === 'Aceito' || r.status === 'Pendente') && isSameDay(requestDate, today);
+    // Mostrar na agenda apenas serviços aceitos
+    return r.status === 'Aceito' && isSameDay(requestDate, today);
     });
 
     const now = new Date();
@@ -666,8 +668,14 @@ const DashboardView: React.FC<{
         r.status === 'Finalizado' && new Date(r.requestDate) >= oneMonthAgo && new Date(r.requestDate) <= now
     ).length;
     
+    // Agenda deve conter apenas serviços aceitos
     const agendaToday = requests
-        .filter(r => isSameDay(new Date(r.requestDate), today))
+        .filter(r => r.status === 'Aceito' && isSameDay(new Date(r.requestDate), today))
+        .sort((a,b) => new Date(a.requestDate).getTime() - new Date(b.requestDate).getTime());
+
+    // Novos pedidos: solicitações pendentes para hoje
+    const pendingToday = requests
+        .filter(r => r.status === 'Pendente' && isSameDay(new Date(r.requestDate), today))
         .sort((a,b) => new Date(a.requestDate).getTime() - new Date(b.requestDate).getTime());
     
     return (
@@ -712,6 +720,29 @@ const DashboardView: React.FC<{
                 </StatCard>
             </div>
             
+            {/* Seção de novos pedidos pendentes */}
+            <h2 className="text-xl font-medium text-brand-navy mt-16 mb-6">Novos pedidos ({pendingToday.length})</h2>
+            <div className="flex flex-col gap-4">
+                {pendingToday.length > 0 ? pendingToday.map((req) => (
+                    <div key={req.id} className="bg-white rounded-lg border border-gray-200 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                        <div className="w-full sm:w-auto">
+                            <div className="text-sm text-gray-500">{new Date(req.requestDate).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})}</div>
+                            <div className="font-semibold text-brand-navy">{req.category}</div>
+                            <div className="text-sm text-gray-600 truncate">Cliente: {req.clientName} — {req.address}</div>
+                        </div>
+                        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                            <button onClick={() => onViewDetails(req)} className="px-3 py-2 rounded bg-brand-blue text-white text-sm w-full sm:w-auto">Ver / Orçar</button>
+                            <button onClick={() => updateRequestStatus(req.id, 'Recusado')} className="px-3 py-2 rounded bg-red-100 text-red-700 text-sm w-full sm:w-auto">Recusar</button>
+                        </div>
+                    </div>
+                )) : (
+                    <div className="text-center py-6 bg-gray-50 rounded-lg border border-gray-200">
+                        <p className="text-gray-500">Nenhum novo pedido para hoje.</p>
+                    </div>
+                )}
+            </div>
+
+            {/* Agenda: apenas serviços aceitos */}
             <h2 className="text-xl font-medium text-brand-navy mt-16 mb-6">Agenda de Hoje ({today.toLocaleDateString('pt-BR')})</h2>
             <div className="flex flex-col gap-4">
                 {agendaToday.length > 0 ? agendaToday.map((req) => (
@@ -1100,8 +1131,8 @@ const ProviderPage: React.FC<ProviderPageProps> = ({ currentUser, requests, onLo
 
   const renderContent = () => {
     switch (view) {
-      case 'dashboard':
-        return <DashboardView requests={requests} setView={setView} onViewDetails={handleViewDetails} />;
+            case 'dashboard':
+                return <DashboardView requests={requests} setView={setView} onViewDetails={handleViewDetails} updateRequestStatus={updateRequestStatus} />;
       case 'quotes':
         return <QuotesView requests={requests} setView={setView} onViewDetails={handleViewDetails} />;
       case 'today-services':
@@ -1146,8 +1177,8 @@ const ProviderPage: React.FC<ProviderPageProps> = ({ currentUser, requests, onLo
         return <AgendaView requests={requests} onBack={() => setView('dashboard')} onViewDetails={handleViewDetails} />;
       case 'help':
         return <HelpView onBack={() => setView('edit-profile')} />;
-      default:
-        return <DashboardView requests={requests} setView={setView} onViewDetails={handleViewDetails} />;
+            default:
+                return <DashboardView requests={requests} setView={setView} onViewDetails={handleViewDetails} updateRequestStatus={updateRequestStatus} />;
     }
   };
   
