@@ -29,7 +29,7 @@ const InlineAnnouncements: React.FC<Props> = ({ limit }) => {
     let cancelled = false;
     (async () => {
       try {
-        const url = `${import.meta.env.BASE_URL}announcements.json`;
+  const url = `/announcements.json`; // usar root absoluto para padronizar no Render
         const res = await fetch(url, { cache: 'no-store' });
         if (!res.ok) throw new Error('Falha ao carregar');
         const data: Announcement[] = await res.json();

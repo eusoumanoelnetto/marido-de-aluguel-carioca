@@ -22,7 +22,7 @@ const AnnouncementBanner: React.FC<Props> = ({ role }) => {
     let cancelled = false;
     const fetchAnnouncements = async () => {
       try {
-        const url = `${import.meta.env.BASE_URL}announcements.json`;
+  const url = `/announcements.json`; // caminho absoluto para funcionar no Render (root) e qualquer host
         const res = await fetch(url, { cache: 'no-store' });
         if (!res.ok) return;
         const data: Announcement[] = await res.json();
