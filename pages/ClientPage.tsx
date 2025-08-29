@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { ServiceRequest, ServiceCategory, User } from '../types';
 import { HammerIcon, WrenchIcon, ZapIcon, DropletsIcon, PaintBucketIcon, HouseIcon, MonitorIcon, CctvIcon } from '../components/Icons';
+import InlineAnnouncements from '../components/InlineAnnouncements';
 
 interface ClientPageProps {
     currentUser: User;
@@ -125,6 +126,7 @@ const DashboardView: React.FC<{ setView: (view: ClientView) => void, handleServi
         </header>
         <main className="max-w-[1200px] mx-auto p-5">
             <input type="search" className="w-full p-3 bg-gray-100 border border-gray-200 rounded-lg my-8 text-base" placeholder="🔎 Buscar serviços (ex: eletricista, encanador, pintor...)" />
+            <InlineAnnouncements limit={3} />
 
             <h2 className="text-3xl font-semibold mb-6 text-brand-navy">Serviços Disponíveis</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-5 mb-12">
