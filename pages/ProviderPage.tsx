@@ -1139,8 +1139,21 @@ const ProviderPage: React.FC<ProviderPageProps> = ({ currentUser, requests, onLo
         const handler = (e: any) => {
             const id = e?.detail?.id as string | undefined;
             if (!id) return;
-            const found = requests.find(r => r.id === id);
-            if (found) handleViewDetails(found);
+                const found = requests.find(r => r.id === id);
+                if (found) {
+                    handleViewDetails(found);
+                    return;
+                }
+                // se não encontrou localmente, tentar atualizar via API antes de desistir
+                (async () => {
+                    try {
+                        const fresh = await (await import('../services/apiService')).getServiceRequests();
+                        const f = fresh.find((rr: ServiceRequest) => rr.id === id);
+                        if (f) handleViewDetails(f);
+                    } catch (err) {
+                        // ignore
+                    }
+                })();
         };
         window.addEventListener('mdac:viewRequest', handler as EventListener);
         return () => window.removeEventListener('mdac:viewRequest', handler as EventListener);

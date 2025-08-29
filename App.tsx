@@ -64,6 +64,19 @@ const App: React.FC = () => {
           if (newlyArrived.length) {
             setNewPending(newlyArrived);
             setShowNewRequestsAlert(true);
+            // tocar som simples via WebAudio
+            try {
+              const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+              const o = ctx.createOscillator();
+              const g = ctx.createGain();
+              o.type = 'sine'; o.frequency.value = 880;
+              g.gain.value = 0.05;
+              o.connect(g); g.connect(ctx.destination);
+              o.start(); o.stop(ctx.currentTime + 0.12);
+            } catch (e) {
+              // ignore
+            }
+
             if ('Notification' in window) {
               if (Notification.permission === 'granted') {
                 newlyArrived.forEach(n => {
