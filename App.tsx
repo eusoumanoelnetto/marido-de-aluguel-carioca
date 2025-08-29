@@ -32,7 +32,16 @@ const App: React.FC = () => {
       if (currentUser) {
         try {
           const requests = await api.getServiceRequests();
-          setServiceRequests(requests);
+          const normalized = requests.map(r => {
+            const q: any = (r as any).quote;
+            let numQuote = q;
+            if (q !== undefined && q !== null && typeof q !== 'number') {
+              const parsed = Number(q);
+              if (!isNaN(parsed)) numQuote = parsed; else numQuote = undefined;
+            }
+            return { ...r, quote: numQuote };
+          });
+          setServiceRequests(normalized);
         } catch (error) {
           console.error("Failed to fetch requests:", error);
         }
@@ -53,7 +62,16 @@ const App: React.FC = () => {
     const check = async () => {
       if (isPollingPaused.value) return;
       try {
-        const requests = await api.getServiceRequests();
+        const requestsRaw = await api.getServiceRequests();
+        const requests = requestsRaw.map(r => {
+          const q: any = (r as any).quote;
+          let numQuote = q;
+          if (q !== undefined && q !== null && typeof q !== 'number') {
+            const parsed = Number(q);
+            if (!isNaN(parsed)) numQuote = parsed; else numQuote = undefined;
+          }
+          return { ...r, quote: numQuote };
+        });
         if (cancelled) return;
         // atualizar lista principal
         setServiceRequests(requests);
