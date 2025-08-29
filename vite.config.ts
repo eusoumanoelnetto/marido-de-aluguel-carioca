@@ -1,33 +1,32 @@
-import path from 'path';
 import { defineConfig, loadEnv } from 'vite';
+import react from '@vitejs/plugin-react';
+import path from 'path';
 
 export default defineConfig(({ mode }) => {
-    const env = loadEnv(mode, '.', '');
-    return {
-  // Base path is configurable via VITE_BASE so we can build for GitHub Pages
-  // (e.g. '/owner/repo/') or use a relative base for local/backend-serving ('./').
-  base: env.VITE_BASE || '/marido-de-aluguel-carioca/',
-      define: {
-        'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-        'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
+  const env = loadEnv(mode, process.cwd(), '');
+  return {
+    plugins: [react()],
+    base: env.VITE_BASE || '/marido-de-aluguel-carioca/',
+    define: {
+      'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
+      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
+    },
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, '.'),
       },
-      resolve: {
-        alias: {
-          '@': path.resolve(__dirname, '.'),
-        }
-      }
-        ,
-        server: {
-          proxy: {
-            '/api': {
-              target: 'http://localhost:3001',
-              changeOrigin: true,
-              secure: false,
-            }
-          }
+    },
+    server: {
+      proxy: {
+        '/api': {
+          target: 'http://localhost:3001',
+          changeOrigin: true,
+          secure: false,
         },
-        build: {
-          outDir: 'dist'
-        }
-    };
+      },
+    },
+    build: {
+      outDir: 'dist',
+    },
+  };
 });

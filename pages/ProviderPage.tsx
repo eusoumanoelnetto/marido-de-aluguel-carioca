@@ -1049,29 +1049,42 @@ const ProviderPage: React.FC<ProviderPageProps> = ({ currentUser, requests, onLo
     const inputRef = React.useRef<HTMLInputElement>(null);
     const initializedRef = React.useRef<string | null>(null);
     const userIsTypingRef = React.useRef(false);
+    // cache último valor escrito programaticamente para evitar re-writes constantes
+    const lastSetValueRef = React.useRef<string | null>(null);
     
     console.log('ServiceDetailView render - request ID:', request?.id, 'request quote:', request?.quote, 'userIsTyping:', userIsTypingRef.current);
     
     // Initialize input value only once per request ID
-    React.useEffect(() => {
-      if (request && request.id !== initializedRef.current && inputRef.current) {
-        initializedRef.current = request.id;
-        const initialValue = request.quote?.toString() || '';
-        inputRef.current.value = initialValue;
-        console.log('Initializing input value to:', initialValue);
-      }
-    }, [request?.id]);
+        React.useEffect(() => {
+            if (request && request.id !== initializedRef.current && inputRef.current) {
+                initializedRef.current = request.id;
+                const initialValue = request.quote?.toString() || '';
+                // só escrever quando o campo não estiver focado e quando o valor for diferente
+                const isFocused = document.activeElement === inputRef.current;
+                if (!isFocused && lastSetValueRef.current !== initialValue) {
+                    inputRef.current.value = initialValue;
+                    lastSetValueRef.current = initialValue;
+                    console.log('Initializing input value to:', initialValue);
+                } else {
+                    console.log('Skipping init write (focused or same value):', { initialValue, isFocused, lastSet: lastSetValueRef.current });
+                }
+            }
+        }, [request?.id, request?.quote]);
     
     // Update input value from external changes only if user is not typing
-    React.useEffect(() => {
-      if (request && !userIsTypingRef.current && inputRef.current && request.quote !== undefined) {
-        const newValue = request.quote?.toString() || '';
-        if (inputRef.current.value !== newValue) {
-          inputRef.current.value = newValue;
-          console.log('External update - setting input value to:', newValue);
-        }
-      }
-    }, [request?.quote]);
+        React.useEffect(() => {
+            if (request && inputRef.current) {
+                const newValue = request.quote?.toString() || '';
+                const isFocused = document.activeElement === inputRef.current;
+                if (!isFocused && !userIsTypingRef.current && lastSetValueRef.current !== newValue) {
+                    inputRef.current.value = newValue;
+                    lastSetValueRef.current = newValue;
+                    console.log('External update - setting input value to:', newValue);
+                } else {
+                    console.log('External update - skipped (focused/typing/no-change):', { newValue, isFocused, userIsTyping: userIsTypingRef.current, lastSet: lastSetValueRef.current });
+                }
+            }
+        }, [request?.quote]);
     if (!request) {
       return (
         <div className="max-w-7xl mx-auto p-6">
