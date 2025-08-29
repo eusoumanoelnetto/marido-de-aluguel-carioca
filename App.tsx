@@ -158,12 +158,16 @@ const App: React.FC = () => {
           }
         }
 
-        // Para prestadores: notificar quando um pedido que tem providerEmail igual ao seu for Aceito
+        // Para prestadores: notificar quando status relevante muda (Aceito ou Cancelado) para pedido que ele orçou
         if (currentUser.role === 'provider') {
           requests.forEach(r => {
             const prev = lastMap[r.id];
-            if (prev !== 'Aceito' && r.status === 'Aceito' && r.providerEmail === currentUser.email) {
-              window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: `Seu orçamento para ${r.clientName} foi aceito. Entre em contato para combinar.`, type: 'success' } }));
+            if (r.providerEmail === currentUser.email) {
+              if (prev !== 'Aceito' && r.status === 'Aceito') {
+                window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: `Seu orçamento para ${r.clientName} foi aceito. Combine os próximos passos.`, type: 'success' } }));
+              } else if (prev !== 'Cancelado' && r.status === 'Cancelado') {
+                window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: `O cliente cancelou a solicitação (${r.category}).`, type: 'warning' } }));
+              }
             }
           });
         }
