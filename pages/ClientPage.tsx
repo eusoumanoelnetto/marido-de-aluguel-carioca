@@ -83,7 +83,7 @@ const EditProfileView: React.FC<{ user: User; onSave: (user: User) => void; onCa
     );
 };
 
-const DashboardView: React.FC<{ setView: (view: ClientView) => void, handleServiceClick: (category: ServiceCategory) => void }> = ({ setView, handleServiceClick }) => (
+const DashboardView: React.FC<{ setView: (view: ClientView) => void, handleServiceClick: (category: ServiceCategory) => void; unseenQuotes: number; }> = ({ setView, handleServiceClick, unseenQuotes }) => (
     <div>
         <header className="bg-white shadow-sm sticky top-0 z-10">
             <div className="max-w-7xl mx-auto px-2 sm:px-6">
@@ -92,14 +92,17 @@ const DashboardView: React.FC<{ setView: (view: ClientView) => void, handleServi
                         <img src="https://wngalbve.manus.space/assets/logo_marido_aluguel_3-CqPHQ69B.png" alt="Logo Marido de Aluguel" className="h-12 w-auto" style={{objectFit: 'contain'}} />
                     </div>
                     <nav className="flex items-center gap-4 md:gap-6 text-gray-600 font-medium">
-                        <button
-                            onClick={() => setView('quotes-received')}
-                            className="flex items-center gap-1.5 hover:text-brand-red transition-colors"
-                            aria-label="Meus Orçamentos"
-                        >
-                            <i className="fa-solid fa-file-invoice text-base md:text-lg"></i>
-                            <span className="text-xs md:text-sm whitespace-nowrap">Meus Orçamentos</span>
-                        </button>
+                                                <button
+                                                        onClick={() => setView('quotes-received')}
+                                                        className="relative flex items-center gap-1.5 hover:text-brand-red transition-colors"
+                                                        aria-label="Meus Orçamentos"
+                                                >
+                                                        <i className="fa-solid fa-file-invoice text-base md:text-lg"></i>
+                                                        <span className="text-xs md:text-sm whitespace-nowrap">Meus Orçamentos</span>
+                                                        {unseenQuotes > 0 && (
+                                                            <span className="absolute -top-2 -right-3 bg-green-600 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded-full shadow animate-pulse" aria-label={`Você tem ${unseenQuotes} novos orçamentos`}>{unseenQuotes}</span>
+                                                        )}
+                                                </button>
                         <button
                             onClick={() => setView('messages')}
                             className="flex items-center gap-1.5 hover:text-brand-red transition-colors"
@@ -601,6 +604,42 @@ const ClientPage: React.FC<ClientPageProps> = ({ currentUser, addServiceRequest,
   const [view, setView] = useState<ClientView>('dashboard');
   const [selectedCategory, setSelectedCategory] = useState<ServiceCategory>('Montagem de Móveis');
   const [isEmergencyRequest, setIsEmergencyRequest] = useState(false);
+    // ids de orçamentos recebidos ainda não visualizados na aba 'Meus Orçamentos'
+    const [unseenQuoteIds, setUnseenQuoteIds] = useState<Set<string>>(() => {
+        try {
+            const raw = localStorage.getItem('mdac_unseenQuotes');
+            if (raw) {
+                const arr: string[] = JSON.parse(raw);
+                return new Set(arr);
+            }
+        } catch(_) {}
+        return new Set();
+    });
+
+    // listener para novos orçamentos disparado em App.tsx
+    useEffect(() => {
+        const handler = (e: any) => {
+            const id = e?.detail?.id;
+            if (!id) return;
+            setUnseenQuoteIds(prev => {
+                if (prev.has(id)) return prev;
+                const next = new Set(prev);
+                next.add(id);
+                try { localStorage.setItem('mdac_unseenQuotes', JSON.stringify(Array.from(next))); } catch(_) {}
+                return next;
+            });
+        };
+        window.addEventListener('mdac:newQuote', handler as EventListener);
+        return () => window.removeEventListener('mdac:newQuote', handler as EventListener);
+    }, []);
+
+    // quando entra em 'quotes-received', marcar todos como vistos
+    useEffect(() => {
+        if (view === 'quotes-received' && unseenQuoteIds.size) {
+            setUnseenQuoteIds(new Set());
+            try { localStorage.setItem('mdac_unseenQuotes', JSON.stringify([])); } catch(_) {}
+        }
+    }, [view, unseenQuoteIds]);
 
   const handleServiceClick = (category: ServiceCategory) => {
       setSelectedCategory(category);
@@ -614,8 +653,8 @@ const ClientPage: React.FC<ClientPageProps> = ({ currentUser, addServiceRequest,
 
   const renderContent = () => {
     switch (view) {
-      case 'dashboard':
-        return <DashboardView setView={setView} handleServiceClick={handleServiceClick} />;
+            case 'dashboard':
+                return <DashboardView setView={setView} handleServiceClick={handleServiceClick} unseenQuotes={unseenQuoteIds.size} />;
       case 'profile':
         return <ProfileView setView={setView} onLogout={onLogout} user={currentUser} onEdit={() => setView('edit-profile')} updateUser={updateUser} />;
       case 'edit-profile':

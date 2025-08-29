@@ -99,12 +99,21 @@ const App: React.FC = () => {
         const lastMap = lastRequestsMap || {};
         // Para clientes: notificar quando um pedido dele recebe 'Orçamento Enviado'
         if (currentUser.role === 'client') {
+          const newQuotes: string[] = [];
           requests.forEach(r => {
             const prev = lastMap[r.id];
             if (prev !== 'Orçamento Enviado' && r.status === 'Orçamento Enviado' && r.clientEmail === currentUser.email) {
-              window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: `Você recebeu um orçamento de ${r.providerEmail} para ${r.category}.`, type: 'info' } }));
+              // notificação visual principal
+              window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: `Você recebeu um orçamento de ${r.providerEmail || 'um prestador'} para ${r.category}.`, type: 'success' } }));
+              // evento específico para badge
+              window.dispatchEvent(new CustomEvent('mdac:newQuote', { detail: { id: r.id } }));
+              newQuotes.push(r.id);
             }
           });
+          // agrupar em notificação do sistema (web notification) se mais de um chegou de uma vez
+          if (newQuotes.length > 1 && 'Notification' in window && Notification.permission === 'granted') {
+            try { new Notification('Novos orçamentos recebidos', { body: `${newQuotes.length} novos orçamentos chegaram.` }); } catch(_) {}
+          }
         }
 
         // Para prestadores: notificar quando um pedido que tem providerEmail igual ao seu for Aceito
