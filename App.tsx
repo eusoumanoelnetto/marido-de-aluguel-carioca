@@ -8,6 +8,7 @@ import { ServiceRequest, User, SignUpData } from './types';
 import * as api from './services/apiService';
 import { AuthContext } from './src/context/AuthContext';
 import Toast from './components/Toast';
+import AnnouncementBanner from './components/AnnouncementBanner';
 import PWAInstall from './components/PWAInstall';
 import LoadingOverlay from './components/LoadingOverlay';
 import NewRequestAlert from './components/NewRequestAlert';
@@ -104,7 +105,7 @@ const App: React.FC = () => {
             const prev = lastMap[r.id];
             if (prev !== 'Orçamento Enviado' && r.status === 'Orçamento Enviado' && r.clientEmail === currentUser.email) {
               // notificação visual principal
-              window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: `Você recebeu um orçamento de ${r.providerEmail || 'um prestador'} para ${r.category}.`, type: 'success' } }));
+              window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: `Você recebeu um orçamento de ${r.providerEmail || 'um prestador'} para ${r.category}.`, type: 'success', quoteId: r.id } }));
               // evento específico para badge
               window.dispatchEvent(new CustomEvent('mdac:newQuote', { detail: { id: r.id } }));
               newQuotes.push(r.id);
@@ -288,7 +289,8 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-slate-50 text-slate-800">
       <Toast />
       <PWAInstall />
-      <main>
+  <AnnouncementBanner role={currentUser?.role} />
+  <main>
         {renderPage()}
       </main>
       {showNewRequestsAlert && newPending.length > 0 && currentUser?.role === 'provider' && (

@@ -641,6 +641,13 @@ const ClientPage: React.FC<ClientPageProps> = ({ currentUser, addServiceRequest,
         }
     }, [view, unseenQuoteIds]);
 
+        // evento global de navegação disparado pelo Toast (novo orçamento)
+        useEffect(() => {
+            const handler = () => setView('quotes-received');
+            window.addEventListener('mdac:gotoQuotes', handler as EventListener);
+            return () => window.removeEventListener('mdac:gotoQuotes', handler as EventListener);
+        }, []);
+
   const handleServiceClick = (category: ServiceCategory) => {
       setSelectedCategory(category);
       setView('service-category');
