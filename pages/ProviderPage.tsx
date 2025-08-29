@@ -193,7 +193,7 @@ const ProviderPublicProfile: React.FC<{
         }
         .main-container-profile {
             max-width: 800px;
-            margin: 32px auto 0;
+            const inputValue = quote || '';
             padding: 0 24px;
             display: flex;
             flex-direction: column;
@@ -1069,19 +1069,19 @@ const ProviderPage: React.FC<ProviderPageProps> = ({ currentUser, requests, onLo
       );
     }
 
-    const handleAccept = () => {
-      // Get value directly from input to avoid state sync issues
-      const inputValue = inputRef.current?.value || '';
-      const quoteValue = parseFloat(inputValue);
-      console.log('Trying to accept with input value:', inputValue, 'parsed:', quoteValue);
-      if (isNaN(quoteValue) || quoteValue <= 0) {
-    window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: 'Por favor, insira um valor de orçamento válido.', type: 'error' } }));
-        return;
-      }
-    // Prestador envia orçamento: muda para 'Orçamento Enviado'; ainda não é 'Aceito'
-    updateRequestStatus(request.id, 'Orçamento Enviado', quoteValue, currentUser.email);
-      onBack();
-    };
+        const handleAccept = () => {
+            // Use controlled state value
+            const inputValue = quote || '';
+            const quoteValue = parseFloat(inputValue);
+            console.log('Trying to accept with input value:', inputValue, 'parsed:', quoteValue);
+            if (isNaN(quoteValue) || quoteValue <= 0) {
+                window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: 'Por favor, insira um valor de orçamento válido.', type: 'error' } }));
+                return;
+            }
+            // Prestador envia orçamento: muda para 'Orçamento Enviado'; ainda não é 'Aceito'
+            updateRequestStatus(request.id, 'Orçamento Enviado', quoteValue, currentUser.email);
+            onBack();
+        };
 
     const handleDecline = () => {
     updateRequestStatus(request.id, 'Recusado');
@@ -1124,14 +1124,14 @@ const ProviderPage: React.FC<ProviderPageProps> = ({ currentUser, requests, onLo
                         <div className="mt-8 border-t pt-8" style={{ position: 'relative', zIndex: 1 }}>
                             <h2 className="text-lg font-semibold mb-3 text-brand-navy">Enviar Orçamento</h2>
                             <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 w-full min-w-0">
-                                <input 
+                                <input
                                     ref={inputRef}
-                                    type="number" 
-                                    defaultValue={request?.quote?.toString() || ''}
-                                    onInput={(e) => {
+                                    type="number"
+                                    value={quote}
+                                    onChange={(e) => {
                                         const target = e.target as HTMLInputElement;
                                         console.log('Input value changed to:', target.value);
-                                        setQuote(target.value); // Keep state in sync for display purposes
+                                        setQuote(target.value);
                                     }}
                                     onFocus={(e) => {
                                         console.log('Input focused, current value:', (e.target as HTMLInputElement).value);
@@ -1139,7 +1139,7 @@ const ProviderPage: React.FC<ProviderPageProps> = ({ currentUser, requests, onLo
                                     onBlur={(e) => {
                                         console.log('Input blurred, final value:', (e.target as HTMLInputElement).value);
                                     }}
-                                    placeholder="Ex: 150.00" 
+                                    placeholder="Ex: 150.00"
                                     className="p-3 bg-white border-2 border-gray-300 rounded-lg text-base w-full sm:w-48 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-brand-blue"
                                     autoComplete="off"
                                     step="0.01"
