@@ -10,7 +10,7 @@ import { initDb, isDbConnected } from './db';
 // Load environment variables from .env file
 dotenv.config();
 
-const app: Express = express();
+export const app: Express = express();
 const PORT = process.env.PORT || 3001;
 
 // Middlewares
@@ -75,8 +75,8 @@ app.use('/api/users', userRoutes);
 })();
 
 // Function to start the Express server
-const startServer = () => {
-    app.listen(PORT, () => {
+export const startServer = () => {
+  return app.listen(PORT, () => {
         if (isDbConnected) {
             console.log(`🚀 Server is running on http://localhost:${PORT}`);
         } else {
@@ -86,14 +86,13 @@ const startServer = () => {
 }
 
 // Initialize the database and then start the server
-initDb()
+if (process.env.JEST_WORKER_ID === undefined) {
+  initDb()
     .catch(error => {
-        // Log detailed error for the developer
-        console.error('Failed to initialize database:', error.message);
-        // Log a more user-friendly message
-        console.warn('Continuando sem conexão com o banco. Algumas rotas podem falhar até que DATABASE_URL seja corrigida.');
+      console.error('Failed to initialize database:', error.message);
+      console.warn('Continuando sem conexão com o banco. Algumas rotas podem falhar até que DATABASE_URL seja corrigida.');
     })
     .finally(() => {
-        // Start the server regardless of DB connection status
-        startServer();
+      startServer();
     });
+}

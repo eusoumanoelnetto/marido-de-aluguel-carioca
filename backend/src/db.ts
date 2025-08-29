@@ -66,6 +66,12 @@ const inMemoryQuery = async (text: string, params?: any[]) => {
 
   // service requests: select all
   if (/SELECT\s+\*\s+FROM\s+service_requests/i.test(q)) {
+    // select by id (mais específico) antes do select all genérico
+    if (/WHERE\s+id\s*=\s*\$1/i.test(q)) {
+      const id = params && params[0];
+      const found = memServiceRequests.find(r => r.id === id);
+      return makeResult(found ? [ { ...found } ] : []);
+    }
     // order by requestDate desc
     const rows = memServiceRequests.slice().sort((a, b) => {
       const da = new Date(a.requestDate).getTime() || 0;
