@@ -340,7 +340,10 @@ const App: React.FC = () => {
             </div>
           </div>
         )}
-  <AnnouncementBanner role={currentUser?.role} />
+  {/* Banner de anúncios global ocultado para clientes para evitar duplicação com a seção "Atualizações" interna */}
+  {currentUser?.role !== 'client' && (
+    <AnnouncementBanner role={currentUser?.role} />
+  )}
   <main>
         {renderPage()}
       </main>
