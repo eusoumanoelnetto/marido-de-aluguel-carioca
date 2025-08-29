@@ -53,6 +53,8 @@ const App: React.FC = () => {
 
   // Detectar ambiente sem API configurada (ex: site hospedado no GitHub Pages sem VITE_API_BASE)
   useEffect(() => {
+    // só checar em produção para não mostrar alerta em ambiente dev
+    if (!import.meta.env.PROD) return;
     const checkApi = async () => {
       try {
         const base = (import.meta.env.VITE_API_BASE as string) || '/api';
