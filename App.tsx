@@ -328,7 +328,7 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-slate-50 text-slate-800">
       <Toast />
       <PWAInstall />
-        {apiMisconfigured && (
+        {apiMisconfigured && !currentUser && (
           <div className="w-full bg-yellow-50 border-b border-yellow-200 text-yellow-900 p-3 text-sm">
             <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
               <div>
