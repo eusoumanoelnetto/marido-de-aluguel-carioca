@@ -1046,21 +1046,20 @@ const ProviderPage: React.FC<ProviderPageProps> = ({ currentUser, requests, onLo
     onBack: () => void;
     updateRequestStatus: (id: string, status: ServiceRequest['status'], quote?: number, providerEmail?: string) => void;
   }> = ({ request, onBack, updateRequestStatus }) => {
-    const [quote, setQuote] = useState('');
+    const [quote, setQuote] = useState(() => request?.quote?.toString() || '');
     const inputRef = React.useRef<HTMLInputElement>(null);
-    const requestIdRef = React.useRef<string | null>(null);
+    const initializedRef = React.useRef<string | null>(null);
     
-    console.log('ServiceDetailView render - quote:', quote, 'request:', request?.id);
+    console.log('ServiceDetailView render - quote state:', quote, 'request ID:', request?.id, 'request quote:', request?.quote);
     
-    // Initialize quote only when request ID actually changes
-    React.useEffect(() => {
-      if (request && request.id !== requestIdRef.current) {
-        const initialValue = request.quote ? request.quote.toString() : '';
-        setQuote(initialValue);
-        requestIdRef.current = request.id;
-        console.log('Initialized quote with:', initialValue, 'for request:', request.id);
+    // Only initialize once per request ID
+    if (request && request.id !== initializedRef.current) {
+      initializedRef.current = request.id;
+      if (request.quote && quote !== request.quote.toString()) {
+        setQuote(request.quote.toString());
+        console.log('Force setting quote to:', request.quote.toString());
       }
-    }, [request?.id]);
+    }
     if (!request) {
       return (
         <div className="max-w-7xl mx-auto p-6">
@@ -1071,8 +1070,10 @@ const ProviderPage: React.FC<ProviderPageProps> = ({ currentUser, requests, onLo
     }
 
     const handleAccept = () => {
-      const quoteValue = parseFloat(quote);
-      console.log('Trying to accept with quote:', quote, 'parsed:', quoteValue);
+      // Get value directly from input to avoid state sync issues
+      const inputValue = inputRef.current?.value || '';
+      const quoteValue = parseFloat(inputValue);
+      console.log('Trying to accept with input value:', inputValue, 'parsed:', quoteValue);
       if (isNaN(quoteValue) || quoteValue <= 0) {
     window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: 'Por favor, insira um valor de orçamento válido.', type: 'error' } }));
         return;
@@ -1126,17 +1127,17 @@ const ProviderPage: React.FC<ProviderPageProps> = ({ currentUser, requests, onLo
                                 <input 
                                     ref={inputRef}
                                     type="number" 
-                                    value={quote}
-                                    onChange={(e) => {
-                                        const newValue = e.target.value;
-                                        console.log('Input changed from:', quote, 'to:', newValue);
-                                        setQuote(newValue);
+                                    defaultValue={request?.quote?.toString() || ''}
+                                    onInput={(e) => {
+                                        const target = e.target as HTMLInputElement;
+                                        console.log('Input value changed to:', target.value);
+                                        setQuote(target.value); // Keep state in sync for display purposes
                                     }}
                                     onFocus={(e) => {
-                                        console.log('Input focused, current value:', e.target.value);
+                                        console.log('Input focused, current value:', (e.target as HTMLInputElement).value);
                                     }}
                                     onBlur={(e) => {
-                                        console.log('Input blurred, final value:', e.target.value);
+                                        console.log('Input blurred, final value:', (e.target as HTMLInputElement).value);
                                     }}
                                     placeholder="Ex: 150.00" 
                                     className="p-3 bg-white border-2 border-gray-300 rounded-lg text-base w-full sm:w-48 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-brand-blue"
