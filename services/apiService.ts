@@ -92,7 +92,11 @@ const authFetch = async (input: RequestInfo, init: RequestInit = {}) => {
  * @returns The JSON parsed response.
  */
 const handleResponse = async (response: Response) => {
-  console.log('handleResponse: processando resposta, status:', response.status, 'ok:', response.ok);
+  // Log detalhado apenas em desenvolvimento para evitar poluição de console em produção (polling frequente)
+  if (import.meta.env.DEV) {
+    // eslint-disable-next-line no-console
+    console.log('handleResponse: status:', response.status, 'ok:', response.ok);
+  }
   
   let data;
   try {
@@ -103,13 +107,19 @@ const handleResponse = async (response: Response) => {
   }
   
   if (!response.ok) {
-    console.error('handleResponse: resposta não ok, dados:', data);
+    if (import.meta.env.DEV) {
+      // eslint-disable-next-line no-console
+      console.error('handleResponse: erro:', data);
+    }
     // If the server returns an error, use its message.
     const errorMessage = data.message || data.error || `Erro do servidor (${response.status})`;
     throw new Error(errorMessage);
   }
   
-  console.log('handleResponse: sucesso, dados:', data);
+  if (import.meta.env.DEV) {
+    // eslint-disable-next-line no-console
+    console.log('handleResponse: sucesso');
+  }
   return data;
 };
 
@@ -129,20 +139,29 @@ export const login = async (email: string, password?: string): Promise<User | nu
 };
 
 export const signUp = async (data: SignUpData): Promise<User> => {
-  console.log('signUp: tentando cadastrar com API_BASE_URL:', API_BASE_URL);
+  if (import.meta.env.DEV) {
+    // eslint-disable-next-line no-console
+    console.log('signUp: usando API_BASE_URL:', API_BASE_URL);
+  }
   try {
     const response = await fetch(`${API_BASE_URL}/auth/signup`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
-    console.log('signUp: resposta recebida, status:', response.status);
+    if (import.meta.env.DEV) {
+      // eslint-disable-next-line no-console
+      console.log('signUp: status:', response.status);
+    }
     const resData = await handleResponse(response);
     // backend returns { user, token }
     if (resData?.token) setToken(resData.token);
     return resData.user ?? resData;
   } catch (error) {
-    console.error('signUp: erro capturado:', error);
+    if (import.meta.env.DEV) {
+      // eslint-disable-next-line no-console
+      console.error('signUp: erro:', error);
+    }
     throw error;
   }
 };

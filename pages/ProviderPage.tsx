@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import ServiceDetailView from '../components/ServiceDetailView';
 import { ServiceRequest, User } from '../types';
 
 interface ProviderPageProps {
@@ -88,6 +89,33 @@ const profilePageStyles = `
     #edit-profile-page .form-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 32px; border-top: 1px solid var(--border-color); padding-top: 24px; }
 `;
 
+// Componente simples reutilizado em algumas páginas para cabeçalho com botão de voltar
+const PageHeader: React.FC<{ onBack: () => void; title: string }> = ({ onBack, title }) => (
+    <div className="flex items-center mb-6">
+        <button onClick={onBack} className="font-semibold text-brand-navy hover:text-black flex items-center">
+            <i className="fa-solid fa-arrow-left mr-2"></i> {title}
+        </button>
+    </div>
+);
+
+// Mapeia status para texto + classes de estilo (Tailwind)
+const getStatusDetails = (status: ServiceRequest['status']): { text: string; className: string } => {
+    switch (status) {
+        case 'Pendente':
+            return { text: 'Pendente', className: 'bg-yellow-100 text-yellow-800' };
+        case 'Orçamento Enviado':
+            return { text: 'Orçamento Enviado', className: 'bg-blue-100 text-blue-800' };
+        case 'Aceito':
+            return { text: 'Aceito', className: 'bg-green-100 text-green-800' };
+        case 'Finalizado':
+            return { text: 'Finalizado', className: 'bg-gray-200 text-gray-700' };
+        case 'Recusado':
+            return { text: 'Recusado', className: 'bg-red-100 text-red-700' };
+        default:
+            return { text: status, className: 'bg-gray-100 text-gray-700' };
+    }
+};
+
 const ProviderHeader: React.FC<{
   setView: (view: ProviderView) => void;
 }> = ({ setView }) => {
@@ -129,6 +157,20 @@ const ProviderHeader: React.FC<{
     </header>
   );
 };
+
+// Card de estatísticas usado no dashboard do prestador
+const StatCard: React.FC<{ icon: string; title: string; color?: string; onClick?: () => void; children?: React.ReactNode; }> = ({ icon, title, color = 'text-brand-navy', onClick, children }) => (
+    <div
+        onClick={onClick}
+        className={`bg-white border border-gray-200 rounded-xl p-5 cursor-pointer transition-shadow hover:shadow-lg flex flex-col justify-between min-h-[120px]`}
+    >
+        <div className="flex items-center justify-between mb-3">
+            <i className={`${icon} text-2xl ${color}`}></i>
+            <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">{title}</span>
+        </div>
+        <div>{children}</div>
+    </div>
+);
 
 
 const ProviderPublicProfile: React.FC<{
@@ -308,119 +350,62 @@ const ProviderPublicProfile: React.FC<{
                     </div>
                 </section>
 
-                <section className="card details-section">
-                    <div>
-                        <h2 className="section-title">Sobre Mim</h2>
-                        <p>Profissional com mais de 8 anos de experiência em montagem de móveis, pequenos reparos e manutenção residencial. Prezo pela pontualidade, organização e um serviço de alta qualidade para garantir a sua total satisfação.</p>
-                    </div>
-                    <div>
-                        <h2 className="section-title">Serviços Oferecidos</h2>
-                        <ul>
-                            {currentUser.services && currentUser.services.length > 0 ? (
-                                currentUser.services.map(service => (
-                                    <li key={service}><i className="fas fa-check"></i> {service}</li>
-                                ))
-                            ) : (
-                                <li className="!items-center">Nenhum serviço especificado.</li>
-                            )}
-                        </ul>
-                    </div>
-                </section>
+                                <section className="card details-section">
+                                        <div>
+                                                <h2 className="section-title">Sobre o Profissional</h2>
+                                                <p>Profissional dedicado a serviços de reparos e manutenção residencial. Experiência em diversas categorias e foco em atendimento de qualidade.</p>
+                                                <ul>
+                                                        <li><i className="fa-solid fa-check"></i> Compromisso com pontualidade</li>
+                                                        <li><i className="fa-solid fa-check"></i> Transparência no orçamento</li>
+                                                        <li><i className="fa-solid fa-check"></i> Atendimento humanizado</li>
+                                                </ul>
+                                        </div>
+                                        <div>
+                                                <h2 className="section-title">Serviços Principais</h2>
+                                                <div className="flex flex-wrap gap-2">
+                                                        {currentUser.services?.length ? currentUser.services.map(s => (
+                                                                <span key={s} className="px-3 py-1 rounded-full bg-gray-100 text-gray-600 text-xs font-medium">{s}</span>
+                                                        )) : <span className="text-gray-500 text-sm">Nenhum serviço cadastrado.</span>}
+                                                </div>
+                                        </div>
+                                </section>
 
-                <section className="card reviews-section">
-                    <div className="reviews-header">
-                        <h2 className="section-title">Avaliações e Feedback ({mockReviews.length})</h2>
-                        <div className="review-filters">
-                            <button 
-                                className={`filter-btn ${reviewFilter === 'recent' ? 'active' : ''}`}
-                                onClick={() => setReviewFilter('recent')}
-                            >
-                                Mais Recentes
-                            </button>
-                            <button 
-                                className={`filter-btn ${reviewFilter === 'rating' ? 'active' : ''}`}
-                                onClick={() => setReviewFilter('rating')}
-                            >
-                                Maior Nota
-                            </button>
-                        </div>
-                    </div>
-                    <div className="reviews-list">
-                        {displayedReviews.map(review => (
-                             <article key={review.id} className="review-card">
-                                <div className="review-header">
-                                    <div className="review-avatar" style={{backgroundColor: review.color}}>{review.initials}</div>
-                                    <div className="review-name">{review.name}</div>
-                                    <span className="review-date">{review.timeAgo}</span>
-                                </div>
-                                {renderStars(review.rating)}
-                                <div className="review-body">
-                                    <p>"{review.text}"</p>
-                                    <span className="review-service-tag">Serviço: {review.service}</span>
-                                </div>
-                            </article>
-                        ))}
-                    </div>
-                    {visibleReviewsCount < sortedReviews.length && (
-                        <div className="load-more-wrapper">
-                             <button
-                                className="load-more-btn"
-                                onClick={() => setVisibleReviewsCount(prev => prev + 3)}
-                             >
-                                Carregar mais avaliações
-                            </button>
-                        </div>
-                    )}
-                </section>
-            </main>
-        </div>
-    );
+                                <section className="card reviews-section">
+                                        <div className="reviews-header">
+                                                <h2 className="section-title">Avaliações Recentes</h2>
+                                                <div className="review-filters">
+                                                        <button onClick={() => setReviewFilter('recent')} className={reviewFilter === 'recent' ? 'active' : ''}>Mais Recentes</button>
+                                                        <button onClick={() => setReviewFilter('rating')} className={reviewFilter === 'rating' ? 'active' : ''}>Melhores</button>
+                                                </div>
+                                        </div>
+                                        {displayedReviews.map(r => (
+                                                <div key={r.id} className="review-card">
+                                                        <div className="review-header">
+                                                                <div className="review-avatar" style={{ backgroundColor: r.color }}>{r.initials}</div>
+                                                                <div>
+                                                                        <div className="review-name">{r.name}</div>
+                                                                        {renderStars(r.rating)}
+                                                                </div>
+                                                                <div className="review-date">{r.timeAgo}</div>
+                                                        </div>
+                                                        <div className="review-body">
+                                                                <p>{r.text}</p>
+                                                                <span className="review-service-tag">{r.service}</span>
+                                                        </div>
+                                                </div>
+                                        ))}
+                                        {visibleReviewsCount < sortedReviews.length && (
+                                                <div className="load-more-wrapper">
+                                                        <button className="load-more-btn" onClick={() => setVisibleReviewsCount(c => c + 3)}>Carregar mais</button>
+                                                </div>
+                                        )}
+                                </section>
+                        </main>
+                </div>
+        );
 };
 
-
-const getStatusDetails = (status: ServiceRequest['status']) => {
-    switch (status) {
-        case 'Orçamento Enviado':
-            return { text: 'Aguardando Cliente', className: 'bg-[#e0f2fe] text-[#075985]' };
-        case 'Aceito':
-            return { text: 'Confirmado', className: 'bg-[#dcfce7] text-[#166534]' };
-        case 'Pendente':
-            return { text: 'Pendente', className: 'bg-[#fef9c3] text-[#854d0e]' };
-        case 'Finalizado':
-            return { text: 'Concluído', className: 'bg-[#f3f4f6] text-[#4b5563]' };
-        case 'Recusado':
-            return { text: 'Recusado', className: 'bg-red-100 text-red-700' };
-        default:
-            return { text: status, className: 'bg-gray-100 text-gray-800' };
-    }
-};
-
-const PageHeader: React.FC<{ onBack: () => void, title?: string, children?: React.ReactNode }> = ({ onBack, title, children }) => (
-    <header className="flex items-center p-4 border-b border-gray-200 mb-8 max-w-7xl mx-auto w-full">
-        <button onClick={onBack} className="font-semibold text-brand-navy hover:text-black">
-            <i className="fa-solid fa-arrow-left mr-2"></i> {title ? title : 'Voltar'}
-        </button>
-        <div className="flex-grow text-center">
-            {children}
-        </div>
-        <div className="w-24"></div>
-    </header>
-);
-
-const StatCard: React.FC<{ icon: string; title: string; color: string; onClick?: () => void; children: React.ReactNode }> = ({ icon, title, color, onClick, children }) => (
-    <div 
-        className={`bg-white border border-gray-200 rounded-xl p-6 md:p-8 flex gap-5 items-center transition-transform transform hover:-translate-y-1 hover:shadow-xl ${onClick ? 'cursor-pointer' : ''}`}
-        onClick={onClick}
-    >
-        <i className={`${icon} ${color} text-3xl md:text-4xl`}></i>
-        <div>
-            <div className="text-base text-gray-500">{title}</div>
-            {children}
-        </div>
-    </div>
-);
-
-
+// ---- Componentes auxiliares (fora de qualquer retorno JSX para evitar erros de parse) ----
 const AppointmentCard: React.FC<{ request: ServiceRequest; time?: string; onViewDetails: () => void; }> = ({ request, time, onViewDetails }) => {
     const status = getStatusDetails(request.status);
     return (
@@ -432,11 +417,9 @@ const AppointmentCard: React.FC<{ request: ServiceRequest; time?: string; onView
                     <p className="text-sm text-gray-500 truncate">Cliente: {request.clientName} - {request.address}</p>
                 </div>
             </div>
-            <div className="flex items-center sm:items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
-              <span className={`px-3 py-1 text-xs font-medium rounded-full ${status.className}`}>{status.text}</span>
-              <button onClick={onViewDetails} className="bg-gray-100 text-gray-800 border border-gray-200 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-200 transition-colors">
-                  Ver Detalhes
-              </button>
+            <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+                <span className={`px-3 py-1 text-xs font-medium rounded-full ${status.className}`}>{status.text}</span>
+                <button onClick={onViewDetails} className="bg-gray-100 text-gray-800 border border-gray-200 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-200 transition-colors">Ver Detalhes</button>
             </div>
         </div>
     );
@@ -450,173 +433,83 @@ const ActionCard: React.FC<{ icon: string; title: string; description: string; o
     </div>
 );
 
-const AgendaView: React.FC<{
-    requests: ServiceRequest[];
-    onBack: () => void;
-    onViewDetails: (request: ServiceRequest) => void;
-}> = ({ requests, onBack, onViewDetails }) => {
-    // Defaulting to the current date for consistency
+const AgendaView: React.FC<{ requests: ServiceRequest[]; onBack: () => void; onViewDetails: (request: ServiceRequest) => void; }> = ({ requests, onBack, onViewDetails }) => {
     const [currentDate, setCurrentDate] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState(new Date());
-
     const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
     const dayNames = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
-    const handlePrevMonth = () => {
-        setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
-    };
+    const handlePrevMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
+    const handleNextMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
+    const handleDayClick = (day: number) => setSelectedDate(new Date(currentDate.getFullYear(), currentDate.getMonth(), day));
 
-    const handleNextMonth = () => {
-        setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
-    };
-
-    const handleDayClick = (day: number) => {
-        setSelectedDate(new Date(currentDate.getFullYear(), currentDate.getMonth(), day));
-    };
-    
     const calendarDays = useMemo(() => {
         const year = currentDate.getFullYear();
         const month = currentDate.getMonth();
-        
         const firstDayOfMonth = new Date(year, month, 1).getDay();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
         const daysInPrevMonth = new Date(year, month, 0).getDate();
-
-        const days = [];
-
-        for (let i = firstDayOfMonth; i > 0; i--) {
-            days.push({ day: daysInPrevMonth - i + 1, isOtherMonth: true });
-        }
-        for (let i = 1; i <= daysInMonth; i++) {
-            days.push({ day: i, isOtherMonth: false });
-        }
+        const days: { day: number; isOtherMonth: boolean }[] = [];
+        for (let i = firstDayOfMonth; i > 0; i--) days.push({ day: daysInPrevMonth - i + 1, isOtherMonth: true });
+        for (let i = 1; i <= daysInMonth; i++) days.push({ day: i, isOtherMonth: false });
         const remainingCells = 42 - days.length;
-        for (let i = 1; i <= remainingCells; i++) {
-            days.push({ day: i, isOtherMonth: true });
-        }
-        
+        for (let i = 1; i <= remainingCells; i++) days.push({ day: i, isOtherMonth: true });
         return days;
     }, [currentDate]);
 
-    const appointmentsForSelectedDay = useMemo(() => {
-        return requests
-            .filter(req => {
-                const reqDate = new Date(req.requestDate);
-                return reqDate.getFullYear() === selectedDate.getFullYear() &&
-                       reqDate.getMonth() === selectedDate.getMonth() &&
-                       reqDate.getDate() === selectedDate.getDate();
-            })
-            .sort((a, b) => new Date(a.requestDate).getTime() - new Date(b.requestDate).getTime());
-    }, [requests, selectedDate]);
+    const appointmentsForSelectedDay = useMemo(() => requests
+        .filter(req => {
+            const reqDate = new Date(req.requestDate);
+            return reqDate.getFullYear() === selectedDate.getFullYear() && reqDate.getMonth() === selectedDate.getMonth() && reqDate.getDate() === selectedDate.getDate();
+        })
+        .sort((a, b) => new Date(a.requestDate).getTime() - new Date(b.requestDate).getTime()), [requests, selectedDate]);
 
-    const formatSelectedDate = (date: Date) => {
-        return `${date.getDate()} de ${monthNames[date.getMonth()]}`;
-    };
-
-    const getAppointmentTime = (isoDate: string) => {
-        const date = new Date(isoDate);
-        return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-    };
-
+    const formatSelectedDate = (date: Date) => `${date.getDate()} de ${monthNames[date.getMonth()]}`;
+    const getAppointmentTime = (isoDate: string) => new Date(isoDate).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
     const getStatusForAgenda = (status: ServiceRequest['status']) => {
         switch (status) {
             case 'Aceito': return { text: 'Confirmado', className: 'status--confirmed' };
             case 'Pendente': return { text: 'Pendente', className: 'status--pending' };
             case 'Finalizado': return { text: 'Concluído', className: 'status--completed' };
             case 'Recusado': return { text: 'Recusado', className: 'status--refused' };
+            case 'Orçamento Enviado': return { text: 'Orçado', className: 'status--pending' };
             default: return { text: status, className: 'status--completed' };
         }
     };
 
-    const agendaCSS = `
-        :root {
-            --blue-primary: #3c84c1;
-            --text-dark: #0b3051; 
-            --text-body: #374151; 
-            --text-light: #6b7280;
-            --border-color: #e5e7eb;
-            --bg-page: #f9fafb; 
-            --bg-card: #ffffff;
-            --status-confirmed-bg: #dcfce7;
-            --status-confirmed-text: #166534;
-            --status-pending-bg: #fef9c3;
-            --status-pending-text: #854d0e;
-            --status-completed-bg: #f3f4f6;
-            --status-completed-text: #4b5563;
-        }
-        .agenda-main-container { max-width: 900px; margin: 0 auto; padding: 2rem 1rem; }
-        .agenda-header { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
-        .main-title { font-size: 1.5rem; font-weight: 600; color: var(--text-dark); margin:0;}
-        .agenda-container { display: grid; grid-template-columns: 280px 1fr; gap: 24px; align-items: flex-start; }
-        .card { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.04); padding: 20px; }
-        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-        .calendar-header .month { font-weight: 600; color: var(--text-dark); font-size: 0.95rem; }
-        .calendar-header .nav-arrows { color: var(--text-light); }
-        .calendar-header .nav-arrows i { cursor: pointer; padding: 4px; }
-        .weekdays { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; color: var(--text-light); font-size: 0.75rem; font-weight: 500; margin-bottom: 8px; }
-        .days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-        .day { display: grid; place-items: center; aspect-ratio: 1 / 1; border-radius: 50%; cursor: pointer; font-size: 0.85rem; font-weight: 500; color: var(--text-body); transition: background-color 0.2s ease; }
-        .day:not(.other-month):hover { background-color: #f3f4f6; }
-        .day.other-month { color: #d1d5db; cursor: default; }
-        .day.selected { background-color: var(--blue-primary); color: #fff; font-weight: 600; }
-        .schedule-card h2 { font-size: 1rem; font-weight: 600; margin-bottom: 24px; color: var(--text-dark); }
-        .appointments-list { display: flex; flex-direction: column; gap: 24px; }
-        .appointment { border-bottom: 1px solid var(--border-color); padding-bottom: 24px; cursor: pointer; transition: background-color .2s; }
-        .appointment:hover { background-color: #fafafa; }
-        .appointment:last-child { border-bottom: none; padding-bottom: 0; }
-        .appointment .time { font-size: 0.8rem; font-weight: 500; color: var(--text-light); margin-bottom: 4px; }
-        .appointment .title { font-size: 1rem; font-weight: 600; color: var(--text-dark); margin-bottom: 6px; }
-        .appointment .details { font-size: 0.85rem; color: var(--text-light); margin-bottom: 12px; }
-        .status-tag { display: inline-block; padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: 500; }
-        .status--confirmed { background-color: var(--status-confirmed-bg); color: var(--status-confirmed-text); }
-        .status--pending { background-color: var(--status-pending-bg); color: var(--status-pending-text); }
-        .status--completed { background-color: var(--status-completed-bg); color: var(--status-completed-text); }
-        .status--refused { background-color: #fee2e2; color: #b91c1c; }
-        .no-appointments { color: var(--text-light); text-align: center; padding: 40px 0; }
-         @media (max-width: 768px) {
-            .agenda-container { grid-template-columns: 1fr; }
-        }
-    `;
+    const agendaCSS = `:root { --blue-primary:#3c84c1; --text-dark:#0b3051; --text-body:#374151; --text-light:#6b7280; --border-color:#e5e7eb; --bg-page:#f9fafb; --bg-card:#ffffff; --status-confirmed-bg:#dcfce7; --status-confirmed-text:#166534; --status-pending-bg:#fef9c3; --status-pending-text:#854d0e; --status-completed-bg:#f3f4f6; --status-completed-text:#4b5563;} .agenda-main-container{max-width:900px;margin:0 auto;padding:2rem 1rem;} .agenda-header{display:flex;align-items:center;gap:16px;margin-bottom:24px;} .main-title{font-size:1.5rem;font-weight:600;color:var(--text-dark);margin:0;} .agenda-container{display:grid;grid-template-columns:280px 1fr;gap:24px;align-items:flex-start;} .card{background-color:var(--bg-card);border:1px solid var(--border-color);border-radius:12px;box-shadow:0 1px 2px rgba(0,0,0,0.04);padding:20px;} .calendar-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;} .calendar-header .month{font-weight:600;color:var(--text-dark);font-size:.95rem;} .calendar-header .nav-arrows{color:var(--text-light);} .calendar-header .nav-arrows i{cursor:pointer;padding:4px;} .weekdays{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;color:var(--text-light);font-size:.75rem;font-weight:500;margin-bottom:8px;} .days{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;} .day{display:grid;place-items:center;aspect-ratio:1/1;border-radius:50%;cursor:pointer;font-size:.85rem;font-weight:500;color:var(--text-body);transition:background-color .2s ease;} .day:not(.other-month):hover{background-color:#f3f4f6;} .day.other-month{color:#d1d5db;cursor:default;} .day.selected{background-color:var(--blue-primary);color:#fff;font-weight:600;} .schedule-card h2{font-size:1rem;font-weight:600;margin-bottom:24px;color:var(--text-dark);} .appointments-list{display:flex;flex-direction:column;gap:24px;} .appointment{border-bottom:1px solid var(--border-color);padding-bottom:24px;cursor:pointer;transition:background-color .2s;} .appointment:hover{background-color:#fafafa;} .appointment:last-child{border-bottom:none;padding-bottom:0;} .appointment .time{font-size:.8rem;font-weight:500;color:var(--text-light);margin-bottom:4px;} .appointment .title{font-size:1rem;font-weight:600;color:var(--text-dark);margin-bottom:6px;} .appointment .details{font-size:.85rem;color:var(--text-light);margin-bottom:12px;} .status-tag{display:inline-block;padding:6px 12px;border-radius:8px;font-size:.8rem;font-weight:500;} .status--confirmed{background-color:var(--status-confirmed-bg);color:var(--status-confirmed-text);} .status--pending{background-color:var(--status-pending-bg);color:var(--status-pending-text);} .status--completed{background-color:var(--status-completed-bg);color:var(--status-completed-text);} .status--refused{background-color:#fee2e2;color:#b91c1c;} .no-appointments{color:var(--text-light);text-align:center;padding:40px 0;} @media (max-width:768px){.agenda-container{grid-template-columns:1fr;}}`;
 
     return (
         <>
-        <style>{agendaCSS}</style>
-        <main className="agenda-main-container">
-            <div className="agenda-header">
-                <button onClick={onBack} className="font-semibold text-brand-navy hover:text-black">
-                    <i className="fa-solid fa-arrow-left mr-2"></i> Voltar
-                </button>
-                <h1 className="main-title flex-grow text-center">Minha Agenda</h1>
-                <div className="w-24"></div>
-            </div>
-            
-            <div className="agenda-container">
-                <div className="card calendar-card">
-                    <div className="calendar-header">
-                        <span className="month">{monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}</span>
-                        <div className="nav-arrows">
-                            <i className="fas fa-chevron-left" onClick={handlePrevMonth}></i>
-                            <i className="fas fa-chevron-right" style={{ marginLeft: '8px' }} onClick={handleNextMonth}></i>
+            <style>{agendaCSS}</style>
+            <main className="agenda-main-container">
+                <div className="agenda-header">
+                    <button onClick={onBack} className="font-semibold text-brand-navy hover:text-black"><i className="fa-solid fa-arrow-left mr-2"></i> Voltar</button>
+                    <h1 className="main-title flex-grow text-center">Minha Agenda</h1>
+                    <div className="w-24"></div>
+                </div>
+                <div className="agenda-container">
+                    <div className="card calendar-card">
+                        <div className="calendar-header">
+                            <span className="month">{monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}</span>
+                            <div className="nav-arrows">
+                                <i className="fas fa-chevron-left" onClick={handlePrevMonth}></i>
+                                <i className="fas fa-chevron-right ml-2" onClick={handleNextMonth}></i>
+                            </div>
+                        </div>
+                        <div className="weekdays">{dayNames.map(day => <span key={day}>{day}</span>)}</div>
+                        <div className="days">
+                            {calendarDays.map((d, i) => {
+                                const isSelected = !d.isOtherMonth && d.day === selectedDate.getDate() && currentDate.getMonth() === selectedDate.getMonth() && currentDate.getFullYear() === selectedDate.getFullYear();
+                                const className = `day ${d.isOtherMonth ? 'other-month' : ''} ${isSelected ? 'selected' : ''}`;
+                                return <div key={i} className={className} onClick={() => !d.isOtherMonth && handleDayClick(d.day)}>{d.day}</div>;
+                            })}
                         </div>
                     </div>
-                    <div className="weekdays">
-                        {dayNames.map(day => <span key={day}>{day}</span>)}
-                    </div>
-                    <div className="days">
-                        {calendarDays.map((d, index) => {
-                            const isSelected = !d.isOtherMonth && d.day === selectedDate.getDate() && currentDate.getMonth() === selectedDate.getMonth() && currentDate.getFullYear() === selectedDate.getFullYear();
-                            const className = `day ${d.isOtherMonth ? 'other-month' : ''} ${isSelected ? 'selected' : ''}`;
-                            return <div key={index} className={className} onClick={() => !d.isOtherMonth && handleDayClick(d.day)}>{d.day}</div>;
-                        })}
-                    </div>
-                </div>
-
-                <div className="card schedule-card">
-                    <h2>Compromissos para: {formatSelectedDate(selectedDate)}</h2>
-
-                    <div className="appointments-list">
-                        {appointmentsForSelectedDay.length > 0 ? (
-                            appointmentsForSelectedDay.map((req) => {
+                    <div className="card schedule-card">
+                        <h2>Compromissos para: {formatSelectedDate(selectedDate)}</h2>
+                        <div className="appointments-list">
+                            {appointmentsForSelectedDay.length > 0 ? appointmentsForSelectedDay.map(req => {
                                 const status = getStatusForAgenda(req.status);
                                 return (
                                     <article key={req.id} className="appointment" onClick={() => onViewDetails(req)}>
@@ -626,14 +519,11 @@ const AgendaView: React.FC<{
                                         <span className={`status-tag ${status.className}`}>{status.text}</span>
                                     </article>
                                 );
-                            })
-                        ) : (
-                            <p className="no-appointments">Nenhum compromisso para esta data.</p>
-                        )}
+                            }) : <p className="no-appointments">Nenhum compromisso para esta data.</p>}
+                        </div>
                     </div>
                 </div>
-            </div>
-        </main>
+            </main>
         </>
     );
 };
@@ -1040,147 +930,7 @@ const ProviderPage: React.FC<ProviderPageProps> = ({ currentUser, requests, onLo
   const [view, setView] = useState<ProviderView>('dashboard');
   const [previousView, setPreviousView] = useState<ProviderView>('dashboard');
   const [selectedRequest, setSelectedRequest] = useState<ServiceRequest | null>(null);
-
-  const ServiceDetailView: React.FC<{
-    request: ServiceRequest | null;
-    onBack: () => void;
-    updateRequestStatus: (id: string, status: ServiceRequest['status'], quote?: number, providerEmail?: string) => void;
-  }> = ({ request, onBack, updateRequestStatus }) => {
-    const inputRef = React.useRef<HTMLInputElement>(null);
-    const initializedRef = React.useRef<string | null>(null);
-    const userIsTypingRef = React.useRef(false);
-    // cache último valor escrito programaticamente para evitar re-writes constantes
-    const lastSetValueRef = React.useRef<string | null>(null);
-    
-    console.log('ServiceDetailView render - request ID:', request?.id, 'request quote:', request?.quote, 'userIsTyping:', userIsTypingRef.current);
-    
-    // Initialize input value only once per request ID
-        React.useEffect(() => {
-            if (request && request.id !== initializedRef.current && inputRef.current) {
-                initializedRef.current = request.id;
-                const initialValue = request.quote?.toString() || '';
-                // só escrever quando o campo não estiver focado e quando o valor for diferente
-                const isFocused = document.activeElement === inputRef.current;
-                if (!isFocused && lastSetValueRef.current !== initialValue) {
-                    inputRef.current.value = initialValue;
-                    lastSetValueRef.current = initialValue;
-                    console.log('Initializing input value to:', initialValue);
-                } else {
-                    console.log('Skipping init write (focused or same value):', { initialValue, isFocused, lastSet: lastSetValueRef.current });
-                }
-            }
-        }, [request?.id, request?.quote]);
-    
-    // Update input value from external changes only if user is not typing
-        React.useEffect(() => {
-            if (request && inputRef.current) {
-                const newValue = request.quote?.toString() || '';
-                const isFocused = document.activeElement === inputRef.current;
-                if (!isFocused && !userIsTypingRef.current && lastSetValueRef.current !== newValue) {
-                    inputRef.current.value = newValue;
-                    lastSetValueRef.current = newValue;
-                    console.log('External update - setting input value to:', newValue);
-                } else {
-                    console.log('External update - skipped (focused/typing/no-change):', { newValue, isFocused, userIsTyping: userIsTypingRef.current, lastSet: lastSetValueRef.current });
-                }
-            }
-        }, [request?.quote]);
-    if (!request) {
-      return (
-        <div className="max-w-7xl mx-auto p-6">
-          <PageHeader onBack={onBack} title="Voltar" />
-          <div className="text-center py-20">Nenhum serviço selecionado.</div>
-        </div>
-      );
-    }
-
-        const handleAccept = () => {
-            // Get value directly from input
-            const inputValue = inputRef.current?.value || '';
-            const quoteValue = parseFloat(inputValue);
-            console.log('Trying to accept with input value:', inputValue, 'parsed:', quoteValue);
-            if (isNaN(quoteValue) || quoteValue <= 0) {
-                window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: 'Por favor, insira um valor de orçamento válido.', type: 'error' } }));
-                return;
-            }
-            // Prestador envia orçamento: muda para 'Orçamento Enviado'; ainda não é 'Aceito'
-            userIsTypingRef.current = false;
-            try { window.dispatchEvent(new CustomEvent('mdac:resumePolling')); } catch (err) {}
-            updateRequestStatus(request.id, 'Orçamento Enviado', quoteValue, currentUser.email);
-            onBack();
-        };
-
-    const handleDecline = () => {
-      userIsTypingRef.current = false;
-      try { window.dispatchEvent(new CustomEvent('mdac:resumePolling')); } catch (err) {}
-      updateRequestStatus(request.id, 'Recusado');
-      onBack();
-    };    const status = getStatusDetails(request.status);
-
-    return (
-      <div className="max-w-7xl mx-auto p-6">
-        <PageHeader onBack={onBack} title="Voltar" />
-        <div className="bg-white rounded-xl border border-gray-200 p-8 shadow-sm relative">
-          <div className="flex justify-between items-start">
-            <div>
-              <h1 className="text-2xl font-bold mb-1 text-brand-navy">{request.category}</h1>
-              <p className="text-gray-500">Solicitado por: {request.clientName}</p>
-            </div>
-            <span className={`px-4 py-1.5 text-sm font-medium rounded-full ${status.className}`}>{status.text}</span>
-          </div>
-
-          <div className="mt-6 border-t pt-6 grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div>
-              <h2 className="text-lg font-semibold mb-3 text-brand-navy">Detalhes da Solicitação</h2>
-              <p className="text-gray-600 mb-4">{request.description}</p>
-              {request.photoBase64 && (
-                <img src={`data:image/jpeg;base64,${request.photoBase64}`} alt="Foto do serviço" className="rounded-lg max-w-xs" />
-              )}
-            </div>
-            <div>
-              <h2 className="text-lg font-semibold mb-3 text-brand-navy">Informações do Cliente</h2>
-              <div className="space-y-2 text-gray-700">
-                <p><i className="fas fa-user mr-2 w-4 text-center"></i>{request.clientName}</p>
-                <p><i className="fas fa-map-marker-alt mr-2 w-4 text-center"></i>{request.address}</p>
-                <p><i className="fas fa-phone mr-2 w-4 text-center"></i>{request.contact}</p>
-              </div>
-            </div>
-          </div>
-
-                    {request.status === 'Pendente' && (
-                        <div className="mt-8 border-t pt-8" style={{ position: 'relative', zIndex: 1 }}>
-                            <h2 className="text-lg font-semibold mb-3 text-brand-navy">Enviar Orçamento</h2>
-                            <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 w-full min-w-0">
-                                <input
-                                    ref={inputRef}
-                                    type="number"
-                                    onFocus={(e) => {
-                                        console.log('Input focused, current value:', (e.target as HTMLInputElement).value);
-                                        userIsTypingRef.current = true;
-                                        try { window.dispatchEvent(new CustomEvent('mdac:pausePolling')); } catch (err) {}
-                                    }}
-                                    onBlur={(e) => {
-                                        console.log('Input blurred, final value:', (e.target as HTMLInputElement).value);
-                                        userIsTypingRef.current = false;
-                                        try { window.dispatchEvent(new CustomEvent('mdac:resumePolling')); } catch (err) {}
-                                    }}
-                                    placeholder="Ex: 150.00"
-                                    className="p-3 bg-white border-2 border-gray-300 rounded-lg text-base w-full sm:w-48 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-brand-blue"
-                                    autoComplete="off"
-                                    step="0.01"
-                                    min="0"
-                                />
-                                <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto min-w-0">
-                                    <button onClick={handleAccept} className="px-5 py-3 rounded-lg font-semibold bg-green-600 text-white hover:bg-green-700 w-full sm:w-auto text-center whitespace-normal break-words">Enviar Orçamento</button>
-                                    <button onClick={handleDecline} className="px-5 py-3 rounded-lg font-semibold bg-brand-red text-white hover:opacity-90 w-full sm:w-auto">Recusar</button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-        </div>
-      </div>
-    );
-  };
+    // (ServiceDetailView agora é importado de components/ServiceDetailView.tsx)
   
 
   const handleViewDetails = (request: ServiceRequest) => {
@@ -1242,12 +992,8 @@ const ProviderPage: React.FC<ProviderPageProps> = ({ currentUser, requests, onLo
                   onCancel={() => setView('profile')}
                   setView={setView}
               />;
-      case 'service-detail':
-        return <ServiceDetailView 
-                  request={selectedRequest} 
-                  onBack={() => setView(previousView)} 
-                  updateRequestStatus={updateRequestStatus}
-                />;
+            case 'service-detail':
+                return <ServiceDetailView request={selectedRequest} onBack={() => setView(previousView)} updateRequestStatus={updateRequestStatus} currentUser={currentUser} getStatusDetails={getStatusDetails} />;
       case 'public-profile':
         return <ProviderPublicProfile currentUser={currentUser} onBack={() => setView('dashboard')} requests={requests} />;
       case 'clients':
