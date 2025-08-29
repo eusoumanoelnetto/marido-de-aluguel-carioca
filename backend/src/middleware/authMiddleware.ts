@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 
 interface JwtPayload {
   email: string;
+  role?: string;
 }
 
 export const authenticate = (req: Request, res: Response, next: NextFunction) => {
@@ -16,7 +17,8 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
     const secret = process.env.JWT_SECRET || 'dev_secret';
     const payload = jwt.verify(token, secret) as JwtPayload;
     // anexar email ao request para uso nas rotas
-    (req as any).userEmail = payload.email;
+  (req as any).userEmail = payload.email;
+  (req as any).userRole = payload.role;
     next();
   } catch (err) {
     return res.status(401).json({ message: 'Token inválido.' });

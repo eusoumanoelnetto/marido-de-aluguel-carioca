@@ -3,14 +3,16 @@ export type ServiceCategory = 'Elétrica' | 'Hidráulica' | 'Pintura' | 'Montage
 export interface ServiceRequest {
   id: string;
   clientName: string;
+  clientEmail?: string;
   address: string;
   contact: string;
   category: ServiceCategory;
   description: string;
   photoBase64: string | null;
-  status: 'Pendente' | 'Aceito' | 'Recusado' | 'Finalizado';
+  status: 'Pendente' | 'Orçamento Enviado' | 'Aceito' | 'Recusado' | 'Finalizado';
   isEmergency?: boolean;
   quote?: number;
+  providerEmail?: string;
   requestDate: string; // ISO string for tracking
 }
 

@@ -77,19 +77,20 @@ const inMemoryQuery = async (text: string, params?: any[]) => {
 
   // insert service request
   if (/INSERT\s+INTO\s+service_requests/i.test(q)) {
-    // params: id, clientName, address, contact, category, description, photoBase64, status, isEmergency, requestDate
-    const [id, clientName, address, contact, category, description, photoBase64, status, isEmergency, requestDate] = params || [];
-    const newReq = { id, clientName, address, contact, category, description, photoBase64, status, isEmergency, requestDate };
+    // params: id, clientName, clientEmail, address, contact, category, description, photoBase64, status, isEmergency, requestDate
+    const [id, clientName, clientEmail, address, contact, category, description, photoBase64, status, isEmergency, requestDate] = params || [];
+    const newReq = { id, clientName, clientEmail, address, contact, category, description, photoBase64, status, isEmergency, requestDate };
     memServiceRequests.push(newReq);
     return makeResult([ { ...newReq } ]);
   }
 
   // update service request status
-  if (/UPDATE\s+service_requests\s+SET\s+status\s*=\s*\$1/i.test(q) || /WHERE\s+id\s*=\s*\$3/i.test(q)) {
-    const [status, quote, id] = params || [];
+  if (/UPDATE\s+service_requests\s+SET\s+status\s*=\s*\$1/i.test(q) || /WHERE\s+id\s*=\s*\$4/i.test(q)) {
+    // params (new signature): status, quote, providerEmail, id
+    const [status, quote, providerEmail, id] = params || [];
     const idx = memServiceRequests.findIndex(r => r.id === id);
     if (idx === -1) return makeResult([]);
-    memServiceRequests[idx] = { ...memServiceRequests[idx], status, quote };
+    memServiceRequests[idx] = { ...memServiceRequests[idx], status, quote, providerEmail: providerEmail ?? memServiceRequests[idx].providerEmail };
     return makeResult([ { ...memServiceRequests[idx] } ]);
   }
 
@@ -132,6 +133,7 @@ export const initDb = async () => {
       CREATE TABLE IF NOT EXISTS service_requests (
         id VARCHAR(255) PRIMARY KEY,
         "clientName" VARCHAR(255) NOT NULL,
+        "clientEmail" VARCHAR(255),
         address TEXT NOT NULL,
         contact VARCHAR(50),
         category VARCHAR(100),
@@ -140,9 +142,14 @@ export const initDb = async () => {
         status VARCHAR(50),
         "isEmergency" BOOLEAN,
         quote NUMERIC(10, 2),
+        "providerEmail" VARCHAR(255),
         "requestDate" TIMESTAMPTZ
       );
     `);
+
+  // Garantir colunas novas em bases já existentes
+  await pgPool.query('ALTER TABLE service_requests ADD COLUMN IF NOT EXISTS "clientEmail" VARCHAR(255)');
+  await pgPool.query('ALTER TABLE service_requests ADD COLUMN IF NOT EXISTS "providerEmail" VARCHAR(255)');
 
     console.log('Database connected and tables checked/created successfully.');
     isDbConnected = true;

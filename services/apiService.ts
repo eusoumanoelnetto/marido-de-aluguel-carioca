@@ -170,11 +170,17 @@ export const createServiceRequest = async (request: ServiceRequest): Promise<Ser
   return handleResponse(response);
 };
 
-export const updateServiceRequestStatus = async (id: string, status: 'Aceito' | 'Recusado', quote?: number): Promise<ServiceRequest> => {
+// Atualiza status. Prestador: envia orçamento -> status 'Orçamento Enviado'. Cliente: aceita -> 'Aceito'.
+export const updateServiceRequestStatus = async (
+  id: string,
+  status: ServiceRequest['status'],
+  quote?: number,
+  providerEmail?: string
+): Promise<ServiceRequest> => {
   const response = await authFetch(`${API_BASE_URL}/requests/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ status, quote }),
+    body: JSON.stringify({ status, quote, providerEmail }),
   });
   return handleResponse(response);
 };

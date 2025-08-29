@@ -32,7 +32,7 @@ export const signUp = async (req: Request, res: Response) => {
 
   // generate token
   const secret = process.env.JWT_SECRET || 'dev_secret';
-  const token = jwt.sign({ email: newUser.email }, secret, { expiresIn: '7d' });
+  const token = jwt.sign({ email: newUser.email, role: newUser.role }, secret, { expiresIn: '7d' });
 
   console.log('New user signed up:', newUser.email);
   res.status(201).json({ user: newUser, token });
@@ -79,7 +79,7 @@ export const login = async (req: Request, res: Response) => {
   if (isMatch) {
     delete user.password; // Don't send password hash to client
     const secret = process.env.JWT_SECRET || 'dev_secret';
-    const token = jwt.sign({ email: user.email }, secret, { expiresIn: '7d' });
+  const token = jwt.sign({ email: user.email, role: user.role }, secret, { expiresIn: '7d' });
     console.log('User logged in:', user.email);
     res.status(200).json({ user, token });
   } else {

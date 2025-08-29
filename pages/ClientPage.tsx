@@ -3,10 +3,12 @@ import { ServiceRequest, ServiceCategory, User } from '../types';
 import { HammerIcon, WrenchIcon, ZapIcon, DropletsIcon, PaintBucketIcon, HouseIcon, MonitorIcon, CctvIcon } from '../components/Icons';
 
 interface ClientPageProps {
-  currentUser: User;
-  addServiceRequest: (request: ServiceRequest) => void;
-  onLogout: () => void;
-  updateUser: (user: User) => void;
+    currentUser: User;
+    addServiceRequest: (request: ServiceRequest) => void;
+    onLogout: () => void;
+    updateUser: (user: User) => void;
+    requests: ServiceRequest[];
+    updateRequestStatus: (id: string, status: ServiceRequest['status'], quote?: number) => void;
 }
 
 type ClientView = 'dashboard' | 'profile' | 'edit-profile' | 'messages' | 'quote-step1' | 'quote-step2' | 'quotes-received' | 'service-category' | 'emergency' | 'help';
@@ -299,6 +301,7 @@ const RequestQuoteStep2View: React.FC<{
         const newRequest: ServiceRequest = {
             id: new Date().toISOString(),
             clientName: currentUser.name,
+            clientEmail: currentUser.email,
             address,
             contact: currentUser.phone,
             category: category,
@@ -401,24 +404,43 @@ const RequestQuoteStep2View: React.FC<{
     );
 };
 
-const QuotesReceivedView: React.FC<{ setView: (view: ClientView) => void }> = ({ setView }) => (
-    <main className="max-w-[1200px] mx-auto p-5">
-        <PageHeader onBack={() => setView('dashboard')} />
-        <div className="bg-brand-blue/10 border border-brand-blue/20 p-4 rounded-lg mb-8 flex items-center gap-3">
-            <i className="fa-solid fa-location-dot text-brand-blue text-2xl"></i>
-            <div>
-                <div className="font-semibold text-brand-navy">Sua solicitação foi enviada!</div>
-                <div className="text-gray-600 text-sm">Os prestadores serão notificados e você receberá os orçamentos em breve.</div>
+const QuotesReceivedView: React.FC<{ setView: (view: ClientView) => void; requests: ServiceRequest[]; onAccept: (id: string) => void; user: User; }> = ({ setView, requests, onAccept, user }) => {
+        const myRequests = requests.filter(r => r.clientEmail === user.email);
+        const withQuotes = myRequests.filter(r => r.status === 'Orçamento Enviado' && r.quote);
+    return (
+        <main className="max-w-[1200px] mx-auto p-5">
+            <PageHeader onBack={() => setView('dashboard')} />
+            <div className="bg-brand-blue/10 border border-brand-blue/20 p-4 rounded-lg mb-8 flex items-center gap-3">
+                <i className="fa-solid fa-location-dot text-brand-blue text-2xl"></i>
+                <div>
+                    <div className="font-semibold text-brand-navy">Sua solicitação foi enviada!</div>
+                                        <div className="text-gray-600 text-sm">Quando um prestador envia um orçamento ele aparece abaixo para você confirmar.</div>
+                </div>
             </div>
-        </div>
-
-        <h2 className="text-2xl font-semibold text-brand-navy">Orçamentos Recebidos</h2>
-        <p className="text-gray-500 mb-6">Nenhum orçamento recebido para esta solicitação ainda.</p>
-        <div className="text-center py-10 bg-gray-50 rounded-lg border border-gray-200">
-            <p className="text-gray-500">Aguardando orçamentos dos prestadores.</p>
-        </div>
-    </main>
-);
+                        <h2 className="text-2xl font-semibold text-brand-navy mb-6">Orçamentos Recebidos ({withQuotes.length})</h2>
+                        {withQuotes.length === 0 && (
+                            <div className="text-center py-10 bg-gray-50 rounded-lg border border-gray-200 mb-8">
+                                <p className="text-gray-500">Nenhum orçamento aguardando confirmação.</p>
+                            </div>
+                        )}
+                        <div className="flex flex-col gap-4">
+                            {withQuotes.map(req => (
+                                <div key={req.id} className="bg-white border border-gray-200 rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
+                                     <div className="flex-1 min-w-0">
+                                         <div className="text-sm text-gray-500">{new Date(req.requestDate).toLocaleDateString('pt-BR')} • {req.category}</div>
+                                         <div className="font-semibold text-brand-navy truncate">{req.description}</div>
+                                         <div className="text-sm text-gray-600 mt-1">Orçamento: <span className="font-semibold text-green-600">R$ {req.quote?.toFixed(2)}</span></div>
+                                     </div>
+                                     <div className="flex gap-2 w-full md:w-auto">
+                                            <button onClick={() => onAccept(req.id)} className="px-4 py-2 rounded-lg font-semibold bg-green-600 text-white hover:bg-green-700 flex-1 md:flex-none">Aceitar</button>
+                                            {/* Futuro: botão recusar orçamento individual */}
+                                     </div>
+                                </div>
+                            ))}
+                        </div>
+        </main>
+    );
+};
 
 const ServiceCategoryView: React.FC<{ setView: (view: ClientView) => void, category: ServiceCategory }> = ({ setView, category }) => {
     const subServicesData: Record<string, { name: string; icon: JSX.Element }[]> = {
@@ -551,7 +573,7 @@ const HelpView: React.FC<{ setView: (view: ClientView) => void }> = ({ setView }
     </main>
 );
 
-const ClientPage: React.FC<ClientPageProps> = ({ currentUser, addServiceRequest, onLogout, updateUser }) => {
+const ClientPage: React.FC<ClientPageProps> = ({ currentUser, addServiceRequest, onLogout, updateUser, requests, updateRequestStatus }) => {
   const [view, setView] = useState<ClientView>('dashboard');
   const [selectedCategory, setSelectedCategory] = useState<ServiceCategory>('Montagem de Móveis');
   const [isEmergencyRequest, setIsEmergencyRequest] = useState(false);
@@ -588,7 +610,17 @@ const ClientPage: React.FC<ClientPageProps> = ({ currentUser, addServiceRequest,
       case 'quote-step2':
         return <RequestQuoteStep2View setView={setView} addServiceRequest={addServiceRequest} currentUser={currentUser} category={selectedCategory} isEmergency={isEmergencyRequest} />;
       case 'quotes-received':
-          return <QuotesReceivedView setView={setView} />;
+          return <QuotesReceivedView 
+                    setView={setView} 
+                    requests={requests} 
+                    user={currentUser}
+                    onAccept={(id) => {
+                        updateRequestStatus(id, 'Aceito');
+                        // feedback
+                        window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: 'Orçamento aceito e serviço confirmado!', type: 'success' } }));
+                        setView('dashboard');
+                    }}
+                 />;
       case 'service-category':
           return <ServiceCategoryView setView={setView} category={selectedCategory} />;
       case 'emergency':

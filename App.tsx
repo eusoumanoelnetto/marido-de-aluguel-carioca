@@ -24,10 +24,10 @@ const App: React.FC = () => {
   const [newPending, setNewPending] = useState<ServiceRequest[]>([]);
   const [showNewRequestsAlert, setShowNewRequestsAlert] = useState(false);
 
-  // This effect will run when a provider logs in to fetch their requests
+  // Buscar solicitações tanto para prestador quanto para cliente (cliente filtra localmente pelos seus pedidos)
   useEffect(() => {
     const fetchRequests = async () => {
-      if (currentUser?.role === 'provider') {
+      if (currentUser) {
         try {
           const requests = await api.getServiceRequests();
           setServiceRequests(requests);
@@ -86,9 +86,9 @@ const App: React.FC = () => {
     }
   };
 
-  const updateRequestStatus = async (id: string, status: 'Aceito' | 'Recusado', quote?: number) => {
+  const updateRequestStatus = async (id: string, status: ServiceRequest['status'], quote?: number) => {
     try {
-      const updatedRequest = await api.updateServiceRequestStatus(id, status, quote);
+      const updatedRequest = await api.updateServiceRequestStatus(id, status, quote, currentUser?.role === 'provider' ? currentUser.email : undefined);
       setServiceRequests(prev => 
         prev.map(req => req.id === id ? updatedRequest : req)
       );
@@ -194,6 +194,8 @@ const App: React.FC = () => {
                     addServiceRequest={addServiceRequest} 
                     onLogout={handleLogout}
                     updateUser={handleUpdateUser}
+                    requests={serviceRequests}
+                    updateRequestStatus={updateRequestStatus}
                   />;
         case 'provider':
           return <ProviderPage 

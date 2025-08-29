@@ -5,7 +5,7 @@ interface ProviderPageProps {
   currentUser: User;
   requests: ServiceRequest[];
   onLogout: () => void;
-  updateRequestStatus: (id: string, status: 'Aceito' | 'Recusado', quote?: number) => void;
+    updateRequestStatus: (id: string, status: ServiceRequest['status'], quote?: number, providerEmail?: string) => void;
   updateUser: (user: User) => void;
 }
 
@@ -380,6 +380,8 @@ const ProviderPublicProfile: React.FC<{
 
 const getStatusDetails = (status: ServiceRequest['status']) => {
     switch (status) {
+        case 'Orçamento Enviado':
+            return { text: 'Aguardando Cliente', className: 'bg-[#e0f2fe] text-[#075985]' };
         case 'Aceito':
             return { text: 'Confirmado', className: 'bg-[#dcfce7] text-[#166534]' };
         case 'Pendente':
@@ -640,7 +642,7 @@ const DashboardView: React.FC<{
     requests: ServiceRequest[];
     setView: (view: ProviderView) => void;
     onViewDetails: (request: ServiceRequest) => void;
-    updateRequestStatus: (id: string, status: 'Aceito' | 'Recusado', quote?: number) => void;
+    updateRequestStatus: (id: string, status: ServiceRequest['status'], quote?: number, providerEmail?: string) => void;
 }> = ({ requests, setView, onViewDetails, updateRequestStatus }) => {
     
     const [isBannerVisible, setIsBannerVisible] = useState(true);
@@ -654,7 +656,7 @@ const DashboardView: React.FC<{
     const servicesToday = requests.filter(r => {
         const requestDate = new Date(r.requestDate);
     // Mostrar na agenda apenas serviços aceitos
-    return r.status === 'Aceito' && isSameDay(requestDate, today);
+    return r.status === 'Aceito' && isSameDay(requestDate, today); // permanece apenas os confirmados na contagem de serviços do dia
     });
 
     const now = new Date();
@@ -670,7 +672,7 @@ const DashboardView: React.FC<{
     
     // Agenda deve conter apenas serviços aceitos
     const agendaToday = requests
-        .filter(r => r.status === 'Aceito' && isSameDay(new Date(r.requestDate), today))
+    .filter(r => r.status === 'Aceito' && isSameDay(new Date(r.requestDate), today))
         .sort((a,b) => new Date(a.requestDate).getTime() - new Date(b.requestDate).getTime());
 
     // Novos pedidos: solicitações pendentes para hoje
@@ -1042,7 +1044,7 @@ const ProviderPage: React.FC<ProviderPageProps> = ({ currentUser, requests, onLo
   const ServiceDetailView: React.FC<{
     request: ServiceRequest | null;
     onBack: () => void;
-    updateRequestStatus: (id: string, status: 'Aceito' | 'Recusado', quote?: number) => void;
+    updateRequestStatus: (id: string, status: ServiceRequest['status'], quote?: number, providerEmail?: string) => void;
   }> = ({ request, onBack, updateRequestStatus }) => {
     const [quote, setQuote] = useState(request?.quote?.toString() || '');
     if (!request) {
@@ -1060,12 +1062,13 @@ const ProviderPage: React.FC<ProviderPageProps> = ({ currentUser, requests, onLo
     window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: 'Por favor, insira um valor de orçamento válido.', type: 'error' } }));
         return;
       }
-      updateRequestStatus(request.id, 'Aceito', quoteValue);
+    // Prestador envia orçamento: muda para 'Orçamento Enviado'; ainda não é 'Aceito'
+    updateRequestStatus(request.id, 'Orçamento Enviado', quoteValue, currentUser.email);
       onBack();
     };
 
     const handleDecline = () => {
-      updateRequestStatus(request.id, 'Recusado');
+    updateRequestStatus(request.id, 'Recusado');
       onBack();
     };
     
@@ -1113,7 +1116,7 @@ const ProviderPage: React.FC<ProviderPageProps> = ({ currentUser, requests, onLo
                                     className="p-3 bg-gray-100 border border-gray-300 rounded-lg text-base w-full sm:w-48 focus:outline-none focus:ring-2 focus:ring-brand-blue min-w-0"
                                 />
                                 <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto min-w-0">
-                                    <button onClick={handleAccept} className="px-5 py-3 rounded-lg font-semibold bg-green-600 text-white hover:bg-green-700 w-full sm:w-auto text-center whitespace-normal break-words">Aceitar e Enviar Orçamento</button>
+                                    <button onClick={handleAccept} className="px-5 py-3 rounded-lg font-semibold bg-green-600 text-white hover:bg-green-700 w-full sm:w-auto text-center whitespace-normal break-words">Enviar Orçamento</button>
                                     <button onClick={handleDecline} className="px-5 py-3 rounded-lg font-semibold bg-brand-red text-white hover:opacity-90 w-full sm:w-auto">Recusar</button>
                                 </div>
                             </div>
@@ -1142,7 +1145,7 @@ const ProviderPage: React.FC<ProviderPageProps> = ({ currentUser, requests, onLo
         const isSameDay = (d1: Date, d2: Date) => d1.toDateString() === d2.toDateString();
         const todayRequests = requests.filter(r => {
             const requestDate = new Date(r.requestDate);
-            return (r.status === 'Aceito' || r.status === 'Pendente') && isSameDay(requestDate, today);
+            return (r.status === 'Aceito' || r.status === 'Pendente' || r.status === 'Orçamento Enviado') && isSameDay(requestDate, today);
         });
         return <QuotesView requests={todayRequests} setView={setView} onViewDetails={handleViewDetails} isFilteredView={true} />;
       case 'messages':
