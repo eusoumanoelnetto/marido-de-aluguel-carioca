@@ -1,8 +1,8 @@
 [
   {
     "id": "2025-08-29-hotfix-quote-badge",
-    "title": "Melhoria: Notificação de Orçamentos",
-    "message": "Agora o aviso de novo orçamento é clicável e há um badge com contagem de orçamentos não vistos.",
+    "title": "Novidade nos orçamentos",
+    "message": "Quando pintar orçamento novo ele aparece com aviso que dá pra clicar e tem bolinha mostrando quantos você ainda não abriu. Fácil de ver e não perder nada.",
     "date": "2025-08-29"
   }
 ]

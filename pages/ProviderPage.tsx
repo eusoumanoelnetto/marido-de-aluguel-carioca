@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import AnnouncementBanner from '../components/AnnouncementBanner';
 import ServiceDetailView from '../components/ServiceDetailView';
 import { ServiceRequest, User } from '../types';
 
@@ -572,22 +573,14 @@ const DashboardView: React.FC<{
     
     return (
         <main className="max-w-7xl mx-auto p-6">
-            {isBannerVisible && (
-                <div className="bg-brand-beige/30 border border-brand-beige/50 text-brand-navy px-6 py-4 rounded-xl relative flex items-start gap-4 mt-8" role="alert">
-                    <i className="fa-solid fa-circle-info text-xl text-brand-navy/80 mt-1"></i>
-                    <div>
-                        <strong className="font-bold">Novidades na Plataforma!</strong>
-                        <p className="block sm:inline text-sm mt-1">Atualizamos nossos termos de serviço e adicionamos novas funcionalidades para gerenciar sua agenda. Confira as novidades!</p>
-                    </div>
-                    <button 
-                        onClick={() => setIsBannerVisible(false)}
-                        className="absolute top-0 bottom-0 right-0 px-4 py-3"
-                        aria-label="Fechar"
-                    >
-                        <i className="fa-solid fa-xmark"></i>
-                    </button>
-                </div>
-            )}
+                        {isBannerVisible && (
+                            <div className="mt-4 mb-6 rounded-xl overflow-hidden border border-sky-600/30 shadow">
+                                <AnnouncementBanner role={'provider'} />
+                                <div className="bg-white px-4 py-2 text-xs text-right">
+                                    <button onClick={() => setIsBannerVisible(false)} className="text-slate-500 hover:text-slate-700">Fechar</button>
+                                </div>
+                            </div>
+                        )}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mt-5">
                 <StatCard icon="fas fa-calendar-check" title="Serviços para Hoje" color="text-brand-blue" onClick={() => setView('today-services')}>
                      <div className="text-3xl md:text-4xl font-bold text-gray-800">{servicesToday.length}</div>

@@ -340,10 +340,8 @@ const App: React.FC = () => {
             </div>
           </div>
         )}
-  {/* Banner de anúncios global ocultado para clientes para evitar duplicação com a seção "Atualizações" interna */}
-  {currentUser?.role !== 'client' && (
-    <AnnouncementBanner role={currentUser?.role} />
-  )}
+  {/* Banner global removido para client e provider: client vê só "Atualizações" e provider verá banner dentro do dashboard */}
+  {false && <AnnouncementBanner role={currentUser?.role} />}
   <main>
         {renderPage()}
       </main>
