@@ -1047,19 +1047,28 @@ const ProviderPage: React.FC<ProviderPageProps> = ({ currentUser, requests, onLo
     updateRequestStatus: (id: string, status: ServiceRequest['status'], quote?: number, providerEmail?: string) => void;
   }> = ({ request, onBack, updateRequestStatus }) => {
     const [quote, setQuote] = useState(() => request?.quote?.toString() || '');
+    const [isEditing, setIsEditing] = useState(false);
     const inputRef = React.useRef<HTMLInputElement>(null);
     const initializedRef = React.useRef<string | null>(null);
     
-    console.log('ServiceDetailView render - quote state:', quote, 'request ID:', request?.id, 'request quote:', request?.quote);
+    console.log('ServiceDetailView render - quote state:', quote, 'request ID:', request?.id, 'request quote:', request?.quote, 'isEditing:', isEditing);
     
-    // Only initialize once per request ID
+    // Only initialize once per request ID and only if not currently editing
     if (request && request.id !== initializedRef.current) {
       initializedRef.current = request.id;
-      if (request.quote && quote !== request.quote.toString()) {
+      if (request.quote && quote !== request.quote.toString() && !isEditing) {
         setQuote(request.quote.toString());
         console.log('Force setting quote to:', request.quote.toString());
       }
     }
+    
+    // Protect against external updates while editing
+    React.useEffect(() => {
+      if (request && !isEditing && request.quote && quote !== request.quote.toString()) {
+        setQuote(request.quote.toString());
+        console.log('External update - setting quote to:', request.quote.toString());
+      }
+    }, [request?.quote, isEditing]);
     if (!request) {
       return (
         <div className="max-w-7xl mx-auto p-6">
@@ -1079,18 +1088,18 @@ const ProviderPage: React.FC<ProviderPageProps> = ({ currentUser, requests, onLo
                 return;
             }
             // Prestador envia orçamento: muda para 'Orçamento Enviado'; ainda não é 'Aceito'
+            setIsEditing(false);
             try { window.dispatchEvent(new CustomEvent('mdac:resumePolling')); } catch (err) {}
             updateRequestStatus(request.id, 'Orçamento Enviado', quoteValue, currentUser.email);
             onBack();
         };
 
-        const handleDecline = () => {
-            try { window.dispatchEvent(new CustomEvent('mdac:resumePolling')); } catch (err) {}
-            updateRequestStatus(request.id, 'Recusado');
-            onBack();
-        };
-    
-    const status = getStatusDetails(request.status);
+    const handleDecline = () => {
+      setIsEditing(false);
+      try { window.dispatchEvent(new CustomEvent('mdac:resumePolling')); } catch (err) {}
+      updateRequestStatus(request.id, 'Recusado');
+      onBack();
+    };    const status = getStatusDetails(request.status);
 
     return (
       <div className="max-w-7xl mx-auto p-6">
@@ -1134,13 +1143,16 @@ const ProviderPage: React.FC<ProviderPageProps> = ({ currentUser, requests, onLo
                                         const target = e.target as HTMLInputElement;
                                         console.log('Input value changed to:', target.value);
                                         setQuote(target.value);
+                                        setIsEditing(true);
                                     }}
                                     onFocus={(e) => {
                                         console.log('Input focused, current value:', (e.target as HTMLInputElement).value);
+                                        setIsEditing(true);
                                         try { window.dispatchEvent(new CustomEvent('mdac:pausePolling')); } catch (err) {}
                                     }}
                                     onBlur={(e) => {
                                         console.log('Input blurred, final value:', (e.target as HTMLInputElement).value);
+                                        setIsEditing(false);
                                         try { window.dispatchEvent(new CustomEvent('mdac:resumePolling')); } catch (err) {}
                                     }}
                                     placeholder="Ex: 150.00"
