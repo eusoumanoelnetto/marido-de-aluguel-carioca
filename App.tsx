@@ -23,6 +23,7 @@ const App: React.FC = () => {
   const [lastPendingIds, setLastPendingIds] = useState<Set<string>>(new Set());
   const [newPending, setNewPending] = useState<ServiceRequest[]>([]);
   const [showNewRequestsAlert, setShowNewRequestsAlert] = useState(false);
+  const [lastRequestsMap, setLastRequestsMap] = useState<Record<string, ServiceRequest['status']>>({});
 
   // Buscar solicitações tanto para prestador quanto para cliente (cliente filtra localmente pelos seus pedidos)
   useEffect(() => {
@@ -39,40 +40,76 @@ const App: React.FC = () => {
     fetchRequests();
   }, [currentUser]);
 
-  // Polling leve para detectar novos pedidos pendentes enquanto prestador logado
+  // Polling leve para detectar mudanças relevantes (novos pedidos, orçamentos enviados, orçamentos aceitos)
   useEffect(() => {
-    if (currentUser?.role !== 'provider') return;
+    if (!currentUser) return;
     let cancelled = false;
-    const interval = setInterval(async () => {
+
+    const check = async () => {
       try {
         const requests = await api.getServiceRequests();
         if (cancelled) return;
+        // atualizar lista principal
         setServiceRequests(requests);
-        const pending = requests.filter(r => r.status === 'Pendente');
-        const pendingIds = new Set(pending.map(p => p.id));
-        // Detectar novos
-        const newlyArrived = pending.filter(p => !lastPendingIds.has(p.id));
-        if (newlyArrived.length) {
-          setNewPending(newlyArrived);
-          setShowNewRequestsAlert(true);
-          // Notification API (permite apenas se usuário concedeu e aba ativa)
-          if ('Notification' in window) {
-            if (Notification.permission === 'granted') {
-              newlyArrived.forEach(n => {
-                try { new Notification('Novo pedido', { body: `${n.clientName} solicitou ${n.category}` }); } catch (_) {}
-              });
-            } else if (Notification.permission === 'default') {
-              try { Notification.requestPermission(); } catch(_){}
+
+        // construir mapa atual id->status
+        const currentMap: Record<string, ServiceRequest['status']> = {};
+        requests.forEach(r => (currentMap[r.id] = r.status));
+
+        // detectar novos pedidos pendentes (para prestador)
+        if (currentUser.role === 'provider') {
+          const pending = requests.filter(r => r.status === 'Pendente');
+          const pendingIds = new Set(pending.map(p => p.id));
+          const newlyArrived = pending.filter(p => !lastPendingIds.has(p.id));
+          if (newlyArrived.length) {
+            setNewPending(newlyArrived);
+            setShowNewRequestsAlert(true);
+            if ('Notification' in window) {
+              if (Notification.permission === 'granted') {
+                newlyArrived.forEach(n => {
+                  try { new Notification('Novo pedido', { body: `${n.clientName} solicitou ${n.category}` }); } catch (_) {}
+                });
+              } else if (Notification.permission === 'default') {
+                try { Notification.requestPermission(); } catch(_){}
+              }
             }
           }
+          setLastPendingIds(pendingIds);
         }
-        setLastPendingIds(pendingIds);
+
+        // detectar transições comparando lastRequestsMap
+        const lastMap = lastRequestsMap || {};
+        // Para clientes: notificar quando um pedido dele recebe 'Orçamento Enviado'
+        if (currentUser.role === 'client') {
+          requests.forEach(r => {
+            const prev = lastMap[r.id];
+            if (prev !== 'Orçamento Enviado' && r.status === 'Orçamento Enviado' && r.clientEmail === currentUser.email) {
+              window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: `Você recebeu um orçamento de ${r.providerEmail} para ${r.category}.`, type: 'info' } }));
+            }
+          });
+        }
+
+        // Para prestadores: notificar quando um pedido que tem providerEmail igual ao seu for Aceito
+        if (currentUser.role === 'provider') {
+          requests.forEach(r => {
+            const prev = lastMap[r.id];
+            if (prev !== 'Aceito' && r.status === 'Aceito' && r.providerEmail === currentUser.email) {
+              window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: `Seu orçamento para ${r.clientName} foi aceito. Entre em contato para combinar.`, type: 'success' } }));
+            }
+          });
+        }
+
+        setLastRequestsMap(currentMap);
       } catch (e) {
         // silencioso
       }
-    }, 15000); // 15s
+    };
+
+    // primeira checagem imediata
+    check();
+    const interval = setInterval(check, 15000);
     return () => { cancelled = true; clearInterval(interval); };
-  }, [currentUser, lastPendingIds]);
+  }, [currentUser, lastPendingIds, lastRequestsMap]);
 
 
   const addServiceRequest = async (request: ServiceRequest) => {
@@ -229,7 +266,14 @@ const App: React.FC = () => {
         <NewRequestAlert 
           requests={newPending}
           onClose={() => setShowNewRequestsAlert(false)}
-          onView={() => { setShowNewRequestsAlert(false); setCurrentPage('provider'); }}
+          onView={() => {
+            const first = newPending[0];
+            setShowNewRequestsAlert(false);
+            setCurrentPage('provider');
+            try {
+              window.dispatchEvent(new CustomEvent('mdac:viewRequest', { detail: { id: first.id } }));
+            } catch (e) {}
+          }}
         />
       )}
     </div>

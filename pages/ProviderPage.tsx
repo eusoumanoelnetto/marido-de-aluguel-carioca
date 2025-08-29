@@ -1134,6 +1134,18 @@ const ProviderPage: React.FC<ProviderPageProps> = ({ currentUser, requests, onLo
     setView('service-detail');
   };
 
+    // Abrir detalhe quando receber evento global (ex: popup manda para ver pedido específico)
+    React.useEffect(() => {
+        const handler = (e: any) => {
+            const id = e?.detail?.id as string | undefined;
+            if (!id) return;
+            const found = requests.find(r => r.id === id);
+            if (found) handleViewDetails(found);
+        };
+        window.addEventListener('mdac:viewRequest', handler as EventListener);
+        return () => window.removeEventListener('mdac:viewRequest', handler as EventListener);
+    }, [requests, view]);
+
   const renderContent = () => {
     switch (view) {
             case 'dashboard':
