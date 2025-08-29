@@ -1048,15 +1048,19 @@ const ProviderPage: React.FC<ProviderPageProps> = ({ currentUser, requests, onLo
   }> = ({ request, onBack, updateRequestStatus }) => {
     const [quote, setQuote] = useState('');
     const inputRef = React.useRef<HTMLInputElement>(null);
+    const requestIdRef = React.useRef<string | null>(null);
     
-    // Initialize quote only once when request changes
+    console.log('ServiceDetailView render - quote:', quote, 'request:', request?.id);
+    
+    // Initialize quote only when request ID actually changes
     React.useEffect(() => {
-      if (request?.quote) {
-        setQuote(request.quote.toString());
-      } else {
-        setQuote('');
+      if (request && request.id !== requestIdRef.current) {
+        const initialValue = request.quote ? request.quote.toString() : '';
+        setQuote(initialValue);
+        requestIdRef.current = request.id;
+        console.log('Initialized quote with:', initialValue, 'for request:', request.id);
       }
-    }, [request?.id]); // Only depend on request ID to avoid reinitializing on every request change
+    }, [request?.id]);
     if (!request) {
       return (
         <div className="max-w-7xl mx-auto p-6">
@@ -1067,7 +1071,8 @@ const ProviderPage: React.FC<ProviderPageProps> = ({ currentUser, requests, onLo
     }
 
     const handleAccept = () => {
-      const quoteValue = parseFloat(inputRef.current?.value || quote);
+      const quoteValue = parseFloat(quote);
+      console.log('Trying to accept with quote:', quote, 'parsed:', quoteValue);
       if (isNaN(quoteValue) || quoteValue <= 0) {
     window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: 'Por favor, insira um valor de orçamento válido.', type: 'error' } }));
         return;
@@ -1121,35 +1126,23 @@ const ProviderPage: React.FC<ProviderPageProps> = ({ currentUser, requests, onLo
                                 <input 
                                     ref={inputRef}
                                     type="number" 
-                                    defaultValue={quote}
-                                    onInput={(e) => {
-                                        console.log('Input onInput triggered:', (e.target as HTMLInputElement).value);
-                                        setQuote((e.target as HTMLInputElement).value);
-                                    }}
+                                    value={quote}
                                     onChange={(e) => {
-                                        console.log('Input onChange triggered:', e.target.value);
-                                        e.stopPropagation();
-                                        setQuote(e.target.value);
+                                        const newValue = e.target.value;
+                                        console.log('Input changed from:', quote, 'to:', newValue);
+                                        setQuote(newValue);
                                     }}
                                     onFocus={(e) => {
-                                        console.log('Input focused');
-                                        e.stopPropagation();
+                                        console.log('Input focused, current value:', e.target.value);
                                     }}
-                                    onBlur={() => console.log('Input blurred')}
-                                    onClick={(e) => {
-                                        console.log('Input clicked');
-                                        e.stopPropagation();
+                                    onBlur={(e) => {
+                                        console.log('Input blurred, final value:', e.target.value);
                                     }}
-                                    onKeyDown={(e) => console.log('Key pressed:', e.key)}
                                     placeholder="Ex: 150.00" 
-                                    className="p-3 bg-white border-2 border-gray-300 rounded-lg text-base w-full sm:w-48 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-brand-blue min-w-0"
-                                    style={{ 
-                                        pointerEvents: 'auto',
-                                        position: 'relative',
-                                        zIndex: 10,
-                                        touchAction: 'manipulation'
-                                    }}
+                                    className="p-3 bg-white border-2 border-gray-300 rounded-lg text-base w-full sm:w-48 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-brand-blue"
                                     autoComplete="off"
+                                    step="0.01"
+                                    min="0"
                                 />
                                 <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto min-w-0">
                                     <button onClick={handleAccept} className="px-5 py-3 rounded-lg font-semibold bg-green-600 text-white hover:bg-green-700 w-full sm:w-auto text-center whitespace-normal break-words">Enviar Orçamento</button>
