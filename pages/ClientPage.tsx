@@ -86,35 +86,35 @@ const EditProfileView: React.FC<{ user: User; onSave: (user: User) => void; onCa
 const DashboardView: React.FC<{ setView: (view: ClientView) => void, handleServiceClick: (category: ServiceCategory) => void }> = ({ setView, handleServiceClick }) => (
     <div>
         <header className="bg-white shadow-sm sticky top-0 z-10">
-            <div className="max-w-[1200px] mx-auto px-5">
+            <div className="max-w-7xl mx-auto px-2 sm:px-6">
                 <div className="flex items-center justify-between h-16">
                     <div className="flex items-center gap-4 cursor-pointer" onClick={() => setView('dashboard')}>
-                        <img src="https://wngalbve.manus.space/assets/logo_marido_aluguel_3-CqPHQ69B.png" alt="Marido de Aluguel Logo" className="h-12" />
+                        <img src="https://wngalbve.manus.space/assets/logo_marido_aluguel_3-CqPHQ69B.png" alt="Logo Marido de Aluguel" className="h-12 w-auto" style={{objectFit: 'contain'}} />
                     </div>
-                    <nav className="flex items-center gap-8 text-gray-600 font-medium">
+                    <nav className="flex items-center gap-4 md:gap-6 text-gray-600 font-medium">
                         <button
                             onClick={() => setView('quotes-received')}
-                            className="flex items-center gap-2 hover:text-brand-red transition-colors"
+                            className="flex items-center gap-1.5 hover:text-brand-red transition-colors"
                             aria-label="Meus Orçamentos"
                         >
-                            <i className="fa-solid fa-file-invoice text-lg"></i>
-                            <span>Meus Orçamentos</span>
+                            <i className="fa-solid fa-file-invoice text-base md:text-lg"></i>
+                            <span className="text-xs md:text-sm whitespace-nowrap">Meus Orçamentos</span>
                         </button>
                         <button
                             onClick={() => setView('messages')}
-                            className="flex items-center gap-2 hover:text-brand-red transition-colors"
+                            className="flex items-center gap-1.5 hover:text-brand-red transition-colors"
                             aria-label="Mensagens"
                         >
-                            <i className="fa-regular fa-comments text-lg"></i>
-                            <span>Mensagens</span>
+                            <i className="fa-regular fa-comments text-base md:text-lg"></i>
+                            <span className="text-xs md:text-sm whitespace-nowrap">Mensagens</span>
                         </button>
                         <button
                             onClick={() => setView('profile')}
-                            className="flex items-center gap-2 hover:text-brand-red transition-colors"
+                            className="flex items-center gap-1.5 hover:text-brand-red transition-colors"
                             aria-label="Perfil"
                         >
-                            <i className="fa-regular fa-user text-lg"></i>
-                            <span>Perfil</span>
+                            <i className="fa-regular fa-user text-base md:text-lg"></i>
+                            <span className="text-xs md:text-sm whitespace-nowrap">Perfil</span>
                         </button>
                     </nav>
                 </div>
