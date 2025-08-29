@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { ServiceRequest, ServiceCategory, User } from '../types';
 import { HammerIcon, WrenchIcon, ZapIcon, DropletsIcon, PaintBucketIcon, HouseIcon, MonitorIcon, CctvIcon } from '../components/Icons';
 
@@ -405,45 +405,69 @@ const RequestQuoteStep2View: React.FC<{
 };
 
 const QuotesReceivedView: React.FC<{ setView: (view: ClientView) => void; requests: ServiceRequest[]; onAccept: (id: string) => void; user: User; }> = ({ setView, requests, onAccept, user }) => {
-        const myRequests = requests.filter(r => r.clientEmail === user.email);
-        const withQuotes = myRequests.filter(r => r.status === 'Orçamento Enviado' && r.quote);
+    const myRequests = requests.filter(r => r.clientEmail === user.email);
+    const pending = myRequests.filter(r => r.status === 'Pendente');
+    const withQuotes = myRequests.filter(r => r.status === 'Orçamento Enviado' && typeof r.quote === 'number' && r.quote > 0);
+
     return (
         <main className="max-w-[1200px] mx-auto p-5">
             <PageHeader onBack={() => setView('dashboard')} />
             <div className="bg-brand-blue/10 border border-brand-blue/20 p-4 rounded-lg mb-8 flex items-center gap-3">
-                <i className="fa-solid fa-location-dot text-brand-blue text-2xl"></i>
+                <i className="fa-solid fa-location-dot text-brand-blue text-2xl" />
                 <div>
-                    <div className="font-semibold text-brand-navy">Sua solicitação foi enviada!</div>
-                                        <div className="text-gray-600 text-sm">Quando um prestador envia um orçamento ele aparece abaixo para você confirmar.</div>
+                    <div className="font-semibold text-brand-navy">Solicitações de Serviço</div>
+                    <div className="text-gray-600 text-sm">Acompanhe abaixo pedidos aguardando orçamento e orçamentos já enviados.</div>
                 </div>
             </div>
-                        <h2 className="text-2xl font-semibold text-brand-navy mb-6">Orçamentos Recebidos ({withQuotes.length})</h2>
-                        {withQuotes.length === 0 && (
-                            <div className="text-center py-10 bg-gray-50 rounded-lg border border-gray-200 mb-8">
-                                <p className="text-gray-500">Nenhum orçamento aguardando confirmação.</p>
-                            </div>
-                        )}
-                        <div className="flex flex-col gap-4">
-                            {withQuotes.map(req => (
-                                <div key={req.id} className="bg-white border border-gray-200 rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
-                                     <div className="flex-1 min-w-0">
-                                         <div className="text-sm text-gray-500">{new Date(req.requestDate).toLocaleDateString('pt-BR')} • {req.category}</div>
-                                         <div className="font-semibold text-brand-navy truncate">{req.description}</div>
-                                         <div className="text-sm text-gray-600 mt-1">Orçamento: <span className="font-semibold text-green-600">R$ {req.quote?.toFixed(2)}</span></div>
-                                     </div>
-                                     <div className="flex gap-2 w-full md:w-auto">
-                                            <button onClick={() => onAccept(req.id)} className="px-4 py-2 rounded-lg font-semibold bg-green-600 text-white hover:bg-green-700 flex-1 md:flex-none">Aceitar</button>
-                                            {/* Futuro: botão recusar orçamento individual */}
-                                     </div>
-                                </div>
-                            ))}
+
+            {/* Aguardando orçamento */}
+            <h2 className="text-xl font-semibold text-brand-navy mb-4">Aguardando Orçamento ({pending.length})</h2>
+            {pending.length === 0 && (
+                <div className="text-center py-6 bg-gray-50 rounded-lg border border-gray-200 mb-8">
+                    <p className="text-gray-500 text-sm">Nenhuma solicitação aguardando orçamento.</p>
+                </div>
+            )}
+            <div className="flex flex-col gap-4 mb-10">
+                {pending.map(req => (
+                    <div key={req.id} className="bg-white border border-gray-200 rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
+                        <div className="flex-1 min-w-0">
+                            <div className="text-sm text-gray-500">{new Date(req.requestDate).toLocaleDateString('pt-BR')} • {req.category}</div>
+                            <div className="font-semibold text-brand-navy truncate">{req.description}</div>
+                            <div className="text-xs mt-1 inline-flex items-center gap-1 px-2 py-1 rounded bg-yellow-50 text-yellow-700 border border-yellow-200">Pendente</div>
                         </div>
+                        <div className="text-xs text-gray-500 w-full md:w-auto">Aguardando envio de orçamento pelo prestador...</div>
+                    </div>
+                ))}
+            </div>
+
+            {/* Orçamentos recebidos */}
+            <h2 className="text-xl font-semibold text-brand-navy mb-4">Orçamentos Recebidos ({withQuotes.length})</h2>
+            {withQuotes.length === 0 && (
+                <div className="text-center py-6 bg-gray-50 rounded-lg border border-gray-200 mb-8">
+                    <p className="text-gray-500 text-sm">Ainda não há orçamentos enviados. Assim que um prestador enviar, aparecerá aqui.</p>
+                </div>
+            )}
+            <div className="flex flex-col gap-4">
+                {withQuotes.map(req => (
+                    <div key={req.id} className="bg-white border border-gray-200 rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
+                        <div className="flex-1 min-w-0">
+                            <div className="text-sm text-gray-500">{new Date(req.requestDate).toLocaleDateString('pt-BR')} • {req.category}</div>
+                            <div className="font-semibold text-brand-navy truncate">{req.description}</div>
+                            <div className="text-sm text-gray-600 mt-1">Orçamento: <span className="font-semibold text-green-600">R$ {req.quote?.toFixed(2)}</span></div>
+                        </div>
+                        <div className="flex gap-2 w-full md:w-auto">
+                            <button onClick={() => onAccept(req.id)} className="px-4 py-2 rounded-lg font-semibold bg-green-600 text-white hover:bg-green-700 flex-1 md:flex-none">Aceitar</button>
+                            {/* Futuro: botão recusar orçamento individual */}
+                        </div>
+                    </div>
+                ))}
+            </div>
         </main>
     );
 };
 
 const ServiceCategoryView: React.FC<{ setView: (view: ClientView) => void, category: ServiceCategory }> = ({ setView, category }) => {
-    const subServicesData: Record<string, { name: string; icon: JSX.Element }[]> = {
+    const subServicesData: Record<string, { name: string; icon: React.ReactElement }[]> = {
         'Montagem de Móveis': [
             { name: 'Montagem de Guarda-roupa', icon: <HammerIcon /> },
             { name: 'Montagem de Cama', icon: <HammerIcon /> },
