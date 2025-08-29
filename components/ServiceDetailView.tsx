@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { ServiceRequest, User } from '../types';
-import ProviderPage from '../pages/ProviderPage'; // not actually used; avoid circular? We'll avoid this import.
-import '../pages/ProviderPage'; // ensure global styles if any side effects (optional)
+// Removidos imports circulares desnecessários para evitar bundles maiores / warnings
 
 interface Props {
   request: ServiceRequest | null;
@@ -14,16 +13,32 @@ interface Props {
 const ServiceDetailView: React.FC<Props> = ({ request, onBack, updateRequestStatus, currentUser, getStatusDetails }) => {
   const [draftQuote, setDraftQuote] = useState('');
   const [editing, setEditing] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const lastRequestIdRef = useRef<string | null>(null);
 
   // Initialize / sync from external quote only when not editing
   useEffect(() => {
     if (!request) return;
+    // Se mudou o ID do request, resetar estado de edição e quote para refletir dado vindo do servidor
+    if (lastRequestIdRef.current !== request.id) {
+      lastRequestIdRef.current = request.id;
+      setEditing(false);
+      setIsSubmitting(false);
+    }
     if (!editing) {
       const initial = request.quote != null ? request.quote.toString() : '';
       setDraftQuote(initial);
     }
   }, [request?.id, request?.quote, editing]);
+
+  // Se status mudou para algo diferente de 'Pendente' enquanto a tela está aberta, cancelar edição e garantir polling retomado
+  useEffect(() => {
+    if (request && request.status !== 'Pendente' && editing) {
+      setEditing(false);
+      try { window.dispatchEvent(new CustomEvent('mdac:resumePolling')); } catch {}
+    }
+  }, [request?.status, editing]);
 
   if (!request) {
     return (
@@ -35,23 +50,39 @@ const ServiceDetailView: React.FC<Props> = ({ request, onBack, updateRequestStat
 
   const status = getStatusDetails(request.status);
 
-  const handleAccept = () => {
+  const handleAccept = async () => {
+    if (!request || isSubmitting) return;
     const value = parseFloat(draftQuote.replace(',', '.'));
     if (isNaN(value) || value <= 0) {
       window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: 'Por favor, insira um valor de orçamento válido.', type: 'error' } }));
       return;
     }
+    setIsSubmitting(true);
     setEditing(false);
     try { window.dispatchEvent(new CustomEvent('mdac:resumePolling')); } catch {}
-    updateRequestStatus(request.id, 'Orçamento Enviado', value, currentUser.email);
-    onBack();
+    try {
+      await updateRequestStatus(request.id, 'Orçamento Enviado', value, currentUser.email);
+      window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: 'Orçamento enviado com sucesso.', type: 'success' } }));
+      onBack();
+    } catch (err: any) {
+      window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: err?.message || 'Falha ao enviar orçamento.', type: 'error' } }));
+      setIsSubmitting(false);
+    }
   };
 
-  const handleDecline = () => {
+  const handleDecline = async () => {
+    if (!request || isSubmitting) return;
+    setIsSubmitting(true);
     setEditing(false);
     try { window.dispatchEvent(new CustomEvent('mdac:resumePolling')); } catch {}
-    updateRequestStatus(request.id, 'Recusado');
-    onBack();
+    try {
+      await updateRequestStatus(request.id, 'Recusado');
+      window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: 'Solicitação recusada.', type: 'info' } }));
+      onBack();
+    } catch (err: any) {
+      window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: err?.message || 'Erro ao recusar.', type: 'error' } }));
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -90,20 +121,37 @@ const ServiceDetailView: React.FC<Props> = ({ request, onBack, updateRequestStat
             <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 w-full min-w-0">
               <input
                 ref={inputRef}
-                type="number"
+                type="text"
+                inputMode="decimal"
                 value={draftQuote}
-                onChange={(e) => { setDraftQuote(e.target.value); if (!editing) setEditing(true); }}
+                onChange={(e) => {
+                  const raw = e.target.value.replace(/[^0-9.,]/g, '');
+                  setDraftQuote(raw);
+                  if (!editing) setEditing(true);
+                }}
                 onFocus={() => { setEditing(true); try { window.dispatchEvent(new CustomEvent('mdac:pausePolling')); } catch {} }}
-                onBlur={() => { setEditing(false); try { window.dispatchEvent(new CustomEvent('mdac:resumePolling')); } catch {} }}
-                placeholder="Ex: 150.00"
+                onBlur={() => {
+                  setEditing(false);
+                  // Normaliza para formato 0.00 se número válido
+                  const num = parseFloat(draftQuote.replace(',', '.'));
+                  if (!isNaN(num) && num > 0) setDraftQuote(num.toFixed(2));
+                  try { window.dispatchEvent(new CustomEvent('mdac:resumePolling')); } catch {}
+                }}
+                placeholder="Ex: 150,00"
                 className="p-3 bg-white border-2 border-gray-300 rounded-lg text-base w-full sm:w-48 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-brand-blue"
                 autoComplete="off"
-                step="0.01"
-                min="0"
               />
               <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto min-w-0">
-                <button onClick={handleAccept} className="px-5 py-3 rounded-lg font-semibold bg-green-600 text-white hover:bg-green-700 w-full sm:w-auto text-center">Enviar Orçamento</button>
-                <button onClick={handleDecline} className="px-5 py-3 rounded-lg font-semibold bg-brand-red text-white hover:opacity-90 w-full sm:w-auto">Recusar</button>
+                <button
+                  onClick={handleAccept}
+                  disabled={isSubmitting}
+                  className={`px-5 py-3 rounded-lg font-semibold w-full sm:w-auto text-center text-white ${isSubmitting ? 'bg-green-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'}`}
+                >{isSubmitting ? 'Enviando...' : 'Enviar Orçamento'}</button>
+                <button
+                  onClick={handleDecline}
+                  disabled={isSubmitting}
+                  className={`px-5 py-3 rounded-lg font-semibold text-white w-full sm:w-auto ${isSubmitting ? 'bg-brand-red/60 cursor-not-allowed' : 'bg-brand-red hover:opacity-90'}`}
+                >Recusar</button>
               </div>
             </div>
           </div>

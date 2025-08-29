@@ -143,3 +143,32 @@ Siga esses passos para configurar deploy automático no [Render](https://render.
 6. Clique em **Create Static Site**.
 
 Após alguns minutos, seu front-end e backend estarão ativos com deploy contínuo a partir do GitHub.
+
+---
+
+## Fluxo de Orçamento (Prestador)
+
+Estados possíveis do serviço:
+- Pendente → aguardando o prestador digitar e enviar valor
+- Orçamento Enviado → prestador enviou o valor; cliente pode aceitar ou recusar
+- Aceito → cliente aceitou o orçamento; vira compromisso na agenda
+- Finalizado → serviço concluído
+- Recusado → recusa de qualquer lado antes de ser aceito
+
+Proteções implementadas contra perda do valor digitado:
+1. Polling global pausa ao focar o campo de orçamento (evento `mdac:pausePolling`).
+2. Enquanto o prestador digita (`editing` = true) o valor local não é sobrescrito por atualizações vindas do backend.
+3. Ao desfocar, o polling é retomado (`mdac:resumePolling`) e o valor é normalizado para formato `0.00` (pt-BR adapta com vírgula na digitação).
+4. Mudança de request (ID diferente) reseta estado local e evita carregar valor anterior incorretamente.
+5. Botões ficam desabilitados durante envio para evitar duplo clique.
+
+Eventos / integrações:
+- `mdac:notify` (CustomEvent) usado para disparar toasts de feedback (sucesso, erro, info).
+- `mdac:viewRequest` pode ser disparado globalmente com `{ detail: { id } }` para abrir diretamente um serviço específico.
+
+Possíveis melhorias futuras:
+- Debounce e máscara monetária com Intl.NumberFormat.
+- Histórico de alterações de status para auditoria.
+- Cancelamento / reenvio de orçamento antes de o cliente decidir.
+
+---
