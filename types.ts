@@ -9,7 +9,7 @@ export interface ServiceRequest {
   category: ServiceCategory;
   description: string;
   photoBase64: string | null;
-  status: 'Pendente' | 'Orçamento Enviado' | 'Aceito' | 'Recusado' | 'Finalizado';
+  status: 'Pendente' | 'Orçamento Enviado' | 'Aceito' | 'Recusado' | 'Finalizado' | 'Cancelado';
   isEmergency?: boolean;
   quote?: number;
   providerEmail?: string;

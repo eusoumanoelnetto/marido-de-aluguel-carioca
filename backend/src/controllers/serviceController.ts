@@ -81,6 +81,13 @@ export const updateServiceRequestStatus = async (req: Request, res: Response) =>
     } else if (status === 'Finalizado') {
       // Poderíamos exigir que seja prestador dono e que esteja Aceito antes; simplificado:
       if (existing.status !== 'Aceito') return res.status(400).json({ message: 'Só é possível finalizar um serviço aceito.' });
+    } else if (status === 'Cancelado') {
+      // Cancelamento permitido somente pelo cliente dono enquanto ainda não aceito
+      if (userRole !== 'client') return res.status(403).json({ message: 'Apenas o cliente pode cancelar a solicitação.' });
+      if (existing.clientEmail !== userEmail) return res.status(403).json({ message: 'Você não pode cancelar esta solicitação.' });
+      if (!(existing.status === 'Pendente' || existing.status === 'Orçamento Enviado')) {
+        return res.status(400).json({ message: 'Não é possível cancelar após o serviço ter sido aceito ou finalizado.' });
+      }
     } else if (status === 'Pendente') {
       return res.status(400).json({ message: 'Transição para Pendente não permitida.' });
     }

@@ -112,6 +112,8 @@ const getStatusDetails = (status: ServiceRequest['status']): { text: string; cla
             return { text: 'Finalizado', className: 'bg-gray-200 text-gray-700' };
         case 'Recusado':
             return { text: 'Recusado', className: 'bg-red-100 text-red-700' };
+        case 'Cancelado':
+            return { text: 'Cancelado', className: 'bg-red-50 text-red-600' };
         default:
             return { text: status, className: 'bg-gray-100 text-gray-700' };
     }

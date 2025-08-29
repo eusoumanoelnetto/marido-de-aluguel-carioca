@@ -10,7 +10,7 @@ export interface ServiceRequest {
   description: string;
   photoBase64: string | null;
   // Novo fluxo: quando prestador envia orçamento vira 'Orçamento Enviado' e só depois que o cliente aceita passa a 'Aceito'
-  status: 'Pendente' | 'Orçamento Enviado' | 'Aceito' | 'Recusado' | 'Finalizado';
+  status: 'Pendente' | 'Orçamento Enviado' | 'Aceito' | 'Recusado' | 'Finalizado' | 'Cancelado';
   isEmergency?: boolean;
   quote?: number;
   providerEmail?: string; // prestador que enviou orçamento / foi escolhido

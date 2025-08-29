@@ -409,10 +409,11 @@ const RequestQuoteStep2View: React.FC<{
     );
 };
 
-const QuotesReceivedView: React.FC<{ setView: (view: ClientView) => void; requests: ServiceRequest[]; onAccept: (id: string) => void; user: User; }> = ({ setView, requests, onAccept, user }) => {
+const QuotesReceivedView: React.FC<{ setView: (view: ClientView) => void; requests: ServiceRequest[]; onAccept: (id: string) => void; onCancel: (id: string) => void; user: User; }> = ({ setView, requests, onAccept, onCancel, user }) => {
     const myRequests = requests.filter(r => r.clientEmail === user.email);
     const pending = myRequests.filter(r => r.status === 'Pendente');
     const withQuotes = myRequests.filter(r => r.status === 'Orçamento Enviado' && (typeof r.quote === 'number' ? r.quote >= 0 : true));
+    const cancelled = myRequests.filter(r => r.status === 'Cancelado');
 
     return (
         <main className="max-w-[1200px] mx-auto p-5">
@@ -434,13 +435,18 @@ const QuotesReceivedView: React.FC<{ setView: (view: ClientView) => void; reques
             )}
             <div className="flex flex-col gap-4 mb-10">
                 {pending.map(req => (
-                    <div key={req.id} className="bg-white border border-gray-200 rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
-                        <div className="flex-1 min-w-0">
-                            <div className="text-sm text-gray-500">{new Date(req.requestDate).toLocaleDateString('pt-BR')} • {req.category}</div>
-                            <div className="font-semibold text-brand-navy truncate">{req.description}</div>
-                            <div className="text-xs mt-1 inline-flex items-center gap-1 px-2 py-1 rounded bg-yellow-50 text-yellow-700 border border-yellow-200">Pendente</div>
+                    <div key={req.id} className="bg-white border border-gray-200 rounded-xl p-5 flex flex-col gap-4 shadow-sm">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div className="flex-1 min-w-0">
+                                <div className="text-sm text-gray-500">{new Date(req.requestDate).toLocaleDateString('pt-BR')} • {req.category}</div>
+                                <div className="font-semibold text-brand-navy truncate">{req.description}</div>
+                                <div className="text-xs mt-1 inline-flex items-center gap-1 px-2 py-1 rounded bg-yellow-50 text-yellow-700 border border-yellow-200">Pendente</div>
+                            </div>
+                            <div className="text-xs text-gray-500 w-full md:w-auto">Aguardando envio de orçamento pelo prestador...</div>
                         </div>
-                        <div className="text-xs text-gray-500 w-full md:w-auto">Aguardando envio de orçamento pelo prestador...</div>
+                        <div className="flex justify-end gap-2">
+                            <button onClick={() => onCancel(req.id)} className="px-4 py-2 rounded-lg font-semibold border border-red-300 text-red-700 hover:bg-red-50 text-sm">Cancelar solicitação</button>
+                        </div>
                     </div>
                 ))}
             </div>
@@ -454,19 +460,38 @@ const QuotesReceivedView: React.FC<{ setView: (view: ClientView) => void; reques
             )}
             <div className="flex flex-col gap-4">
                 {withQuotes.map(req => (
-                    <div key={req.id} className="bg-white border border-gray-200 rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
-                        <div className="flex-1 min-w-0">
-                            <div className="text-sm text-gray-500">{new Date(req.requestDate).toLocaleDateString('pt-BR')} • {req.category}</div>
-                            <div className="font-semibold text-brand-navy truncate">{req.description}</div>
-                            <div className="text-sm text-gray-600 mt-1">Orçamento: <span className="font-semibold text-green-600">{typeof req.quote === 'number' ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(req.quote) : '—'}</span></div>
-                        </div>
-                        <div className="flex gap-2 w-full md:w-auto">
-                            <button onClick={() => onAccept(req.id)} className="px-4 py-2 rounded-lg font-semibold bg-green-600 text-white hover:bg-green-700 flex-1 md:flex-none">Aceitar</button>
-                            {/* Futuro: botão recusar orçamento individual */}
+                    <div key={req.id} className="bg-white border border-gray-200 rounded-xl p-5 flex flex-col gap-4 shadow-sm">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div className="flex-1 min-w-0">
+                                <div className="text-sm text-gray-500">{new Date(req.requestDate).toLocaleDateString('pt-BR')} • {req.category}</div>
+                                <div className="font-semibold text-brand-navy truncate">{req.description}</div>
+                                <div className="text-sm text-gray-600 mt-1">Orçamento: <span className="font-semibold text-green-600">{typeof req.quote === 'number' ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(req.quote) : '—'}</span></div>
+                            </div>
+                            <div className="flex gap-2 w-full md:w-auto">
+                                <button onClick={() => onAccept(req.id)} className="px-4 py-2 rounded-lg font-semibold bg-green-600 text-white hover:bg-green-700 flex-1 md:flex-none">Aceitar</button>
+                                <button onClick={() => onCancel(req.id)} className="px-4 py-2 rounded-lg font-semibold border border-red-300 text-red-700 hover:bg-red-50 flex-1 md:flex-none">Cancelar</button>
+                            </div>
                         </div>
                     </div>
                 ))}
             </div>
+
+            {cancelled.length > 0 && (
+                <div className="mt-12">
+                    <h2 className="text-xl font-semibold text-brand-navy mb-4">Cancelados ({cancelled.length})</h2>
+                    <div className="flex flex-col gap-4">
+                        {cancelled.map(req => (
+                            <div key={req.id} className="bg-white border border-gray-200 rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm opacity-70">
+                                <div className="flex-1 min-w-0">
+                                    <div className="text-sm text-gray-500">{new Date(req.requestDate).toLocaleDateString('pt-BR')} • {req.category}</div>
+                                    <div className="font-semibold text-brand-navy truncate">{req.description}</div>
+                                    <div className="text-xs mt-1 inline-flex items-center gap-1 px-2 py-1 rounded bg-red-50 text-red-700 border border-red-200">Cancelado</div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
         </main>
     );
 };
@@ -688,9 +713,13 @@ const ClientPage: React.FC<ClientPageProps> = ({ currentUser, addServiceRequest,
                     user={currentUser}
                     onAccept={(id) => {
                         updateRequestStatus(id, 'Aceito');
-                        // feedback
                         window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: 'Orçamento aceito e serviço confirmado!', type: 'success' } }));
                         setView('dashboard');
+                    }}
+                    onCancel={(id) => {
+                        if (!window.confirm('Tem certeza que deseja cancelar esta solicitação? Esta ação não pode ser desfeita.')) return;
+                        updateRequestStatus(id, 'Cancelado');
+                        window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: 'Solicitação cancelada.', type: 'success' } }));
                     }}
                  />;
       case 'service-category':
