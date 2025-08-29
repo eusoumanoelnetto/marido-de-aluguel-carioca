@@ -43,9 +43,14 @@ const App: React.FC = () => {
   // Polling leve para detectar mudanças relevantes (novos pedidos, orçamentos enviados, orçamentos aceitos)
   useEffect(() => {
     if (!currentUser) return;
-    let cancelled = false;
+  let cancelled = false;
+  const isPollingPaused = { value: false } as { value: boolean };
+
+  const pauseHandler = () => { isPollingPaused.value = true; };
+  const resumeHandler = () => { isPollingPaused.value = false; /* trigger immediate check on resume */ check().catch(() => {}); };
 
     const check = async () => {
+      if (isPollingPaused.value) return;
       try {
         const requests = await api.getServiceRequests();
         if (cancelled) return;
@@ -118,10 +123,12 @@ const App: React.FC = () => {
       }
     };
 
-    // primeira checagem imediata
-    check();
-    const interval = setInterval(check, 15000);
-    return () => { cancelled = true; clearInterval(interval); };
+  // primeira checagem imediata
+  window.addEventListener('mdac:pausePolling', pauseHandler as EventListener);
+  window.addEventListener('mdac:resumePolling', resumeHandler as EventListener);
+  check();
+  const interval = setInterval(check, 15000);
+  return () => { cancelled = true; clearInterval(interval); window.removeEventListener('mdac:pausePolling', pauseHandler as EventListener); window.removeEventListener('mdac:resumePolling', resumeHandler as EventListener); };
   }, [currentUser, lastPendingIds, lastRequestsMap]);
 
 

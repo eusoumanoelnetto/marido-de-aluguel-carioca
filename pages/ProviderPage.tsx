@@ -1079,14 +1079,16 @@ const ProviderPage: React.FC<ProviderPageProps> = ({ currentUser, requests, onLo
                 return;
             }
             // Prestador envia orçamento: muda para 'Orçamento Enviado'; ainda não é 'Aceito'
+            try { window.dispatchEvent(new CustomEvent('mdac:resumePolling')); } catch (err) {}
             updateRequestStatus(request.id, 'Orçamento Enviado', quoteValue, currentUser.email);
             onBack();
         };
 
-    const handleDecline = () => {
-    updateRequestStatus(request.id, 'Recusado');
-      onBack();
-    };
+        const handleDecline = () => {
+            try { window.dispatchEvent(new CustomEvent('mdac:resumePolling')); } catch (err) {}
+            updateRequestStatus(request.id, 'Recusado');
+            onBack();
+        };
     
     const status = getStatusDetails(request.status);
 
@@ -1135,9 +1137,11 @@ const ProviderPage: React.FC<ProviderPageProps> = ({ currentUser, requests, onLo
                                     }}
                                     onFocus={(e) => {
                                         console.log('Input focused, current value:', (e.target as HTMLInputElement).value);
+                                        try { window.dispatchEvent(new CustomEvent('mdac:pausePolling')); } catch (err) {}
                                     }}
                                     onBlur={(e) => {
                                         console.log('Input blurred, final value:', (e.target as HTMLInputElement).value);
+                                        try { window.dispatchEvent(new CustomEvent('mdac:resumePolling')); } catch (err) {}
                                     }}
                                     placeholder="Ex: 150.00"
                                     className="p-3 bg-white border-2 border-gray-300 rounded-lg text-base w-full sm:w-48 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-brand-blue"
