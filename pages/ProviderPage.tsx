@@ -1046,29 +1046,32 @@ const ProviderPage: React.FC<ProviderPageProps> = ({ currentUser, requests, onLo
     onBack: () => void;
     updateRequestStatus: (id: string, status: ServiceRequest['status'], quote?: number, providerEmail?: string) => void;
   }> = ({ request, onBack, updateRequestStatus }) => {
-    const [quote, setQuote] = useState(() => request?.quote?.toString() || '');
-    const [isEditing, setIsEditing] = useState(false);
     const inputRef = React.useRef<HTMLInputElement>(null);
     const initializedRef = React.useRef<string | null>(null);
+    const userIsTypingRef = React.useRef(false);
     
-    console.log('ServiceDetailView render - quote state:', quote, 'request ID:', request?.id, 'request quote:', request?.quote, 'isEditing:', isEditing);
+    console.log('ServiceDetailView render - request ID:', request?.id, 'request quote:', request?.quote, 'userIsTyping:', userIsTypingRef.current);
     
-    // Only initialize once per request ID and only if not currently editing
-    if (request && request.id !== initializedRef.current) {
-      initializedRef.current = request.id;
-      if (request.quote && quote !== request.quote.toString() && !isEditing) {
-        setQuote(request.quote.toString());
-        console.log('Force setting quote to:', request.quote.toString());
-      }
-    }
-    
-    // Protect against external updates while editing
+    // Initialize input value only once per request ID
     React.useEffect(() => {
-      if (request && !isEditing && request.quote && quote !== request.quote.toString()) {
-        setQuote(request.quote.toString());
-        console.log('External update - setting quote to:', request.quote.toString());
+      if (request && request.id !== initializedRef.current && inputRef.current) {
+        initializedRef.current = request.id;
+        const initialValue = request.quote?.toString() || '';
+        inputRef.current.value = initialValue;
+        console.log('Initializing input value to:', initialValue);
       }
-    }, [request?.quote, isEditing]);
+    }, [request?.id]);
+    
+    // Update input value from external changes only if user is not typing
+    React.useEffect(() => {
+      if (request && !userIsTypingRef.current && inputRef.current && request.quote !== undefined) {
+        const newValue = request.quote?.toString() || '';
+        if (inputRef.current.value !== newValue) {
+          inputRef.current.value = newValue;
+          console.log('External update - setting input value to:', newValue);
+        }
+      }
+    }, [request?.quote]);
     if (!request) {
       return (
         <div className="max-w-7xl mx-auto p-6">
@@ -1079,8 +1082,8 @@ const ProviderPage: React.FC<ProviderPageProps> = ({ currentUser, requests, onLo
     }
 
         const handleAccept = () => {
-            // Use controlled state value
-            const inputValue = quote || '';
+            // Get value directly from input
+            const inputValue = inputRef.current?.value || '';
             const quoteValue = parseFloat(inputValue);
             console.log('Trying to accept with input value:', inputValue, 'parsed:', quoteValue);
             if (isNaN(quoteValue) || quoteValue <= 0) {
@@ -1088,14 +1091,14 @@ const ProviderPage: React.FC<ProviderPageProps> = ({ currentUser, requests, onLo
                 return;
             }
             // Prestador envia orçamento: muda para 'Orçamento Enviado'; ainda não é 'Aceito'
-            setIsEditing(false);
+            userIsTypingRef.current = false;
             try { window.dispatchEvent(new CustomEvent('mdac:resumePolling')); } catch (err) {}
             updateRequestStatus(request.id, 'Orçamento Enviado', quoteValue, currentUser.email);
             onBack();
         };
 
     const handleDecline = () => {
-      setIsEditing(false);
+      userIsTypingRef.current = false;
       try { window.dispatchEvent(new CustomEvent('mdac:resumePolling')); } catch (err) {}
       updateRequestStatus(request.id, 'Recusado');
       onBack();
@@ -1138,21 +1141,14 @@ const ProviderPage: React.FC<ProviderPageProps> = ({ currentUser, requests, onLo
                                 <input
                                     ref={inputRef}
                                     type="number"
-                                    value={quote}
-                                    onChange={(e) => {
-                                        const target = e.target as HTMLInputElement;
-                                        console.log('Input value changed to:', target.value);
-                                        setQuote(target.value);
-                                        setIsEditing(true);
-                                    }}
                                     onFocus={(e) => {
                                         console.log('Input focused, current value:', (e.target as HTMLInputElement).value);
-                                        setIsEditing(true);
+                                        userIsTypingRef.current = true;
                                         try { window.dispatchEvent(new CustomEvent('mdac:pausePolling')); } catch (err) {}
                                     }}
                                     onBlur={(e) => {
                                         console.log('Input blurred, final value:', (e.target as HTMLInputElement).value);
-                                        setIsEditing(false);
+                                        userIsTypingRef.current = false;
                                         try { window.dispatchEvent(new CustomEvent('mdac:resumePolling')); } catch (err) {}
                                     }}
                                     placeholder="Ex: 150.00"
