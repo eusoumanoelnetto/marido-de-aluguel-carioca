@@ -22,10 +22,26 @@ const AnnouncementBanner: React.FC<Props> = ({ role }) => {
     let cancelled = false;
     const fetchAnnouncements = async () => {
       try {
-  const url = `/announcements.json`; // caminho absoluto para funcionar no Render (root) e qualquer host
-        const res = await fetch(url, { cache: 'no-store' });
-        if (!res.ok) return;
-        const data: Announcement[] = await res.json();
+        const candidates = [
+          '/announcements.json',
+          `${import.meta.env.BASE_URL}announcements.json`,
+          `${import.meta.env.BASE_URL.replace(/\/$/, '')}/announcements.json`,
+        ];
+        let data: Announcement[] | null = null;
+        for (const url of candidates) {
+          try {
+            const res = await fetch(url, { cache: 'no-store' });
+            if (!res.ok) continue;
+            const json = await res.json();
+            if (Array.isArray(json)) {
+              data = json as Announcement[];
+              break;
+            }
+          } catch (err) {
+            // tentar próximo
+          }
+        }
+        if (!data) return;
         if (cancelled) return;
         const seenRaw = localStorage.getItem('mdac_seenAnnouncements');
         let seen: string[] = [];

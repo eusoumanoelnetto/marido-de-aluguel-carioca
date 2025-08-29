@@ -5,10 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && node ./scripts/copy-sw.cjs",
-    "preview": "vite preview",
-    "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist"
+  "build": "vite build && node ./scripts/copy-sw.cjs",
+  "preview": "vite preview",
+  "predeploy": "npm run build",
+  "deploy": "gh-pages -d dist",
+  "render-build": "npm run build && node ./scripts/copy-dist-to-backend.js"
   },
   "dependencies": {
     "@google/genai": "^1.15.0",

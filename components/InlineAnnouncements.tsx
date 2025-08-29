@@ -29,10 +29,23 @@ const InlineAnnouncements: React.FC<Props> = ({ limit }) => {
     let cancelled = false;
     (async () => {
       try {
-  const url = `/announcements.json`; // usar root absoluto para padronizar no Render
-        const res = await fetch(url, { cache: 'no-store' });
-        if (!res.ok) throw new Error('Falha ao carregar');
-        const data: Announcement[] = await res.json();
+        const candidates = [
+          '/announcements.json',
+          `${import.meta.env.BASE_URL}announcements.json`,
+          `${import.meta.env.BASE_URL.replace(/\/$/, '')}/announcements.json`,
+        ];
+        let data: Announcement[] | null = null;
+        for (const url of candidates) {
+          try {
+            const res = await fetch(url, { cache: 'no-store' });
+            if (!res.ok) continue;
+            const json = await res.json();
+            if (Array.isArray(json)) { data = json as Announcement[]; break; }
+          } catch (err) {
+            // tentar próximo
+          }
+        }
+        if (!data) throw new Error('Falha ao carregar');
         if (cancelled) return;
         setItems(data);
       } catch (e: any) {
@@ -55,14 +68,41 @@ const InlineAnnouncements: React.FC<Props> = ({ limit }) => {
   };
 
   const visible = items.slice(0, limit || items.length);
-  if (loading) return null; // evitar flicker
-  if (error) return null;
-  if (!visible.length) return null;
+  const unseenCount = items.filter(a => !seen.has(a.id)).length;
+  // Mesmo sem itens visíveis, manter a seção para dar feedback ao usuário
+  if (loading) {
+    return (
+      <section aria-label="Atualizações" className="mb-10">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-xl font-semibold text-brand-navy">Atualizações</h2>
+        </div>
+        <div className="text-xs text-gray-500">Carregando...</div>
+      </section>
+    );
+  }
+  if (error) {
+    return (
+      <section aria-label="Atualizações" className="mb-10">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-xl font-semibold text-brand-navy">Atualizações</h2>
+          <button onClick={() => window.location.reload()} className="text-xs font-medium text-brand-blue hover:underline">Recarregar</button>
+        </div>
+        <div className="text-xs text-red-500">Não foi possível carregar atualizações.</div>
+      </section>
+    );
+  }
 
   return (
     <section aria-label="Atualizações" className="mb-10">
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-xl font-semibold text-brand-navy">Atualizações</h2>
+        <h2 className="text-xl font-semibold text-brand-navy flex items-center gap-2">
+          <span>Atualizações</span>
+          {unseenCount > 0 && (
+            <span className="inline-flex items-center justify-center text-[10px] px-1.5 py-0.5 rounded-full bg-brand-blue text-white font-medium">
+              {unseenCount}
+            </span>
+          )}
+        </h2>
         <button
           onClick={() => setExpanded(e => !e)}
           className="text-xs font-medium text-brand-blue hover:underline"
@@ -70,32 +110,36 @@ const InlineAnnouncements: React.FC<Props> = ({ limit }) => {
           {expanded ? 'Recolher' : 'Detalhes'}
         </button>
       </div>
-      <div className="space-y-3">
-        {visible.map(a => {
-          const isSeen = seen.has(a.id);
-          return (
-            <div key={a.id} className={`border rounded-lg p-4 bg-white shadow-sm relative overflow-hidden`}> 
-              {!isSeen && (
-                <span className="absolute top-2 right-2 text-[10px] bg-brand-red text-white px-1.5 py-0.5 rounded-full">novo</span>
-              )}
-              <div className="flex items-start gap-3">
-                <div className="mt-0.5 text-brand-blue"><i className="fa-solid fa-wrench" /></div>
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium text-sm text-brand-navy leading-snug">{a.title}{a.date && <span className="ml-2 text-[11px] font-normal text-gray-500">{new Date(a.date).toLocaleDateString('pt-BR')}</span>}</div>
-                  <div className="text-xs text-gray-600 mt-1 line-clamp-2">
-                    {expanded ? a.message : a.message}
-                  </div>
-                  <div className="mt-2">
-                    {!isSeen && (
-                      <button onClick={() => markSeen(a.id)} className="text-[11px] text-brand-blue hover:underline">Marcar como lido</button>
-                    )}
+      {visible.length > 0 ? (
+        <div className="space-y-3">
+          {visible.map(a => {
+            const isSeen = seen.has(a.id);
+            return (
+              <div key={a.id} className={`border rounded-lg p-4 bg-white shadow-sm relative overflow-hidden`}> 
+                {!isSeen && (
+                  <span className="absolute top-2 right-2 text-[10px] bg-brand-red text-white px-1.5 py-0.5 rounded-full">novo</span>
+                )}
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5 text-brand-blue"><i className="fa-solid fa-wrench" /></div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-sm text-brand-navy leading-snug">{a.title}{a.date && <span className="ml-2 text-[11px] font-normal text-gray-500">{new Date(a.date).toLocaleDateString('pt-BR')}</span>}</div>
+                    <div className="text-xs text-gray-600 mt-1 line-clamp-2">
+                      {expanded ? a.message : a.message}
+                    </div>
+                    <div className="mt-2">
+                      {!isSeen && (
+                        <button onClick={() => markSeen(a.id)} className="text-[11px] text-brand-blue hover:underline">Marcar como lido</button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="text-xs text-gray-500 border rounded-lg p-4 bg-white shadow-sm">Nenhuma novidade no momento.</div>
+      )}
     </section>
   );
 };
