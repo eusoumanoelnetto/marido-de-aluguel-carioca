@@ -1046,7 +1046,17 @@ const ProviderPage: React.FC<ProviderPageProps> = ({ currentUser, requests, onLo
     onBack: () => void;
     updateRequestStatus: (id: string, status: ServiceRequest['status'], quote?: number, providerEmail?: string) => void;
   }> = ({ request, onBack, updateRequestStatus }) => {
-    const [quote, setQuote] = useState(request?.quote?.toString() || '');
+    const [quote, setQuote] = useState('');
+    const inputRef = React.useRef<HTMLInputElement>(null);
+    
+    // Initialize quote only once when request changes
+    React.useEffect(() => {
+      if (request?.quote) {
+        setQuote(request.quote.toString());
+      } else {
+        setQuote('');
+      }
+    }, [request?.id]); // Only depend on request ID to avoid reinitializing on every request change
     if (!request) {
       return (
         <div className="max-w-7xl mx-auto p-6">
@@ -1057,7 +1067,7 @@ const ProviderPage: React.FC<ProviderPageProps> = ({ currentUser, requests, onLo
     }
 
     const handleAccept = () => {
-      const quoteValue = parseFloat(quote);
+      const quoteValue = parseFloat(inputRef.current?.value || quote);
       if (isNaN(quoteValue) || quoteValue <= 0) {
     window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: 'Por favor, insira um valor de orçamento válido.', type: 'error' } }));
         return;
@@ -1077,7 +1087,7 @@ const ProviderPage: React.FC<ProviderPageProps> = ({ currentUser, requests, onLo
     return (
       <div className="max-w-7xl mx-auto p-6">
         <PageHeader onBack={onBack} title="Voltar" />
-    <div className="bg-white rounded-xl border border-gray-200 p-8 shadow-sm overflow-hidden relative">
+        <div className="bg-white rounded-xl border border-gray-200 p-8 shadow-sm relative">
           <div className="flex justify-between items-start">
             <div>
               <h1 className="text-2xl font-bold mb-1 text-brand-navy">{request.category}</h1>
@@ -1105,15 +1115,41 @@ const ProviderPage: React.FC<ProviderPageProps> = ({ currentUser, requests, onLo
           </div>
 
                     {request.status === 'Pendente' && (
-                        <div className="mt-8 border-t pt-8">
+                        <div className="mt-8 border-t pt-8" style={{ position: 'relative', zIndex: 1 }}>
                             <h2 className="text-lg font-semibold mb-3 text-brand-navy">Enviar Orçamento</h2>
                             <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 w-full min-w-0">
                                 <input 
+                                    ref={inputRef}
                                     type="number" 
-                                    value={quote}
-                                    onChange={e => setQuote(e.target.value)}
+                                    defaultValue={quote}
+                                    onInput={(e) => {
+                                        console.log('Input onInput triggered:', (e.target as HTMLInputElement).value);
+                                        setQuote((e.target as HTMLInputElement).value);
+                                    }}
+                                    onChange={(e) => {
+                                        console.log('Input onChange triggered:', e.target.value);
+                                        e.stopPropagation();
+                                        setQuote(e.target.value);
+                                    }}
+                                    onFocus={(e) => {
+                                        console.log('Input focused');
+                                        e.stopPropagation();
+                                    }}
+                                    onBlur={() => console.log('Input blurred')}
+                                    onClick={(e) => {
+                                        console.log('Input clicked');
+                                        e.stopPropagation();
+                                    }}
+                                    onKeyDown={(e) => console.log('Key pressed:', e.key)}
                                     placeholder="Ex: 150.00" 
-                                    className="p-3 bg-gray-100 border border-gray-300 rounded-lg text-base w-full sm:w-48 focus:outline-none focus:ring-2 focus:ring-brand-blue min-w-0"
+                                    className="p-3 bg-white border-2 border-gray-300 rounded-lg text-base w-full sm:w-48 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-brand-blue min-w-0"
+                                    style={{ 
+                                        pointerEvents: 'auto',
+                                        position: 'relative',
+                                        zIndex: 10,
+                                        touchAction: 'manipulation'
+                                    }}
+                                    autoComplete="off"
                                 />
                                 <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto min-w-0">
                                     <button onClick={handleAccept} className="px-5 py-3 rounded-lg font-semibold bg-green-600 text-white hover:bg-green-700 w-full sm:w-auto text-center whitespace-normal break-words">Enviar Orçamento</button>
