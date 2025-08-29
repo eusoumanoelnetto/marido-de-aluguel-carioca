@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes';
 import serviceRoutes from './routes/serviceRoutes';
 import userRoutes from './routes/userRoutes';
+import pushRoutes from './routes/pushRoutes';
 import { initDb, isDbConnected } from './db';
 
 // Load environment variables from .env file
@@ -33,6 +34,7 @@ app.use('/api', checkDbConnection);
 app.use('/api/auth', authRoutes);
 app.use('/api/requests', serviceRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/push', pushRoutes);
 
 
 // Sempre que existir build em ../../dist servimos o front; se não existir, mostra health simples
