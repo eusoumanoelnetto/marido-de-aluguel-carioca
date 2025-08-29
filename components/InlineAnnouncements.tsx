@@ -29,7 +29,8 @@ const InlineAnnouncements: React.FC<Props> = ({ limit }) => {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch('/announcements.json', { cache: 'no-store' });
+        const url = `${import.meta.env.BASE_URL}announcements.json`;
+        const res = await fetch(url, { cache: 'no-store' });
         if (!res.ok) throw new Error('Falha ao carregar');
         const data: Announcement[] = await res.json();
         if (cancelled) return;

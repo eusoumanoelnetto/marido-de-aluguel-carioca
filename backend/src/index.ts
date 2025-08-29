@@ -15,7 +15,25 @@ export const app: Express = express();
 const PORT = process.env.PORT || 3001;
 
 // Middlewares
-app.use(cors()); // Enable Cross-Origin Resource Sharing
+// Enable Cross-Origin Resource Sharing with safer defaults:
+// - Allow Authorization header in preflight so browsers can send Bearer tokens
+// - Allow origin to be configured via FRONTEND_ORIGIN (comma-separated) or fallback to '*'
+const frontendOrigin = process.env.FRONTEND_ORIGIN;
+let corsOrigin: boolean | string | string[] = '*';
+if (frontendOrigin) {
+  // allow a single origin or a comma-separated list
+  corsOrigin = frontendOrigin.includes(',') ? frontendOrigin.split(',').map(s => s.trim()) : frontendOrigin;
+}
+app.use(cors({
+  origin: corsOrigin,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin'],
+  exposedHeaders: ['Authorization'],
+  // credentials left false by default; if you need cookies set FRONTEND_ORIGIN and enable credentials explicitly
+  credentials: false,
+}));
+// Also respond to all OPTIONS preflight requests
+app.options('*', cors());
 app.use(express.json({ limit: '10mb' })); // To parse JSON bodies (and increase limit for images)
 
 // Middleware to check for DB connection before handling API requests

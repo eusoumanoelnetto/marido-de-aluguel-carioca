@@ -25,6 +25,7 @@ const App: React.FC = () => {
   const [newPending, setNewPending] = useState<ServiceRequest[]>([]);
   const [showNewRequestsAlert, setShowNewRequestsAlert] = useState(false);
   const [lastRequestsMap, setLastRequestsMap] = useState<Record<string, ServiceRequest['status']>>({});
+  const [apiMisconfigured, setApiMisconfigured] = useState(false);
 
   // Buscar solicitações tanto para prestador quanto para cliente (cliente filtra localmente pelos seus pedidos)
   useEffect(() => {
@@ -49,6 +50,26 @@ const App: React.FC = () => {
     };
     fetchRequests();
   }, [currentUser]);
+
+  // Detectar ambiente sem API configurada (ex: site hospedado no GitHub Pages sem VITE_API_BASE)
+  useEffect(() => {
+    const checkApi = async () => {
+      try {
+        const base = (import.meta.env.VITE_API_BASE as string) || '/api';
+        // tentar buscar rota de requests sem Authorization para validar disponibilidade
+        const url = `${base.replace(/\/$/, '')}/requests`;
+        const res = await fetch(url, { method: 'GET', cache: 'no-store' });
+        // Se 404 provavelmente a API não está onde o frontend espera (ex: GitHub Pages)
+        if (res.status === 404) {
+          setApiMisconfigured(true);
+        }
+      } catch (e) {
+        // network errors - sinaliza possível misconfiguração em produção
+        if (import.meta.env.PROD) setApiMisconfigured(true);
+      }
+    };
+    checkApi();
+  }, []);
 
   // Polling leve para detectar mudanças relevantes (novos pedidos, orçamentos enviados, orçamentos aceitos)
   useEffect(() => {
@@ -307,6 +328,18 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-slate-50 text-slate-800">
       <Toast />
       <PWAInstall />
+        {apiMisconfigured && (
+          <div className="w-full bg-yellow-50 border-b border-yellow-200 text-yellow-900 p-3 text-sm">
+            <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+              <div>
+                <strong>Atenção:</strong> Backend não configurado para este deploy. Defina a variável de ambiente <code>VITE_API_BASE</code> apontando para a URL do backend (ex: https://meu-backend.onrender.com) e reconstrua o site para que clientes e prestadores recebam notificações e dados.
+              </div>
+              <div>
+                <button onClick={() => setApiMisconfigured(false)} className="text-yellow-800 underline text-sm">Fechar</button>
+              </div>
+            </div>
+          </div>
+        )}
   <AnnouncementBanner role={currentUser?.role} />
   <main>
         {renderPage()}
