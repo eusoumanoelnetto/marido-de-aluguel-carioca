@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
+import { Analytics } from '@vercel/analytics/react';
 import RoleSelectionPage from './pages/RoleSelectionPage';
 import LoginPage from './pages/LoginPage';
 import SignUpPage from './pages/SignUpPage';
@@ -365,7 +366,9 @@ const App: React.FC = () => {
           }}
         />
       )}
-    </div>
+  {/* Vercel Web Analytics: rastreamento de page views */}
+  <Analytics />
+  </div>
   );
 };
 

@@ -4,14 +4,15 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-  "dev": "vite",
-  "build": "vite build && node ./scripts/copy-sw.cjs",
-  "preview": "vite preview",
-  "vercel-build": "npm run build",
-  "render-build": "npm run build && node ./scripts/copy-dist-to-backend.js"
+    "dev": "vite",
+    "build": "vite build && node ./scripts/copy-sw.cjs",
+    "preview": "vite preview",
+    "vercel-build": "npm run build",
+    "render-build": "npm run build && node ./scripts/copy-dist-to-backend.js"
   },
   "dependencies": {
     "@google/genai": "^1.15.0",
+    "@vercel/analytics": "^1.5.0",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
