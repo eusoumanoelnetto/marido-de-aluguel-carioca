@@ -13,6 +13,10 @@ dotenv.config();
 
 export const app: Express = express();
 const PORT = process.env.PORT || 3001;
+const IS_PROD = process.env.NODE_ENV === 'production';
+if (IS_PROD && (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'dev_secret')) {
+  console.warn('⚠️  JWT_SECRET não definido ou usando valor inseguro (dev_secret) em produção. Defina uma string forte em variáveis de ambiente.');
+}
 
 // Middlewares
 // Enable Cross-Origin Resource Sharing with safer defaults:
@@ -23,6 +27,9 @@ let corsOrigin: boolean | string | string[] = '*';
 if (frontendOrigin) {
   // allow a single origin or a comma-separated list
   corsOrigin = frontendOrigin.includes(',') ? frontendOrigin.split(',').map(s => s.trim()) : frontendOrigin;
+}
+if (IS_PROD && corsOrigin === '*') {
+  console.warn('⚠️  CORS liberado para todos (*) em produção. Defina FRONTEND_ORIGIN com o domínio(s) do seu front-end para maior segurança.');
 }
 app.use(cors({
   origin: corsOrigin,

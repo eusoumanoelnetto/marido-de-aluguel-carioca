@@ -49,6 +49,22 @@ Este projeto é uma plataforma completa para conectar clientes e prestadores de 
 
 ---
 
+## Variáveis de Ambiente
+
+Frontend (.env ou Vercel):
+- `GEMINI_API_KEY` – chave do Gemini
+- `VITE_API_BASE` – URL base do backend (ex: https://seu-backend.onrender.com/api)
+
+Backend (`backend/.env` ou provider):
+- `DATABASE_URL` – conexão Postgres
+- `JWT_SECRET` – chave forte para assinar tokens
+- `PORT` – porta (default 3001)
+- `FRONTEND_ORIGIN` – domínio(s) permitidos para CORS (ex: https://seu-frontend.vercel.app)
+
+Arquivos de exemplo: `.env.example` (frontend) e `backend/.env.example`.
+
+---
+
 ## Como rodar localmente
 
 1. Clone o repositório:
