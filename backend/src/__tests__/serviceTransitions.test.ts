@@ -5,7 +5,8 @@ import jwt from 'jsonwebtoken';
 import { ServiceRequest } from '../types';
 
 // Helper para criar tokens simples (em testes podemos ignorar senha real)
-const JWT_SECRET = process.env.JWT_SECRET || 'test-secret';
+// Usar mesmo fallback do middleware (dev_secret) para evitar assinaturas inválidas nos testes
+const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret';
 
 const makeToken = (email: string, role: string) =>
   jwt.sign({ email, role }, JWT_SECRET, { expiresIn: '1h' });
@@ -58,7 +59,7 @@ describe('Transições de status de ServiceRequest', () => {
       .send({ status: 'Orçamento Enviado', quote: 150 });
     expect(res.status).toBe(200);
     expect(res.body.status).toBe('Orçamento Enviado');
-    expect(res.body.quote).toBe('150'); // PG retorna numeric como string
+  expect(String(res.body.quote)).toBe('150'); // Normaliza para string (memória pode guardar número)
     expect(res.body.providerEmail).toBe('pro@example.com');
   });
 

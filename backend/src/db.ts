@@ -116,6 +116,14 @@ const dbClient = {
 };
 
 export const initDb = async () => {
+  // Em ambiente de teste (Jest) ou quando explicitamente solicitado, não tenta conectar no Postgres.
+  if (process.env.JEST_WORKER_ID !== undefined || process.env.SKIP_DB === '1') {
+    isDbConnected = false;
+    if (!process.env.SILENT_TESTS) {
+      console.log('Test mode: pulando conexão real com Postgres e usando armazenamento em memória.');
+    }
+    return;
+  }
   try {
     // Test connection by getting a client from the pool
     const client = await pgPool.connect();
