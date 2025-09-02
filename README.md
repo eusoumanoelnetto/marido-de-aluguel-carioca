@@ -45,7 +45,7 @@ Este projeto é uma plataforma completa para conectar clientes e prestadores de 
 - **Backend:** Node.js, Express, GPT-5 Mini (GitHub Copilot)
 - **Correção de bugs:** Cloud Sonnet 4 (GitHub Copilot)
 - **Hospedagem Backend:** Render
-- **Deploy Frontend:** GitHub Pages / Vercel
+- **Deploy Frontend:** Vercel (GitHub Pages descontinuado)
 
 ---
 
@@ -98,17 +98,14 @@ Arquivos de exemplo: `.env.example` (frontend) e `backend/.env.example`.
 
    ```bash
    GEMINI_API_KEY=coloque_sua_chave
-   VITE_BASE=/marido-de-aluguel-carioca/
+   VITE_API_BASE=https://seu-backend.onrender.com/api
    ```
 
 ---
 
 ## Como fazer deploy
 
-### Opção 1: GitHub Pages (existente)
-- Deploy automático via GitHub Actions para a branch `gh-pages`.
-
-### Opção 2: Vercel (novo)
+### Deploy (Vercel)
 1. Faça push das alterações (já contém `vercel.json`).
 2. No dashboard do Vercel clique em "Add New..." → "Project" e importe este repositório.
 3. Build Command: deixe em branco (auto) ou use `npm run vercel-build`.
@@ -173,13 +170,10 @@ Siga esses passos para configurar deploy automático no [Render](https://render.
 5. (Opcional) Adicione variáveis de ambiente se precisar de chaves como `GEMINI_API_KEY`.
 6. Clique em **Create Static Site**.
 
-### Deploy no Vercel (detalhado)
-
-Se quiser usar Vercel em vez de Render Static Site ou GitHub Pages:
-1. Remova `VITE_BASE` do `.env` (não é necessário no Vercel; base `/`).
-2. Defina `VITE_API_BASE` apontando para o backend (ex: `https://seu-backend.onrender.com`).
-3. (Opcional) Ative Analytics / Speed Insights do Vercel se desejar.
-4. Teste rotas internas (refresh em `/provider` etc.) — devem funcionar pelo rewrite SPA.
+### Ajustes Vercel adicionais
+1. Garanta `VITE_API_BASE` configurada para o ambiente (Production / Preview.
+2. (Opcional) Ative Analytics / Speed Insights.
+3. Teste rotas internas (refresh em `/provider` etc.) — rewrite já configurado.
 
 Após alguns minutos, seu front-end e backend estarão ativos com deploy contínuo a partir do GitHub.
 
