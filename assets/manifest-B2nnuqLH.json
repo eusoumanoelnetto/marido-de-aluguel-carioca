@@ -1,0 +1,24 @@
+{
+  "name": "Marido de Aluguel Carioca By Manoel Coelho",
+  "short_name": "Marido Carioca",
+  "description": "Conectamos você aos melhores profissionais para resolver seus problemas domésticos.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b3051",
+  "theme_color": "#0b3051",
+  "orientation": "portrait-primary",
+  "icons": [
+      {
+        "src": "assets/favicon.png",
+        "sizes": "192x192",
+        "type": "image/png",
+        "purpose": "any"
+      },
+      {
+        "src": "assets/favicon.png",
+        "sizes": "512x512",
+        "type": "image/png",
+        "purpose": "maskable"
+      }
+  ]
+}

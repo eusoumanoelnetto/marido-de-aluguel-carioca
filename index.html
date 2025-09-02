@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+  <!-- Favicon PWA e ícone do app -->
+  <link rel="icon" type="image/png" href="assets/favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Marido de Aluguel Carioca</title>
+  <!-- Open Graph / Social preview -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Marido de Aluguel Carioca" />
+  <meta property="og:description" content="Conecte-se com prestadores de serviços domésticos no Rio de Janeiro. Solicite orçamentos e gerencie sua agenda pelo app PWA." />
+  <!-- Use the built assets path (Vite copies public/* to dist/ as-is under root; built images appear under /assets/) -->
+  <meta property="og:image" content="assets/banner_capa.png" />
+  <meta property="og:image:alt" content="Banner Marido de Aluguel Carioca" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Marido de Aluguel Carioca" />
+  <meta name="twitter:description" content="Conecte-se com prestadores de serviços domésticos no Rio de Janeiro. Solicite orçamentos e gerencie sua agenda pelo app PWA." />
+  <meta name="twitter:image" content="assets/banner_capa.png" />
+    
+    <!-- PWA Manifest and Theme -->
+  <link rel="manifest" href="./assets/manifest-B2nnuqLH.json" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Marido Carioca" />
+  <link rel="apple-touch-icon" href="assets/favicon.png" />
+    <meta name="theme-color" content="#0b3051" />
+
+    <!-- iOS PWA Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Marido Carioca" />
+    <!-- Removido ícone externo, usar apenas o local -->
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inline safeguard: sobrescreve alert e limpa service workers/caches antes do app carregar -->
+    <script>
+      // Provide a minimal `process` stub for libraries that reference `process` at runtime in the browser.
+      // This prevents ReferenceError: process is not defined when an older bundle or third-party
+      // code checks `process` at runtime. It's intentionally minimal.
+      (function(){
+        try { window.process = window.process || { env: {} }; } catch(e) { /* noop */ }
+      })();
+
+      (function(){
+        try {
+          // Overwrite alert to dispatch toast event
+          var originalAlert = window.alert;
+          window.alert = function(msg){
+            try { window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: String(msg||''), type: 'error' } })); }
+            catch(e){ originalAlert(msg); }
+          };
+
+          // Unregister any service workers and clear caches to avoid stale JS
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(regs){
+              regs.forEach(function(r){ try{ r.unregister(); }catch(_){} });
+            }).catch(function(){});
+          }
+          if (window.caches && window.caches.keys) {
+            caches.keys().then(function(keys){ keys.forEach(function(k){ caches.delete(k); }); }).catch(function(){});
+          }
+        } catch(e) { /* noop */ }
+      })();
+    </script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              'brand-navy': '#0b3051',
+              'brand-red': '#b61f16',
+              'brand-blue': '#3c84c1',
+              'brand-muted-blue': '#5f84a9',
+              'brand-beige': '#f0ceac',
+            },
+            fontFamily: {
+              sans: ['Poppins', 'sans-serif'],
+            },
+          }
+        }
+      }
+    </script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* Custom styles to override browser autofill background color */
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:focus,
+    input:-webkit-autofill:active {
+      -webkit-box-shadow: 0 0 0 30px #f3f4f6 inset !important; /* Corresponds to bg-gray-100 */
+      -webkit-text-fill-color: #1f2937 !important; /* A standard dark text color like text-gray-800 */
+      transition: background-color 5000s ease-in-out 0s;
+    }
+  </style>
+<!-- Removido link /index.css inexistente (causava 404 no console). Tailwind CDN já fornece estilos. -->
+  <script type="module" crossorigin src="./assets/index-DRBTPdLD.js"></script>
+</head>
+  <body>
+    <div id="root"></div>
+</body>
+</html>
