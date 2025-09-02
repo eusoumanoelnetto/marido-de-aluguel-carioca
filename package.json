@@ -4,11 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+  "dev": "vite",
   "build": "vite build && node ./scripts/copy-sw.cjs",
   "preview": "vite preview",
-  "predeploy": "npm run build",
-  "deploy": "gh-pages -d dist",
   "vercel-build": "npm run build",
   "render-build": "npm run build && node ./scripts/copy-dist-to-backend.js"
   },
@@ -25,7 +23,6 @@
   "devDependencies": {
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.2",
-    "gh-pages": "^5.0.0",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"
   }

@@ -29,6 +29,10 @@ jobs:
         working-directory: backend
         run: npm ci
 
+      - name: Typecheck backend
+        working-directory: backend
+        run: npm run build -- --noEmit
+
       - name: Test backend
         working-directory: backend
         env:
