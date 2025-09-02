@@ -9,6 +9,7 @@
   "preview": "vite preview",
   "predeploy": "npm run build",
   "deploy": "gh-pages -d dist",
+  "vercel-build": "npm run build",
   "render-build": "npm run build && node ./scripts/copy-dist-to-backend.js"
   },
   "dependencies": {

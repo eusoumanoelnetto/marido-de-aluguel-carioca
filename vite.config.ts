@@ -6,7 +6,8 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   return {
     plugins: [react()],
-    base: env.VITE_BASE || '/marido-de-aluguel-carioca/',
+  // Default base for Vercel should be root '/'. Keep VITE_BASE to allow GitHub Pages builds.
+  base: env.VITE_BASE || '/',
     define: {
       'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
       'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
