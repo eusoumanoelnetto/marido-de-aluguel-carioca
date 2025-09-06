@@ -20,7 +20,7 @@ export const updateUser = async (req: Request, res: Response) => {
             [name, phone, cep, services, profilePictureBase64, email.toLowerCase()]
         );
         
-        if (result.rowCount === 0) {
+        if ((result.rowCount ?? 0) === 0) {
             res.status(404).json({ message: 'Usuário não encontrado.' });
             return;
         }
@@ -61,7 +61,7 @@ export const deleteUser = async (req: Request, res: Response) => {
 
     try {
         const result = await pool.query('DELETE FROM users WHERE email = $1 RETURNING email', [email.toLowerCase()]);
-        if (result.rowCount === 0) {
+        if ((result.rowCount ?? 0) === 0) {
             return res.status(404).json({ message: 'Usuário não encontrado.' });
         }
         res.status(200).json({ message: 'Usuário deletado.', email: result.rows[0].email });
@@ -105,7 +105,7 @@ export const resetPassword = async (req: Request, res: Response) => {
         const salt = await bcrypt.genSalt(10);
         const hashed = await bcrypt.hash(String(password), salt);
         const result = await pool.query('UPDATE users SET password = $1 WHERE email = $2 RETURNING email', [hashed, email.toLowerCase()]);
-        if (result.rowCount === 0) {
+        if ((result.rowCount ?? 0) === 0) {
             return res.status(404).json({ message: 'Usuário não encontrado.' });
         }
         res.status(200).json({ message: 'Senha redefinida com sucesso.', email: result.rows[0].email });

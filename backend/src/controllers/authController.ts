@@ -15,7 +15,7 @@ export const signUp = async (req: Request, res: Response) => {
   try {
     const userExists = await pool.query('SELECT 1 FROM users WHERE email = $1', [email.toLowerCase()]);
 
-    if (userExists.rowCount) {
+    if (userExists.rowCount && userExists.rowCount > 0) {
       return res.status(409).json({ message: 'Este e-mail já está cadastrado.' });
     }
 
@@ -76,7 +76,7 @@ export const login = async (req: Request, res: Response) => {
     [normalizedEmail]
   );
     
-    if (result.rowCount === 0) {
+    if ((result.rowCount ?? 0) === 0) {
         return res.status(401).json({ message: 'E-mail ou senha inválidos.' });
     }
 

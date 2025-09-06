@@ -8,4 +8,4 @@ window.ADMIN_OFFLINE = false;
 window.API_BASE = 'https://marido-de-aluguel-carioca.onrender.com';
 
 // Chave do painel admin (defina a mesma em ADMIN_PANEL_KEY no backend quando contratar o serviço)
-window.ADMIN_KEY = 'DEFINA_AQUI_E_NO_BACKEND';
+window.ADMIN_KEY = 'OxQ6ppr/SYasGbB30fnyrZyh3x5e4fcbmI231UmBXVA=';

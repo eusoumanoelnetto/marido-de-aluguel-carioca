@@ -34,7 +34,7 @@ async function main() {
     'UPDATE users SET name=$1, phone=$2, role=$3, cep=$4, password=$5 WHERE email=$6 RETURNING email',
     [name, phone, 'admin', cep, hashedPassword, email]
   );
-  if (update.rowCount > 0) {
+  if ((update.rowCount ?? 0) > 0) {
     console.log('Admin updated:', email);
     process.exit(0);
   }
@@ -42,7 +42,7 @@ async function main() {
     'INSERT INTO users (name, email, phone, role, cep, password) VALUES ($1,$2,$3,$4,$5,$6) RETURNING email',
     [name, email, phone, 'admin', cep, hashedPassword]
   );
-  if (insert.rowCount > 0) {
+  if ((insert.rowCount ?? 0) > 0) {
     console.log('Admin created:', email);
   } else {
     console.error('Failed to create admin');
