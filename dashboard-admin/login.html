@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin Login - Marido de Aluguel</title>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; display:flex; align-items:center; justify-content:center; height:100vh; background: linear-gradient(135deg,#8e44ad,#614bc3); color:#fff }
+    .box { background: #fff; color:#333; padding:24px; border-radius:8px; width:320px }
+    input { width:100%; padding:8px; margin-bottom:12px; border-radius:6px; border:1px solid #ccc }
+    button { width:100%; padding:10px; background:#8e44ad; color:#fff; border:none; border-radius:6px; cursor:pointer }
+    .error { color:#e74c3c; margin-bottom:8px }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h2>Login Admin</h2>
+    <div id="error" class="error" style="display:none"></div>
+    <input id="email" type="email" placeholder="email@example.com" />
+    <input id="password" type="password" placeholder="Senha" />
+    <button id="loginBtn">Entrar</button>
+  </div>
+  <script src="config.js"></script>
+  <script>
+    const API = (typeof window !== 'undefined' && window.API_BASE) ? window.API_BASE : '';
+    const OFF = !!(typeof window !== 'undefined' && window.ADMIN_OFFLINE);
+    const loginBtn = document.getElementById('loginBtn');
+    const err = document.getElementById('error');
+    loginBtn.addEventListener('click', async () => {
+      err.style.display = 'none';
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      // Modo offline: aceitar admin/Admin simbolicamente
+      if (OFF) {
+        const ok = (email.trim().toLowerCase() === 'admin' || email.trim().toLowerCase() === 'admin@admin.com') && password === 'Admin';
+        if (!ok) {
+          err.textContent = 'Credenciais inválidas (use admin / Admin).';
+          err.style.display = 'block';
+          return;
+        }
+        localStorage.setItem('admin_token', 'offline-admin-token');
+        localStorage.setItem('admin_role', 'admin');
+        window.location.href = 'dashboard_admin.html';
+        return;
+      }
+
+      // Modo online (API Render)
+      try {
+        const res = await fetch(`${API}/api/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          err.textContent = data.message || 'Erro ao logar';
+          err.style.display = 'block';
+          return;
+        }
+        if (!data.user || data.user.role !== 'admin') {
+          err.textContent = 'Acesso negado. Conta não é administrativa.';
+          err.style.display = 'block';
+          return;
+        }
+        localStorage.setItem('admin_token', data.token);
+        window.location.href = 'dashboard_admin.html';
+      } catch (e) {
+        err.textContent = 'Erro de rede.';
+        err.style.display = 'block';
+      }
+    });
+  </script>
+</body>
+</html>

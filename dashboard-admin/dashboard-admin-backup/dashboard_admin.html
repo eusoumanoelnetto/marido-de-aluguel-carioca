@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Admin - Marido de Aluguel</title>
+
+    <!-- Google Fonts: Poppins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <style>
+        /* =================================
+           1. GLOBAIS E VARIÁVEIS DE COR
+           ================================= */
+        :root {
+            --bg-gradient-start: #8e44ad;
+            --bg-gradient-end: #614bc3;
+            --bg-header: rgba(118, 75, 162, 0.8);
+            --card-bg: #ffffff;
+            --text-dark: #34495e;
+            --text-muted: #7f8c8d;
+            --text-on-header: #ffffff;
+            --green: #2ecc71;
+            --blue: #3498db;
+            --orange: #f39c12;
+            --red: #e74c3c;
+            --nav-btn-bg: rgba(255, 255, 255, 0.1);
+            --nav-btn-hover: rgba(255, 255, 255, 0.2);
+            --nav-btn-active: #ffffff;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
+            color: var(--text-dark);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* =================================
+           2. LAYOUT PRINCIPAL E HEADER
+           ================================= */
+        .admin-panel {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        
+        .main-header {
+            background-color: var(--bg-header);
+            backdrop-filter: blur(5px);
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-title { display: flex; align-items: center; gap: 16px; }
+        .header-title .logo {
+            width: 40px; height: 40px;
+            background: white; border-radius: 8px;
+            display: grid; place-items: center;
+            font-size: 1.5rem; color: #8e44ad;
+        }
+        .header-title .title-text h1 { font-size: 1.5rem; font-weight: 600; color: var(--text-on-header); }
+        .header-title .title-text p { font-size: 0.9rem; color: var(--text-on-header); opacity: 0.8; }
+
+        .status-badge {
+            background-color: var(--green);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        /* --- Barra de Navegação --- */
+        .main-nav {
+            background: rgba(0,0,0,0.1);
+            padding: 10px 40px;
+        }
+        .main-nav ul { list-style: none; display: flex; gap: 10px; }
+        .main-nav a {
+            display: flex; align-items: center; gap: 8px;
+            text-decoration: none;
+            color: var(--text-on-header);
+            background-color: var(--nav-btn-bg);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        .main-nav a:hover { background-color: var(--nav-btn-hover); }
+        .main-nav a.active {
+            background-color: var(--nav-btn-active);
+            color: var(--text-dark);
+        }
+        
+        /* --- Área de Conteúdo --- */
+        .content-area {
+            flex-grow: 1;
+            padding: 40px;
+            overflow-y: auto;
+        }
+
+        .page { display: none; }
+        .page.active { display: block; }
+        
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        /* =================================
+           3. ESTILOS DAS PÁGINAS E COMPONENTES
+           ================================= */
+        
+        /* --- Visão Geral --- */
+        .overview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+        }
+        .stat-card { position: relative; }
+        .stat-card .title { font-size: 1.1rem; font-weight: 500; color: var(--text-muted); }
+        .stat-card .value { font-size: 3rem; font-weight: 700; margin-top: 8px; }
+        .stat-card .detail { font-size: 0.9rem; color: var(--green); font-weight: 500; }
+        .stat-card .icon {
+            position: absolute;
+            top: 24px; right: 24px;
+            font-size: 2.5rem;
+            color: #ecf0f1;
+        }
+        
+        /* --- Notificações --- */
+        .form-section .title { font-size: 1.2rem; font-weight: 600; margin-bottom: 8px; }
+        .form-section .subtitle { color: var(--text-muted); margin-bottom: 24px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-weight: 500; margin-bottom: 8px; }
+        .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #bdc3c7;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: 'Poppins', sans-serif;
+        }
+        .form-group textarea { min-height: 120px; resize: vertical; }
+        .btn-purple { background: var(--bg-gradient-start); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 1rem; font-weight: 600; }
+
+        /* --- Usuários --- */
+        .user-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        .stat-list .item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border-color); }
+        .stat-list .item:last-child { border-bottom: none; }
+        .stat-list .stat-value {
+            font-weight: 700;
+            color: #fff; background: var(--bg-gradient-start);
+            border-radius: 12px; padding: 2px 10px; font-size: 0.9rem;
+        }
+        
+        /* --- Gerenciar --- */
+        .manage-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .search-filter input { width: 100%; padding: 12px 16px; border: 1px solid #bdc3c7; border-radius: 8px; }
+        .user-list { display: flex; flex-direction: column; gap: 12px; max-height: 400px; overflow-y: auto; }
+        .user-item { display: flex; align-items: center; gap: 16px; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; }
+        .user-tag { font-size: 0.75rem; font-weight: 600; padding: 4px 10px; border-radius: 12px; color: #fff; }
+        .tag-cliente { background-color: var(--blue); } .tag-prestador { background-color: var(--green); }
+        .user-info { flex-grow: 1; } .user-info .name { font-weight: 600; } .user-info .contact { font-size: 0.85rem; color: var(--text-muted); }
+        .user-actions .btn { border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; color: white; }
+
+        /* --- Erros --- */
+        .log-item { display: flex; gap: 16px; padding: 16px; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 12px; }
+        .log-tag { font-size: 0.8rem; font-weight: 600; padding: 4px 10px; border-radius: 12px; color: #fff; }
+        .tag-error { background-color: var(--red); } .tag-warning { background-color: var(--orange); }
+        .log-message { flex-grow: 1; } .log-timestamp { font-size: 0.85rem; color: var(--text-muted); align-self: flex-start; }
+        
+        /* --- Backup --- */
+        .backup-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; text-align: center; }
+        .backup-card .btn { width: 100%; margin-top: 16px; padding: 12px; font-size: 1rem; }
+
+    </style>
+</head>
+<body>
+    <div class="admin-panel">
+        <header class="main-header">
+            <div class="header-title">
+                <div class="logo"><i class="fas fa-shield-alt"></i></div>
+                <div class="title-text">
+                    <h1>Dashboard Admin</h1>
+                    <p>Marido de Aluguel Carioca</p>
+                </div>
+            </div>
+            <div class="status-badge">Sistema Online</div>
+        </header>
+
+        <nav class="main-nav">
+            <ul>
+                <li><a href="#" class="nav-link active" data-target="visao-geral"><i class="fas fa-chart-pie"></i> Visão Geral</a></li>
+                <li><a href="#" class="nav-link" data-target="notificacoes"><i class="fas fa-bell"></i> Notificações</a></li>
+                <li><a href="#" class="nav-link" data-target="usuarios"><i class="fas fa-users"></i> Usuários</a></li>
+                <li><a href="#" class="nav-link" data-target="gerenciar"><i class="fas fa-cogs"></i> Gerenciar</a></li>
+                <li><a href="#" class="nav-link" data-target="erros"><i class="fas fa-exclamation-triangle"></i> Erros</a></li>
+                <li><a href="#" class="nav-link" data-target="backup"><i class="fas fa-hdd"></i> Backup</a></li>
+            </ul>
+        </nav>
+
+        <main class="content-area">
+            
+            <!-- PÁGINA: Visão Geral -->
+            <div id="visao-geral" class="page active">
+                <div class="overview-grid">
+                    <div class="card stat-card"><div class="title">Total de Clientes</div><div class="value">3</div><div class="detail">+1 novos hoje</div><i class="fas fa-users icon"></i></div>
+                    <div class="card stat-card"><div class="title">Total de Prestadores</div><div class="value">2</div><div class="detail" style="color:#e67e22;">+0 novos hoje</div><i class="fas fa-user-check icon"></i></div>
+                    <div class="card stat-card"><div class="title">Serviços Ativos</div><div class="value">176</div><div class="detail">24 concluídos hoje</div><i class="fas fa-cog icon"></i></div>
+                    <div class="card stat-card"><div class="title">Erros Recentes</div><div class="value">5</div><div class="detail" style="color:var(--red);">3 críticos</div><i class="fas fa-exclamation-triangle icon"></i></div>
+                </div>
+            </div>
+
+            <!-- PÁGINA: Notificações -->
+            <div id="notificacoes" class="page">
+                <div class="card form-section">
+                    <h2 class="title">Enviar Notificação</h2>
+                    <p class="subtitle">Envie avisos para clientes e prestadores de serviço.</p>
+                    <form><div class="form-group"><label>Destinatários</label><select><option>Todos os usuários</option><option>Apenas Clientes</option><option>Apenas Prestadores</option></select></div><div class="form-group"><label>Mensagem da Notificação</label><textarea placeholder="Digite sua mensagem aqui..."></textarea></div><button type="button" class="btn-purple" onclick="sendNotification()"><i class="fas fa-paper-plane"></i> Enviar Notificação</button></form>
+                </div>
+            </div>
+
+            <!-- PÁGINA: Usuários -->
+            <div id="usuarios" class="page">
+                <div class="user-stats-grid">
+                    <div class="card"><h2 class="title">Estatísticas de Clientes</h2><div class="stat-list"><div class="item"><span>Total de Cadastros</span><span class="stat-value">3</span></div><div class="item"><span>Ativos este mês</span><span class="stat-value">3</span></div><div class="item"><span>Novos hoje</span><span class="stat-value">1</span></div></div></div>
+                    <div class="card"><h2 class="title">Estatísticas de Prestadores</h2><div class="stat-list"><div class="item"><span>Total de Cadastros</span><span class="stat-value">2</span></div><div class="item"><span>Ativos este mês</span><span class="stat-value">1</span></div><div class="item"><span>Novos hoje</span><span class="stat-value">0</span></div></div></div>
+                </div>
+            </div>
+
+            <!-- PÁGINA: Gerenciar -->
+            <div id="gerenciar" class="page">
+                 <div class="card">
+                     <div class="manage-header"><h2 class="title">Gerenciar Perfis</h2><button class="btn-purple" style="padding:10px 20px"><i class="fas fa-plus"></i> Cadastrar Usuário</button></div>
+                     <p class="subtitle">Filtre e gerencie perfis de clientes e prestadores.</p>
+                     <div class="search-filter" style="margin-bottom: 24px;"><input type="text" placeholder="Filtrar por email, nome ou telefone..."></div>
+                     <h3 style="margin-bottom:16px;">Usuários (5)</h3>
+                     <div class="user-list">
+                         <div class="user-item"><span class="user-tag tag-cliente">Cliente</span><div class="user-info"><div class="name">João Silva</div><div class="contact">joao@email.com • (21) 99999-1111</div></div><div class="user-actions"><button class="btn" style="background:var(--blue);"><i class="fas fa-eye"></i></button><button class="btn" style="background:var(--green);"><i class="fas fa-pen"></i></button><button class="btn" style="background:var(--red);"><i class="fas fa-trash"></i></button></div></div>
+                         <div class="user-item"><span class="user-tag tag-cliente">Cliente</span><div class="user-info"><div class="name">Maria Santos</div><div class="contact">maria@email.com • (21) 99999-2222</div></div><div class="user-actions"><button class="btn" style="background:var(--blue);"><i class="fas fa-eye"></i></button><button class="btn" style="background:var(--green);"><i class="fas fa-pen"></i></button><button class="btn" style="background:var(--red);"><i class="fas fa-trash"></i></button></div></div>
+                         <div class="user-item"><span class="user-tag tag-cliente">Cliente</span><div class="user-info"><div class="name">Pedro Costa</div><div class="contact">pedro@email.com • (21) 99999-3333</div></div><div class="user-actions"><button class="btn" style="background:var(--blue);"><i class="fas fa-eye"></i></button><button class="btn" style="background:var(--green);"><i class="fas fa-pen"></i></button><button class="btn" style="background:var(--red);"><i class="fas fa-trash"></i></button></div></div>
+                         <div class="user-item"><span class="user-tag tag-prestador">Prestador</span><div class="user-info"><div class="name">Carlos Ferreira</div><div class="contact">carlos@email.com • (21) 99999-4444</div></div><div class="user-actions"><button class="btn" style="background:var(--blue);"><i class="fas fa-eye"></i></button><button class="btn" style="background:var(--green);"><i class="fas fa-pen"></i></button><button class="btn" style="background:var(--red);"><i class="fas fa-trash"></i></button></div></div>
+                         <div class="user-item"><span class="user-tag tag-prestador">Prestador</span><div class="user-info"><div class="name">Ana Oliveira</div><div class="contact">ana@email.com • (21) 99999-5555</div></div><div class="user-actions"><button class="btn" style="background:var(--blue);"><i class="fas fa-eye"></i></button><button class="btn" style="background:var(--green);"><i class="fas fa-pen"></i></button><button class="btn" style="background:var(--red);"><i class="fas fa-trash"></i></button></div></div>
+                     </div>
+                 </div>
+            </div>
+
+            <!-- PÁGINA: Erros -->
+            <div id="erros" class="page">
+                <div class="card">
+                     <h2 class="title">Log de Erros do Backend</h2>
+                     <p class="subtitle">Monitore erros e problemas do sistema para suporte.</p>
+                     <div class="user-list" style="max-height:450px;">
+                        <div class="log-item"><span class="log-tag tag-error">Erro</span><div class="log-message"><h4>Falha na conexão com o banco de dados</h4><p style="color:var(--text-muted)">Connection timeout after 30 seconds</p></div><span class="log-timestamp">2024-08-30 14:30:15</span></div>
+                        <div class="log-item"><span class="log-tag tag-warning">Aviso</span><div class="log-message"><h4>Tempo de resposta da API acima do normal</h4><p style="color:var(--text-muted)">Response time: 2.5s (normal: <1s)</p></div><span class="log-timestamp">2024-08-30 14:25:42</span></div>
+                        <div class="log-item"><span class="log-tag tag-error">Erro</span><div class="log-message"><h4>Erro no processamento de pagamento</h4><p style="color:var(--text-muted)">Payment gateway returned error code 500</p></div><span class="log-timestamp">2024-08-30 13:45:20</span></div>
+                        <div class="log-item"><span class="log-tag tag-error">Erro</span><div class="log-message"><h4>Erro de autenticação de token JWT</h4><p style="color:var(--text-muted)">Invalid signature</p></div><span class="log-timestamp">2024-08-30 12:15:33</span></div>
+                     </div>
+                </div>
+            </div>
+            
+            <!-- PÁGINA: Backup -->
+            <div id="backup" class="page">
+                <div class="backup-grid">
+                    <div class="card backup-card"><h2 class="title">Backup Completo</h2><p class="subtitle">Backup de todos os dados do sistema.</p><button class="btn" style="background:var(--blue)"><i class="fas fa-download"></i> Backup Completo</button></div>
+                    <div class="card backup-card"><h2 class="title">Backup Clientes</h2><p class="subtitle">Backup apenas dos dados de clientes.</p><button class="btn" style="background:var(--green)"><i class="fas fa-download"></i> Backup Clientes</button></div>
+                    <div class="card backup-card"><h2 class="title">Backup Prestadores</h2><p class="subtitle">Backup apenas dos dados de prestadores.</p><button class="btn" style="background:var(--orange)"><i class="fas fa-download"></i> Backup Prestadores</button></div>
+                </div>
+            </div>
+            
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const navLinks = document.querySelectorAll('.nav-link');
+            const pages = document.querySelectorAll('.page');
+
+            // --- Lógica de Navegação entre Páginas ---
+            navLinks.forEach(link => {
+                link.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    
+                    // Altera o estado 'active' do menu
+                    navLinks.forEach(nav => nav.classList.remove('active'));
+                    link.classList.add('active');
+                    
+                    // Mostra/esconde as páginas
+                    const targetPageId = link.getAttribute('data-target');
+                    pages.forEach(page => {
+                        if (page.id === targetPageId) {
+                            page.classList.add('active');
+                        } else {
+                            page.classList.remove('active');
+                        }
+                    });
+                });
+            });
+        });
+    </script>
+    <script src="config.js"></script>
+    <script src="admin.js"></script>
+</body>
+</html>
+
