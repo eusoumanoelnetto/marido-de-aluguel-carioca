@@ -193,19 +193,7 @@
     document.addEventListener('DOMContentLoaded', () => {
       fetchUsers();
       fetchAdminEvents(); // Also fetch recent events
-      // add logout button
-      const header = document.querySelector('.main-header');
-      if (header) {
-        const btn = document.createElement('button');
-        btn.textContent = 'Logout';
-        btn.style.marginLeft = '12px';
-        btn.style.padding = '8px 12px';
-        btn.style.borderRadius = '8px';
-        btn.style.background = '#fff';
-        btn.style.color = '#8e44ad';
-        btn.onclick = window.adminLogout;
-        header.appendChild(btn);
-      }
+  // não adiciona mais botão logout
     });
   }
 })();

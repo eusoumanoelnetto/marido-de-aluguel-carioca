@@ -217,10 +217,10 @@
             <!-- PÁGINA: Visão Geral -->
             <div id="visao-geral" class="page active">
                 <div class="overview-grid">
-                    <div class="card stat-card"><div class="title">Total de Clientes</div><div class="value">3</div><div class="detail">+1 novos hoje</div><i class="fas fa-users icon"></i></div>
-                    <div class="card stat-card"><div class="title">Total de Prestadores</div><div class="value">2</div><div class="detail" style="color:#e67e22;">+0 novos hoje</div><i class="fas fa-user-check icon"></i></div>
-                    <div class="card stat-card"><div class="title">Serviços Ativos</div><div class="value">176</div><div class="detail">24 concluídos hoje</div><i class="fas fa-cog icon"></i></div>
-                    <div class="card stat-card"><div class="title">Erros Recentes</div><div class="value">5</div><div class="detail" style="color:var(--red);">3 críticos</div><i class="fas fa-exclamation-triangle icon"></i></div>
+                        <div class="card stat-card"><div class="title">Total de Clientes</div><div class="value" id="total-clientes">...</div><div class="detail" id="novos-clientes"></div><i class="fas fa-users icon"></i></div>
+                        <div class="card stat-card"><div class="title">Total de Prestadores</div><div class="value" id="total-prestadores">...</div><div class="detail" id="novos-prestadores"></div><i class="fas fa-user-check icon"></i></div>
+                        <div class="card stat-card"><div class="title">Serviços Ativos</div><div class="value" id="servicos-ativos">...</div><div class="detail" id="servicos-concluidos"></div><i class="fas fa-cog icon"></i></div>
+                        <div class="card stat-card"><div class="title">Erros Recentes</div><div class="value" id="erros-recentes">...</div><div class="detail" id="erros-criticos"></div><i class="fas fa-exclamation-triangle icon"></i></div>
                 </div>
             </div>
 
@@ -236,8 +236,8 @@
             <!-- PÁGINA: Usuários -->
             <div id="usuarios" class="page">
                 <div class="user-stats-grid">
-                    <div class="card"><h2 class="title">Estatísticas de Clientes</h2><div class="stat-list"><div class="item"><span>Total de Cadastros</span><span class="stat-value">3</span></div><div class="item"><span>Ativos este mês</span><span class="stat-value">3</span></div><div class="item"><span>Novos hoje</span><span class="stat-value">1</span></div></div></div>
-                    <div class="card"><h2 class="title">Estatísticas de Prestadores</h2><div class="stat-list"><div class="item"><span>Total de Cadastros</span><span class="stat-value">2</span></div><div class="item"><span>Ativos este mês</span><span class="stat-value">1</span></div><div class="item"><span>Novos hoje</span><span class="stat-value">0</span></div></div></div>
+                        <div class="card"><h2 class="title">Estatísticas de Clientes</h2><div class="stat-list" id="stats-clientes"></div></div>
+                        <div class="card"><h2 class="title">Estatísticas de Prestadores</h2><div class="stat-list" id="stats-prestadores"></div></div>
                 </div>
             </div>
 
@@ -249,11 +249,7 @@
                      <div class="search-filter" style="margin-bottom: 24px;"><input type="text" placeholder="Filtrar por email, nome ou telefone..."></div>
                      <h3 style="margin-bottom:16px;">Usuários (5)</h3>
                      <div class="user-list">
-                         <div class="user-item"><span class="user-tag tag-cliente">Cliente</span><div class="user-info"><div class="name">João Silva</div><div class="contact">joao@email.com • (21) 99999-1111</div></div><div class="user-actions"><button class="btn" style="background:var(--blue);"><i class="fas fa-eye"></i></button><button class="btn" style="background:var(--green);"><i class="fas fa-pen"></i></button><button class="btn" style="background:var(--red);"><i class="fas fa-trash"></i></button></div></div>
-                         <div class="user-item"><span class="user-tag tag-cliente">Cliente</span><div class="user-info"><div class="name">Maria Santos</div><div class="contact">maria@email.com • (21) 99999-2222</div></div><div class="user-actions"><button class="btn" style="background:var(--blue);"><i class="fas fa-eye"></i></button><button class="btn" style="background:var(--green);"><i class="fas fa-pen"></i></button><button class="btn" style="background:var(--red);"><i class="fas fa-trash"></i></button></div></div>
-                         <div class="user-item"><span class="user-tag tag-cliente">Cliente</span><div class="user-info"><div class="name">Pedro Costa</div><div class="contact">pedro@email.com • (21) 99999-3333</div></div><div class="user-actions"><button class="btn" style="background:var(--blue);"><i class="fas fa-eye"></i></button><button class="btn" style="background:var(--green);"><i class="fas fa-pen"></i></button><button class="btn" style="background:var(--red);"><i class="fas fa-trash"></i></button></div></div>
-                         <div class="user-item"><span class="user-tag tag-prestador">Prestador</span><div class="user-info"><div class="name">Carlos Ferreira</div><div class="contact">carlos@email.com • (21) 99999-4444</div></div><div class="user-actions"><button class="btn" style="background:var(--blue);"><i class="fas fa-eye"></i></button><button class="btn" style="background:var(--green);"><i class="fas fa-pen"></i></button><button class="btn" style="background:var(--red);"><i class="fas fa-trash"></i></button></div></div>
-                         <div class="user-item"><span class="user-tag tag-prestador">Prestador</span><div class="user-info"><div class="name">Ana Oliveira</div><div class="contact">ana@email.com • (21) 99999-5555</div></div><div class="user-actions"><button class="btn" style="background:var(--blue);"><i class="fas fa-eye"></i></button><button class="btn" style="background:var(--green);"><i class="fas fa-pen"></i></button><button class="btn" style="background:var(--red);"><i class="fas fa-trash"></i></button></div></div>
+                     <div class="user-list"></div>
                      </div>
                  </div>
             </div>
@@ -268,6 +264,7 @@
                         <div class="log-item"><span class="log-tag tag-warning">Aviso</span><div class="log-message"><h4>Tempo de resposta da API acima do normal</h4><p style="color:var(--text-muted)">Response time: 2.5s (normal: <1s)</p></div><span class="log-timestamp">2024-08-30 14:25:42</span></div>
                         <div class="log-item"><span class="log-tag tag-error">Erro</span><div class="log-message"><h4>Erro no processamento de pagamento</h4><p style="color:var(--text-muted)">Payment gateway returned error code 500</p></div><span class="log-timestamp">2024-08-30 13:45:20</span></div>
                         <div class="log-item"><span class="log-tag tag-error">Erro</span><div class="log-message"><h4>Erro de autenticação de token JWT</h4><p style="color:var(--text-muted)">Invalid signature</p></div><span class="log-timestamp">2024-08-30 12:15:33</span></div>
+                            <!-- Erros reais serão carregados via JS -->
                      </div>
                 </div>
             </div>
