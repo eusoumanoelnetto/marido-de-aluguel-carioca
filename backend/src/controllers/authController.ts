@@ -22,9 +22,11 @@ export const signUp = async (req: Request, res: Response) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
     
+    // Por segurança, impedir criação de admin via signUp público
+    const safeRole = role === 'admin' ? 'client' : role;
     const result = await pool.query(
       'INSERT INTO users (name, email, phone, role, cep, password, services) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
-      [name, email.toLowerCase(), phone, role, cep, hashedPassword, services]
+      [name, email.toLowerCase(), phone, safeRole, cep, hashedPassword, services]
     );
 
     const newUser: User = result.rows[0];

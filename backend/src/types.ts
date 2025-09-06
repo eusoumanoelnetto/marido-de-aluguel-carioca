@@ -31,7 +31,8 @@ export interface User {
   name: string;
   email: string;
   phone: string;
-  role: 'client' | 'provider';
+  // adicionado 'admin' para suportar painel administrativo
+  role: 'client' | 'provider' | 'admin';
   cep: string;
   password?: string;
   profilePictureBase64?: string | null;
@@ -42,7 +43,7 @@ export interface SignUpData {
   name: string;
   email: string;
   phone: string;
-  role: 'client' | 'provider';
+  role: 'client' | 'provider' | 'admin';
   cep: string;
   password?: string;
   services?: string[];
