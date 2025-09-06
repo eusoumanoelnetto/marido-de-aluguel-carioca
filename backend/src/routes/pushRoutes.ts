@@ -1,9 +1,12 @@
 import { Router } from 'express';
 import { saveSubscription, sendTestPush } from '../controllers/pushController';
+import { adminAccess } from '../middleware/authMiddleware';
 const router = Router();
 
+// Save subscriptions can be public (called from PWA install flow)
 router.post('/subscribe', saveSubscription);
-router.post('/send-test', sendTestPush);
+// Sending broadcasts should be admin only
+router.post('/send-test', adminAccess, sendTestPush);
 
 router.get('/public-key', (req, res) => {
 	try {

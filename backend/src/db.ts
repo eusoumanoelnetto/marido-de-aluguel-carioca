@@ -169,6 +169,15 @@ export const initDb = async () => {
       );
     `);
 
+    await pgPool.query(`
+      CREATE TABLE IF NOT EXISTS admin_events (
+        id SERIAL PRIMARY KEY,
+        event_type VARCHAR(100),
+        data JSONB,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+
   // Garantir colunas novas em bases já existentes
   await pgPool.query('ALTER TABLE service_requests ADD COLUMN IF NOT EXISTS "clientEmail" VARCHAR(255)');
   await pgPool.query('ALTER TABLE service_requests ADD COLUMN IF NOT EXISTS "providerEmail" VARCHAR(255)');

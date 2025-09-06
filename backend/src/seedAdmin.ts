@@ -1,5 +1,14 @@
 import bcrypt from 'bcryptjs';
-import pool from './db';
+import { Pool } from 'pg';
+import dotenv from 'dotenv';
+dotenv.config();
+
+// Create direct PG connection (bypasses in-memory fallback)
+const isLocalDb = process.env.DATABASE_URL?.includes('localhost') ?? false;
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: isLocalDb ? false : { rejectUnauthorized: false },
+});
 
 // Simple seed to create or upgrade an admin user.
 // Usage (Render shell or local):
@@ -41,4 +50,6 @@ async function main() {
   }
 }
 
-main().catch((e) => { console.error(e); process.exit(3); });
+main()
+  .catch((e) => { console.error(e); process.exit(3); })
+  .finally(async () => { try { await pool.end(); } catch {} });

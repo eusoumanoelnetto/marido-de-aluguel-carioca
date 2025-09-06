@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import pool from '../db';
 import { User } from '../types';
+import bcrypt from 'bcryptjs';
 
 
 export const updateUser = async (req: Request, res: Response) => {
@@ -8,7 +9,8 @@ export const updateUser = async (req: Request, res: Response) => {
     const { name, phone, cep, services, profilePictureBase64 }: User = req.body;
     const requesterEmail = (req as any).userEmail;
 
-    if (!requesterEmail || requesterEmail.toLowerCase() !== email.toLowerCase()) {
+    const requesterRole = (req as any).userRole;
+    if (!(requesterRole === 'admin') && (!requesterEmail || requesterEmail.toLowerCase() !== email.toLowerCase())) {
         return res.status(403).json({ message: 'Não autorizado a atualizar este usuário.' });
     }
   
@@ -66,5 +68,49 @@ export const deleteUser = async (req: Request, res: Response) => {
     } catch (error) {
         console.error('Delete user error:', error);
         res.status(500).json({ message: 'Erro ao deletar usuário.' });
+    }
+};
+
+// Lista eventos recentes para admin (opcional)
+export const getAdminEvents = async (req: Request, res: Response) => {
+    const role = (req as any).userRole;
+    if (role !== 'admin') {
+        return res.status(403).json({ message: 'Acesso negado. Apenas administradores.' });
+    }
+
+    try {
+        const result = await pool.query(
+            'SELECT * FROM admin_events ORDER BY created_at DESC LIMIT 20'
+        );
+        res.status(200).json({ events: result.rows });
+    } catch (error) {
+        // Table may not exist
+        res.status(200).json({ events: [] });
+    }
+};
+
+// Redefine a senha de um usuário (apenas admin)
+export const resetPassword = async (req: Request, res: Response) => {
+    const role = (req as any).userRole;
+    const { email } = req.params;
+    const { password } = req.body as { password?: string };
+    if (role !== 'admin') {
+        return res.status(403).json({ message: 'Acesso negado. Apenas administradores.' });
+    }
+    if (!password || String(password).length < 6) {
+        return res.status(400).json({ message: 'Senha inválida. Informe ao menos 6 caracteres.' });
+    }
+
+    try {
+        const salt = await bcrypt.genSalt(10);
+        const hashed = await bcrypt.hash(String(password), salt);
+        const result = await pool.query('UPDATE users SET password = $1 WHERE email = $2 RETURNING email', [hashed, email.toLowerCase()]);
+        if (result.rowCount === 0) {
+            return res.status(404).json({ message: 'Usuário não encontrado.' });
+        }
+        res.status(200).json({ message: 'Senha redefinida com sucesso.', email: result.rows[0].email });
+    } catch (error) {
+        console.error('Reset password error:', error);
+        res.status(500).json({ message: 'Erro ao redefinir senha.' });
     }
 };

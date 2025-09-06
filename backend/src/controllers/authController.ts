@@ -37,6 +37,17 @@ export const signUp = async (req: Request, res: Response) => {
   const token = jwt.sign({ email: newUser.email, role: newUser.role }, secret, { expiresIn: '7d' });
 
   console.log('New user signed up:', newUser.email);
+  
+  // Log event for admin notifications (try to insert into admin_events table if exists)
+  try {
+    await pool.query(
+      'INSERT INTO admin_events (event_type, data, created_at) VALUES ($1, $2, NOW())',
+      ['user_signup', JSON.stringify({ name: newUser.name, email: newUser.email, role: newUser.role })]
+    );
+  } catch (eventError) {
+    // Table may not exist yet; ignore silently
+  }
+
   res.status(201).json({ user: newUser, token });
   } catch (error) {
     console.error('Sign up error:', error);

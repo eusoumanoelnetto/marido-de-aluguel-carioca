@@ -34,7 +34,8 @@ if (IS_PROD && corsOrigin === '*') {
 app.use(cors({
   origin: corsOrigin,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin'],
+  // Allow custom admin header used by the static admin panel
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Admin-Key'],
   exposedHeaders: ['Authorization'],
   // credentials left false by default; if you need cookies set FRONTEND_ORIGIN and enable credentials explicitly
   credentials: false,

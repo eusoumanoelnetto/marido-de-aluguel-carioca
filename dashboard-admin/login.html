@@ -23,14 +23,31 @@
   <script src="config.js"></script>
   <script>
     const API = (typeof window !== 'undefined' && window.API_BASE) ? window.API_BASE : '';
+    const OFF = !!(typeof window !== 'undefined' && window.ADMIN_OFFLINE);
     const loginBtn = document.getElementById('loginBtn');
     const err = document.getElementById('error');
     loginBtn.addEventListener('click', async () => {
       err.style.display = 'none';
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
+
+      // Modo offline: aceitar admin/Admin simbolicamente
+      if (OFF) {
+        const ok = (email.trim().toLowerCase() === 'admin' || email.trim().toLowerCase() === 'admin@admin.com') && password === 'Admin';
+        if (!ok) {
+          err.textContent = 'Credenciais inválidas (use admin / Admin).';
+          err.style.display = 'block';
+          return;
+        }
+        localStorage.setItem('admin_token', 'offline-admin-token');
+        localStorage.setItem('admin_role', 'admin');
+        window.location.href = 'dashboard_admin.html';
+        return;
+      }
+
+      // Modo online (API Render)
       try {
-  const res = await fetch(`${API}/api/auth/login`, {
+        const res = await fetch(`${API}/api/auth/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password })
@@ -41,15 +58,13 @@
           err.style.display = 'block';
           return;
         }
-        // garantir que o usuário tenha role admin
         if (!data.user || data.user.role !== 'admin') {
           err.textContent = 'Acesso negado. Conta não é administrativa.';
           err.style.display = 'block';
           return;
         }
         localStorage.setItem('admin_token', data.token);
-  // usar caminho relativo para GitHub Pages
-  window.location.href = 'dashboard_admin.html';
+        window.location.href = 'dashboard_admin.html';
       } catch (e) {
         err.textContent = 'Erro de rede.';
         err.style.display = 'block';
