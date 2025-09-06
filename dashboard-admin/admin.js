@@ -9,20 +9,12 @@
     if (!listEl) return;
     try {
       if (OFF) {
-        // Dados locais simulados
-        const local = JSON.parse(localStorage.getItem('admin_users') || '[]');
-        if (!local.length) {
-          const seed = [
-            { name: 'João Silva', email: 'joao@email.com', phone: '(21) 99999-1111', role: 'client' },
-            { name: 'Maria Santos', email: 'maria@email.com', phone: '(21) 99999-2222', role: 'client' },
-            { name: 'Pedro Costa', email: 'pedro@email.com', phone: '(21) 99999-3333', role: 'client' },
-            { name: 'Carlos Ferreira', email: 'carlos@email.com', phone: '(21) 99999-4444', role: 'provider' },
-            { name: 'Ana Oliveira', email: 'ana@email.com', phone: '(21) 99999-5555', role: 'provider' },
-          ];
-          localStorage.setItem('admin_users', JSON.stringify(seed));
+        // Offline mode: do not expose example/demo users here.
+        // Show an empty list and a small notice so the page clearly depends on the backend.
+        const listEl = document.querySelector('.user-list');
+        if (listEl) {
+          listEl.innerHTML = '<div class="card">Painel em modo offline. Sem dados locais de exemplo.</div>';
         }
-        const users = JSON.parse(localStorage.getItem('admin_users') || '[]');
-        renderUsers(users);
         return;
       }
 
