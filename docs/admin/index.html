@@ -94,7 +94,6 @@
       </div>
       <div>
         <span class="status-badge" id="statusBadge">Offline</span>
-        <a id="logout" href="#" style="margin-left:12px;color:#fff;text-decoration:underline;display:none">Sair</a>
       </div>
     </header>
 
@@ -209,7 +208,6 @@
           qsa('.page').forEach(p => p.classList.toggle('active', p.id === target));
         });
       });
-      qs('#logout').addEventListener('click', (e) => { e.preventDefault(); clearToken(); showLogin(); });
       qs('#loginBtn').addEventListener('click', doLogin);
       qs('#notifyBtn').addEventListener('click', sendNotification);
       qs('#searchInput').addEventListener('input', filterUsers);
@@ -221,13 +219,11 @@
 
     function showLogin() {
       qs('#login').classList.remove('hidden');
-      qs('#logout').style.display = 'none';
       statusBadge.textContent = 'Offline';
       statusBadge.style.background = '#e74c3c';
     }
     function hideLogin() {
       qs('#login').classList.add('hidden');
-      qs('#logout').style.display = 'inline-block';
       statusBadge.textContent = 'Online';
       statusBadge.style.background = 'var(--green)';
     }
