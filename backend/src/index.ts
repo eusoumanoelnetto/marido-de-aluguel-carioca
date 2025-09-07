@@ -6,6 +6,7 @@ import authRoutes from './routes/authRoutes';
 import serviceRoutes from './routes/serviceRoutes';
 import userRoutes from './routes/userRoutes';
 import pushRoutes from './routes/pushRoutes';
+import dashboardRoutes from './routes/dashboardRoutes';
 import { initDb, isDbConnected } from './db';
 
 // Load environment variables from .env file
@@ -58,9 +59,11 @@ const checkDbConnection = (req: Request, res: Response, next: NextFunction) => {
 // API Routes - protected by the DB connection check
 app.use('/api', checkDbConnection);
 app.use('/api/auth', authRoutes);
+
 app.use('/api/requests', serviceRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/push', pushRoutes);
+app.use('/api/admin', dashboardRoutes); // Nova rota para dashboard admin
 
 
 // Sempre que existir build em ../../dist servimos o front; se não existir, mostra health simples

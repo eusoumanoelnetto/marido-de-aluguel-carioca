@@ -139,6 +139,60 @@
     }
   }
 
+  // Fetch overall dashboard statistics and update overview cards
+  async function fetchDashboardStats() {
+    if (OFF) {
+      // In offline/demo mode, show a clear message in the cards
+      const elMap = {
+        totalClientes: document.getElementById('total-clientes'),
+        novosClientes: document.getElementById('novos-clientes'),
+        totalPrestadores: document.getElementById('total-prestadores'),
+        novosPrestadores: document.getElementById('novos-prestadores'),
+        servicosAtivos: document.getElementById('servicos-ativos'),
+        servicosConcluidos: document.getElementById('servicos-concluidos'),
+        errosRecentes: document.getElementById('erros-recentes'),
+        errosCriticos: document.getElementById('erros-criticos')
+      };
+      Object.values(elMap).forEach(el => { if (el) el.textContent = 'Offline'; });
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API}/api/admin/stats`, { headers: { 'X-Admin-Key': ADMIN_KEY } });
+      if (!res.ok) return; // silently ignore, events or users will show messages
+      const data = await res.json();
+
+      const setText = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = String(val != null ? val : '0');
+      };
+
+      setText('total-clientes', data.totalClientes ?? '0');
+      const novos = data.servicosConcluidosHoje != null ? `+${data.servicosConcluidosHoje} concluídos hoje` : '+0 concluidos hoje';
+      // Try to update the novos-clientes element only if exists
+      const novosClientesEl = document.getElementById('novos-clientes');
+      if (novosClientesEl) {
+        // prefer explicit value if backend provides "new signups" in future; currently reuse concluded today as an indicator
+        novosClientesEl.textContent = data.newSignupsToday != null ? `+${data.newSignupsToday} novos hoje` : '+0 novos hoje';
+        novosClientesEl.style.color = (data.newSignupsToday > 0) ? 'var(--green)' : 'var(--text-muted)';
+      }
+
+      setText('total-prestadores', data.totalPrestadores ?? '0');
+      const novosPrestEl = document.getElementById('novos-prestadores');
+      if (novosPrestEl) novosPrestEl.textContent = '+0 novos hoje';
+
+      setText('servicos-ativos', data.servicosAtivos ?? '0');
+      setText('servicos-concluidos', data.servicosConcluidosHoje ?? '0');
+
+      setText('erros-recentes', data.errosRecentes ?? '0');
+      const critEl = document.getElementById('erros-criticos');
+      if (critEl) critEl.textContent = (data.errosCriticos ?? 0) > 0 ? `${data.errosCriticos} críticos` : '0 críticos';
+
+    } catch (err) {
+      // ignore dashboard stats errors
+    }
+  }
+
   function updateDashboardWithEvents(events) {
     // Simple logic: count new user signups today
     const today = new Date().toISOString().split('T')[0];
@@ -183,8 +237,9 @@
   // On dashboard page, fetch users
   if (location.pathname.toLowerCase().endsWith('dashboard_admin.html')) {
     document.addEventListener('DOMContentLoaded', () => {
-      fetchUsers();
-      fetchAdminEvents(); // Also fetch recent events
+  fetchUsers();
+  fetchAdminEvents(); // Also fetch recent events
+  fetchDashboardStats(); // Atualizar cards do dashboard
   // não adiciona mais botão logout
     });
   }
