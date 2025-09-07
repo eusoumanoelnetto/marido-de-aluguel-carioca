@@ -13,8 +13,22 @@ export const getDashboardStats = async (req: Request, res: Response) => {
     const clientes = await pool.query('SELECT COUNT(*) FROM users WHERE role = $1', ['client']);
     // Total de prestadores
     const prestadores = await pool.query('SELECT COUNT(*) FROM users WHERE role = $1', ['provider']);
-    // Serviços ativos (status != "Concluído")
-    const servicosAtivos = await pool.query('SELECT COUNT(*) FROM service_requests WHERE status != $1', ['Concluído']);
+    
+    // Serviços realmente ativos (apenas Pendente, Em andamento, Aguardando)
+    const servicosAtivos = await pool.query(`
+      SELECT COUNT(*) FROM service_requests 
+      WHERE status IN ('Pendente', 'Em andamento', 'Aguardando', 'Aceito')
+    `);
+    
+    // Debug: vamos ver todos os status para entender melhor
+    const statusDebug = await pool.query(`
+      SELECT status, COUNT(*) as count 
+      FROM service_requests 
+      GROUP BY status 
+      ORDER BY count DESC
+    `);
+    console.log('Status dos serviços:', statusDebug.rows);
+    
     // Serviços concluídos hoje
     const hoje = new Date().toISOString().split('T')[0];
     const servicosConcluidosHoje = await pool.query(
