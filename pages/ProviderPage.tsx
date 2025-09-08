@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, FC, ReactNode, ChangeEvent } from 'react';
 import AnnouncementBanner from '../components/AnnouncementBanner';
 import ServiceDetailView from '../components/ServiceDetailView';
 import { ServiceRequest, User } from '../types';
@@ -92,9 +92,13 @@ const profilePageStyles = `
 
 // Componente simples reutilizado em algumas páginas para cabeçalho com botão de voltar
 const PageHeader: React.FC<{ onBack: () => void; title: string }> = ({ onBack, title }) => (
-    <div className="flex items-center mb-6">
-        <button onClick={onBack} className="font-semibold text-brand-navy hover:text-black flex items-center">
-            <i className="fa-solid fa-arrow-left mr-2"></i> {title}
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+        <h1 className="text-2xl font-semibold text-brand-navy order-2 sm:order-1">{title}</h1>
+        <button 
+            onClick={onBack} 
+            className="order-1 sm:order-2 mb-4 sm:mb-0 bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 flex items-center self-start"
+        >
+            <i className="fa-solid fa-arrow-left mr-2"></i> Voltar
         </button>
     </div>
 );
