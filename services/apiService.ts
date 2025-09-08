@@ -120,10 +120,8 @@ const handleResponse = async (response: Response) => {
   }
   
   if (!response.ok) {
-    if (import.meta.env.DEV) {
-      // eslint-disable-next-line no-console
-      console.error('handleResponse: erro:', data);
-    }
+    // Log sempre erros importantes (não apenas em DEV)
+    console.error('handleResponse: erro:', response.status, data);
     // If the server returns an error, use its message.
     const errorMessage = data.message || data.error || `Erro do servidor (${response.status})`;
     throw new Error(errorMessage);
