@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, FC, ReactNode, ChangeEvent } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import AnnouncementBanner from '../components/AnnouncementBanner';
 import ServiceDetailView from '../components/ServiceDetailView';
 import { ServiceRequest, User } from '../types';
@@ -91,7 +91,7 @@ const profilePageStyles = `
 `;
 
 // Componente simples reutilizado em algumas páginas para cabeçalho com botão de voltar
-const PageHeader: React.FC<{ onBack: () => void; title: string }> = ({ onBack, title }) => (
+const PageHeader = ({ onBack, title }: { onBack: () => void; title: string }) => (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
         <h1 className="text-2xl font-semibold text-brand-navy order-2 sm:order-1">{title}</h1>
         <button 
@@ -123,9 +123,7 @@ const getStatusDetails = (status: ServiceRequest['status']): { text: string; cla
     }
 };
 
-const ProviderHeader: React.FC<{
-  setView: (view: ProviderView) => void;
-}> = ({ setView }) => {
+const ProviderHeader = ({ setView }: { setView: (view: ProviderView) => void }) => {
   return (
     <header className="bg-white shadow-sm sticky top-0 z-10">
       <div className="max-w-7xl mx-auto px-2 sm:px-6">
