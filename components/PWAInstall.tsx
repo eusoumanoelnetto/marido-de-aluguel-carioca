@@ -9,8 +9,8 @@ interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
 }
 
-const PWAInstall: React.FC = () => {
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+const PWAInstall = () => {
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [isInStandaloneMode, setIsInStandaloneMode] = useState(false);
@@ -118,11 +118,11 @@ const PWAInstall: React.FC = () => {
         <div className="flex-1">
           <div className="flex items-center mb-2">
             <img 
-              src="/marido-de-aluguel-carioca/assets/favicon-D5ikk5VV.png" 
+              src="/assets/favicon.png" 
               alt="Marido Carioca" 
               className="w-8 h-8 mr-3 rounded"
               onError={(e) => {
-                (e.target as HTMLImageElement).src = 'public/assets/favicon.png';
+                (e.target as HTMLImageElement).src = '/assets/logo_marido_aluguel.png';
               }}
             />
             <h3 className="font-semibold text-sm">Instalar Marido Carioca</h3>
