@@ -35,6 +35,18 @@ self.addEventListener('fetch', event => {
     return;
   }
 
+  // Não interceptar requisições cross-origin (CDNs etc.).
+  // Isso evita erros do tipo: "an 'opaque' response was used for a request whose type is not no-cors"
+  try {
+    const reqUrl = new URL(event.request.url);
+    if (reqUrl.origin !== self.location.origin) {
+      return; // deixa o navegador lidar normalmente
+    }
+  } catch (_) {
+    // se falhar ao parsear URL, não intercepta
+    return;
+  }
+
   // Log requests para debug
   if (event.request.url.includes('/api/')) {
     console.log('🌐 SW: interceptando request para API:', event.request.url);
