@@ -137,16 +137,35 @@ const handleResponse = async (response: Response) => {
 // --- API Functions hitting the backend ---
 
 export const login = async (email: string, password?: string): Promise<User | null> => {
-  const response = await fetch(`${API_BASE_URL}/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
-  });
-  if (!response.ok) return null;
-  const data = await response.json();
-  // backend returns { user, token }
-  if (data?.token) setToken(data.token);
-  return data.user ?? null;
+  console.log('🔑 login: tentando fazer login para:', email);
+  console.log('🔑 login: usando API_BASE_URL:', API_BASE_URL);
+  
+  try {
+    const response = await fetch(`${API_BASE_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    
+    console.log('🔑 login: response status:', response.status);
+    console.log('🔑 login: response ok:', response.ok);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('🔑 login: erro de resposta:', errorText);
+      return null;
+    }
+    
+    const data = await response.json();
+    console.log('🔑 login: dados recebidos:', { hasUser: !!data.user, hasToken: !!data.token });
+    
+    // backend returns { user, token }
+    if (data?.token) setToken(data.token);
+    return data.user ?? null;
+  } catch (error) {
+    console.error('🔑 login: erro na requisição:', error);
+    return null;
+  }
 };
 
 export const signUp = async (data: SignUpData): Promise<User> => {

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'marido-de-aluguel-hub-v1';
+const CACHE_NAME = 'marido-de-aluguel-hub-v2-fix';
 // Use relative URLs so the service worker works correctly when served under
 // a GitHub Pages subpath (e.g. /owner/repo/). The SW scope will be the
 // directory where the file is served, so './' and './index.html' are correct.
@@ -35,30 +35,48 @@ self.addEventListener('fetch', event => {
     return;
   }
 
+  // Log requests para debug
+  if (event.request.url.includes('/api/')) {
+    console.log('🌐 SW: interceptando request para API:', event.request.url);
+  }
+
   try {
     const accept = event.request.headers.get('accept') || '';
     if (accept.includes('text/html')) {
       event.respondWith(
-        fetch(event.request).catch(() => caches.match(event.request))
+        fetch(event.request).catch((error) => {
+          console.error('🌐 SW: erro ao buscar HTML:', error);
+          return caches.match(event.request);
+        })
       );
       return;
     }
   } catch (e) {
+    console.error('🌐 SW: erro ao processar headers:', e);
     // If headers aren't accessible for some reason, fall back to network
   }
 
   event.respondWith(
     caches.match(event.request).then(cachedResponse => {
-      if (cachedResponse) return cachedResponse;
+      if (cachedResponse) {
+        if (event.request.url.includes('/api/')) {
+          console.log('🌐 SW: retornando da cache para API (pode estar causando problemas):', event.request.url);
+        }
+        return cachedResponse;
+      }
       return fetch(event.request).then(networkResponse => {
         try {
-          const responseToCache = networkResponse.clone();
-          caches.open(CACHE_NAME).then(cache => {
-            try { cache.put(event.request, responseToCache); } catch (_) { }
-          });
+          // Não cachear requests da API para evitar problemas de CORS e dados desatualizados
+          if (!event.request.url.includes('/api/')) {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then(cache => {
+              try { cache.put(event.request, responseToCache); } catch (_) { }
+            });
+          }
         } catch (_) { /* ignore caching errors */ }
         return networkResponse;
-      }).catch(() => {
+      }).catch((error) => {
+        console.error('🌐 SW: erro ao buscar da rede:', error);
         // final fallback: attempt to match by URL path
         return caches.match(new Request('./index.html'));
       });
