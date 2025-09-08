@@ -316,7 +316,7 @@ const ProviderPublicProfile: React.FC<{
             <style>{publicProfileCSS}</style>
              <header className="flex items-center p-4 mb-4 max-w-[800px] mx-auto w-full bg-transparent">
                 <button onClick={onBack} className="font-semibold text-brand-navy hover:text-black bg-white/70 backdrop-blur-sm p-2 px-4 rounded-lg border border-gray-200">
-                    <i className="fa-solid fa-arrow-left mr-2"></i> Voltar ao Dashboard
+                    <i className="fa-solid fa-arrow-left mr-2"></i> Voltar
                 </button>
             </header>
             <main className="main-container-profile !pt-0 !mt-0">
@@ -664,7 +664,12 @@ const DashboardView: React.FC<{
 
 const QuotesView: React.FC<{ requests: ServiceRequest[]; setView: (view: ProviderView) => void; onViewDetails: (request: ServiceRequest) => void; isFilteredView?: boolean; }> = ({ requests, setView, onViewDetails, isFilteredView = false }) => (
     <div className="max-w-7xl mx-auto p-6">
-        <h1 className="text-2xl font-semibold mb-6 text-brand-navy">{isFilteredView ? "Serviços para Hoje" : "Todos os Orçamentos"}</h1>
+        <div className="flex items-center mb-6">
+            <button onClick={() => setView('dashboard')} className="font-semibold text-brand-navy hover:text-black flex items-center mr-4">
+                <i className="fa-solid fa-arrow-left mr-2"></i> Voltar
+            </button>
+            <h1 className="text-2xl font-semibold text-brand-navy">{isFilteredView ? "Serviços para Hoje" : "Todos os Orçamentos"}</h1>
+        </div>
         <div className="flex flex-col gap-4">
             {requests.length > 0 ? (
                 requests.map(req => (
@@ -681,7 +686,12 @@ const QuotesView: React.FC<{ requests: ServiceRequest[]; setView: (view: Provide
 
 const MessagesView: React.FC<{ setView: (view: ProviderView) => void; }> = ({ setView }) => (
     <div className="max-w-7xl mx-auto p-6">
-         <h1 className="text-2xl font-semibold mb-6 text-brand-navy">Mensagens</h1>
+        <div className="flex items-center mb-6">
+            <button onClick={() => setView('dashboard')} className="font-semibold text-brand-navy hover:text-black flex items-center mr-4">
+                <i className="fa-solid fa-arrow-left mr-2"></i> Voltar
+            </button>
+            <h1 className="text-2xl font-semibold text-brand-navy">Mensagens</h1>
+        </div>
         <div className="text-center py-20 bg-gray-50 rounded-lg border border-gray-200">
             <p className="text-gray-500">Nenhuma conversa encontrada.</p>
         </div>
@@ -725,6 +735,12 @@ const ProviderProfileView: React.FC<{
 
     return (
         <div id="view-profile-page">
+            <div className="flex items-center mb-6">
+                <button onClick={() => setView('dashboard')} className="font-semibold text-brand-navy hover:text-black flex items-center mr-4">
+                    <i className="fa-solid fa-arrow-left mr-2"></i> Voltar
+                </button>
+                <h1 className="text-2xl font-semibold text-brand-navy">Perfil</h1>
+            </div>
             <div className="card">
                 <div className="profile-header">
                     <div className="avatar">
