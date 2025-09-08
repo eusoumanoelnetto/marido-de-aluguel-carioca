@@ -59,27 +59,15 @@ const App: React.FC = () => {
     const checkApi = async () => {
       try {
         const base = (import.meta.env.VITE_API_BASE as string) || 'https://marido-de-aluguel-carioca.onrender.com';
-        // tentar buscar rota de health check primeiro
-        const healthUrl = `${base.replace(/\/api$/, '')}/health`;
-        const healthRes = await fetch(healthUrl, { method: 'GET', cache: 'no-store' });
+        // tentar buscar rota de API diretamente (401 ou 200 indica que está funcionando)
+        const apiUrl = `${base.replace(/\/$/, '')}/api/requests`;
+        const res = await fetch(apiUrl, { method: 'GET', cache: 'no-store' });
         
-        if (healthRes.ok) {
-          // Se health check passou, tentar a API
-          const apiUrl = `${base.replace(/\/$/, '')}/api/requests`;
-          const res = await fetch(apiUrl, { method: 'GET', cache: 'no-store' });
-          // Se 401 ou 200, significa que a API está funcionando
-          if (res.status === 401 || res.status === 200) {
-            setApiMisconfigured(false);
-          } else if (res.status === 404) {
-            setApiMisconfigured(true);
-          }
-        } else {
-          // Se health check falhou, tentar diretamente a API
-          const apiUrl = `${base.replace(/\/$/, '')}/api/requests`;
-          const res = await fetch(apiUrl, { method: 'GET', cache: 'no-store' });
-          if (res.status === 404) {
-            setApiMisconfigured(true);
-          }
+        // Se 401 ou 200, significa que a API está funcionando
+        if (res.status === 401 || res.status === 200) {
+          setApiMisconfigured(false);
+        } else if (res.status === 404) {
+          setApiMisconfigured(true);
         }
       } catch (e) {
         // network errors - sinaliza possível misconfiguração em produção
