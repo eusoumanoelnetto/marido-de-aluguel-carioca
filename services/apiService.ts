@@ -11,20 +11,24 @@ console.log('🔧 API_BASE_URL inicial:', API_BASE_URL);
 console.log('🔧 import.meta.env.VITE_API_BASE:', import.meta.env.VITE_API_BASE);
 console.log('🔧 import.meta.env.PROD:', import.meta.env.PROD);
 
-// Sempre usar URL do backend em produção
-if (!API_BASE_URL || import.meta.env.PROD) {
-  API_BASE_URL = BACKEND_URL;
-  console.log('🔧 Forçando URL do backend:', API_BASE_URL);
+// Determina API_BASE_URL conforme ambiente e variável de config
+if (import.meta.env.PROD) {
+  // Em produção, usa VITE_API_BASE se definido, senão BACKEND_URL
+  API_BASE_URL = (import.meta.env.VITE_API_BASE as string) || BACKEND_URL;
+  console.log('🔧 URL do backend em produção:', API_BASE_URL);
+} else {
+  // Em desenvolvimento, usa VITE_API_BASE se definido, senão proxy local
+  API_BASE_URL = (import.meta.env.VITE_API_BASE as string) || '/api';
+  console.log('🔧 URL do backend em desenvolvimento:', API_BASE_URL);
 }
 
-// Em desenvolvimento, usar API local se não estiver em produção
-if (!import.meta.env.PROD && !API_BASE_URL) {
-  API_BASE_URL = '/api';
-  console.log('🔧 Usando API local em desenvolvimento:', API_BASE_URL);
+// Normaliza e garante que contenha /api como prefixo base das rotas do backend
+if (API_BASE_URL) {
+  API_BASE_URL = API_BASE_URL.replace(/\/+$/, '');
+  if (!API_BASE_URL.endsWith('/api')) {
+    API_BASE_URL = `${API_BASE_URL}/api`;
+  }
 }
-
-// Normalize trailing slash
-if (API_BASE_URL && API_BASE_URL.endsWith('/')) API_BASE_URL = API_BASE_URL.slice(0, -1);
 
 console.log('🔧 API_BASE_URL final:', API_BASE_URL);
 
