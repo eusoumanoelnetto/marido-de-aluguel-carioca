@@ -26,7 +26,7 @@ const App: React.FC = () => {
   const [newPending, setNewPending] = useState<ServiceRequest[]>([]);
   const [showNewRequestsAlert, setShowNewRequestsAlert] = useState(false);
   const [lastRequestsMap, setLastRequestsMap] = useState<Record<string, ServiceRequest['status']>>({});
-  const [apiMisconfigured, setApiMisconfigured] = useState(false);
+  const [apiMisconfigured, setApiMisconfigured] = useState(false); // Temporariamente sempre false
 
   // Buscar solicitações tanto para prestador quanto para cliente (cliente filtra localmente pelos seus pedidos)
   useEffect(() => {
@@ -59,20 +59,30 @@ const App: React.FC = () => {
     const checkApi = async () => {
       try {
         const base = (import.meta.env.VITE_API_BASE as string) || 'https://marido-de-aluguel-carioca.onrender.com';
+        console.log('🔍 Verificando API em:', base);
+        
         // tentar buscar rota de API diretamente (401 ou 200 indica que está funcionando)
         const apiUrl = `${base.replace(/\/$/, '')}/api/requests`;
+        console.log('🔍 Testando URL:', apiUrl);
+        
         const res = await fetch(apiUrl, { method: 'GET', cache: 'no-store' });
+        console.log('🔍 Status da resposta:', res.status);
         
         // Se 401 ou 200, significa que a API está funcionando
         if (res.status === 401 || res.status === 200) {
+          console.log('✅ API funcionando - ocultando banner');
           setApiMisconfigured(false);
         } else if (res.status === 404) {
+          console.log('❌ API não encontrada - mostrando banner');
           setApiMisconfigured(true);
         }
       } catch (e) {
         // network errors - sinaliza possível misconfiguração em produção
-        console.log('API check failed:', e);
-        if (import.meta.env.PROD) setApiMisconfigured(true);
+        console.log('❌ Erro ao verificar API:', e);
+        if (import.meta.env.PROD) {
+          console.log('❌ Erro em produção - mostrando banner');
+          setApiMisconfigured(true);
+        }
       }
     };
     checkApi();

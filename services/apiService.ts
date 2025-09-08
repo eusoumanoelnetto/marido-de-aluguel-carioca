@@ -4,6 +4,11 @@ import { ServiceRequest, User, SignUpData } from '../types';
 // built frontend can call a remote API (e.g. Render) when hosted on GitHub Pages.
 let API_BASE_URL = (import.meta.env.VITE_API_BASE as string) || '';
 
+// Log para debug
+console.log('🔧 API_BASE_URL inicial:', API_BASE_URL);
+console.log('🔧 import.meta.env.VITE_API_BASE:', import.meta.env.VITE_API_BASE);
+console.log('🔧 import.meta.env.PROD:', import.meta.env.PROD);
+
 // Fallback para produção se VITE_API_BASE não estiver definida
 if (!API_BASE_URL) {
   const isProd = Boolean(import.meta.env && (import.meta.env.PROD || import.meta.env.MODE === 'production'));
@@ -14,11 +19,14 @@ if (!API_BASE_URL) {
   } else {
     // Em desenvolvimento, usar API local
     API_BASE_URL = '/api';
+    console.log('🔧 Usando API local em desenvolvimento:', API_BASE_URL);
   }
 }
 
 // Normalize trailing slash
 if (API_BASE_URL && API_BASE_URL.endsWith('/')) API_BASE_URL = API_BASE_URL.slice(0, -1);
+
+console.log('🔧 API_BASE_URL final:', API_BASE_URL);
 
 // Token helpers (localStorage)
 const TOKEN_KEY = 'mdac_token';
