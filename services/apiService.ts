@@ -1,7 +1,9 @@
 import { ServiceRequest, User, SignUpData } from '../types';
 
-// The base URL for our backend API. Use Vite env var when provided so the
-// built frontend can call a remote API (e.g. Render) when hosted on GitHub Pages.
+// Forçar URL do backend para produção
+const BACKEND_URL = 'https://marido-de-aluguel-carioca.onrender.com';
+
+// The base URL for our backend API
 let API_BASE_URL = (import.meta.env.VITE_API_BASE as string) || '';
 
 // Log para debug
@@ -9,18 +11,16 @@ console.log('🔧 API_BASE_URL inicial:', API_BASE_URL);
 console.log('🔧 import.meta.env.VITE_API_BASE:', import.meta.env.VITE_API_BASE);
 console.log('🔧 import.meta.env.PROD:', import.meta.env.PROD);
 
-// Fallback para produção se VITE_API_BASE não estiver definida
-if (!API_BASE_URL) {
-  const isProd = Boolean(import.meta.env && (import.meta.env.PROD || import.meta.env.MODE === 'production'));
-  if (isProd) {
-    // Em produção, usar URL do backend conhecida
-    API_BASE_URL = 'https://marido-de-aluguel-carioca.onrender.com';
-    console.log('🔧 Usando URL padrão do backend em produção:', API_BASE_URL);
-  } else {
-    // Em desenvolvimento, usar API local
-    API_BASE_URL = '/api';
-    console.log('🔧 Usando API local em desenvolvimento:', API_BASE_URL);
-  }
+// Sempre usar URL do backend em produção
+if (!API_BASE_URL || import.meta.env.PROD) {
+  API_BASE_URL = BACKEND_URL;
+  console.log('🔧 Forçando URL do backend:', API_BASE_URL);
+}
+
+// Em desenvolvimento, usar API local se não estiver em produção
+if (!import.meta.env.PROD && !API_BASE_URL) {
+  API_BASE_URL = '/api';
+  console.log('🔧 Usando API local em desenvolvimento:', API_BASE_URL);
 }
 
 // Normalize trailing slash

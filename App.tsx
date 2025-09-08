@@ -26,7 +26,7 @@ const App: React.FC = () => {
   const [newPending, setNewPending] = useState<ServiceRequest[]>([]);
   const [showNewRequestsAlert, setShowNewRequestsAlert] = useState(false);
   const [lastRequestsMap, setLastRequestsMap] = useState<Record<string, ServiceRequest['status']>>({});
-  const [apiMisconfigured, setApiMisconfigured] = useState(false); // Temporariamente sempre false
+  const [apiMisconfigured, setApiMisconfigured] = useState(false);
 
   // Buscar solicitações tanto para prestador quanto para cliente (cliente filtra localmente pelos seus pedidos)
   useEffect(() => {
@@ -58,11 +58,12 @@ const App: React.FC = () => {
     if (!import.meta.env.PROD) return;
     const checkApi = async () => {
       try {
-        const base = (import.meta.env.VITE_API_BASE as string) || 'https://marido-de-aluguel-carioca.onrender.com';
+        // Forçar URL do backend
+        const base = 'https://marido-de-aluguel-carioca.onrender.com';
         console.log('🔍 Verificando API em:', base);
         
         // tentar buscar rota de API diretamente (401 ou 200 indica que está funcionando)
-        const apiUrl = `${base.replace(/\/$/, '')}/api/requests`;
+        const apiUrl = `${base}/api/requests`;
         console.log('🔍 Testando URL:', apiUrl);
         
         const res = await fetch(apiUrl, { method: 'GET', cache: 'no-store' });
