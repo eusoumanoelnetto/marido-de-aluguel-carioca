@@ -4,20 +4,21 @@ import { ServiceRequest, User, SignUpData } from '../types';
 // built frontend can call a remote API (e.g. Render) when hosted on GitHub Pages.
 let API_BASE_URL = (import.meta.env.VITE_API_BASE as string) || '';
 
-// Normalize trailing slash
-if (API_BASE_URL && API_BASE_URL.endsWith('/')) API_BASE_URL = API_BASE_URL.slice(0, -1);
-
-// If no API base provided, default to relative '/api' for local dev; but warn in production builds
+// Fallback para produção se VITE_API_BASE não estiver definida
 if (!API_BASE_URL) {
   const isProd = Boolean(import.meta.env && (import.meta.env.PROD || import.meta.env.MODE === 'production'));
   if (isProd) {
-    // In production we expect the builder to set VITE_API_BASE to the remote backend.
-    // Log a clear warning so deploy logs show the misconfiguration.
-    // eslint-disable-next-line no-console
-    console.warn('VITE_API_BASE is not defined in build. Frontend will call local relative /api which will 404 on GitHub Pages. Define RENDER_BACKEND_URL as secret and expose as VITE_API_BASE in the workflow.');
+    // Em produção, usar URL do backend conhecida
+    API_BASE_URL = 'https://marido-de-aluguel-carioca.onrender.com';
+    console.log('🔧 Usando URL padrão do backend em produção:', API_BASE_URL);
+  } else {
+    // Em desenvolvimento, usar API local
+    API_BASE_URL = '/api';
   }
-  API_BASE_URL = '/api';
 }
+
+// Normalize trailing slash
+if (API_BASE_URL && API_BASE_URL.endsWith('/')) API_BASE_URL = API_BASE_URL.slice(0, -1);
 
 // Token helpers (localStorage)
 const TOKEN_KEY = 'mdac_token';

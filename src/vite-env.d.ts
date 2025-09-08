@@ -6,6 +6,7 @@ interface ImportMetaEnv {
   readonly VITE_BASE?: string;
   readonly MODE?: 'development' | 'production' | string;
   readonly PROD?: boolean;
+  readonly DEV?: boolean;
   readonly BASE_URL?: string;
 }
 

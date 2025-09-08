@@ -58,16 +58,32 @@ const App: React.FC = () => {
     if (!import.meta.env.PROD) return;
     const checkApi = async () => {
       try {
-        const base = (import.meta.env.VITE_API_BASE as string) || '/api';
-        // tentar buscar rota de requests sem Authorization para validar disponibilidade
-        const url = `${base.replace(/\/$/, '')}/requests`;
-        const res = await fetch(url, { method: 'GET', cache: 'no-store' });
-        // Se 404 provavelmente a API não está onde o frontend espera (ex: GitHub Pages)
-        if (res.status === 404) {
-          setApiMisconfigured(true);
+        const base = (import.meta.env.VITE_API_BASE as string) || 'https://marido-de-aluguel-carioca.onrender.com';
+        // tentar buscar rota de health check primeiro
+        const healthUrl = `${base.replace(/\/api$/, '')}/health`;
+        const healthRes = await fetch(healthUrl, { method: 'GET', cache: 'no-store' });
+        
+        if (healthRes.ok) {
+          // Se health check passou, tentar a API
+          const apiUrl = `${base.replace(/\/$/, '')}/api/requests`;
+          const res = await fetch(apiUrl, { method: 'GET', cache: 'no-store' });
+          // Se 401 ou 200, significa que a API está funcionando
+          if (res.status === 401 || res.status === 200) {
+            setApiMisconfigured(false);
+          } else if (res.status === 404) {
+            setApiMisconfigured(true);
+          }
+        } else {
+          // Se health check falhou, tentar diretamente a API
+          const apiUrl = `${base.replace(/\/$/, '')}/api/requests`;
+          const res = await fetch(apiUrl, { method: 'GET', cache: 'no-store' });
+          if (res.status === 404) {
+            setApiMisconfigured(true);
+          }
         }
       } catch (e) {
         // network errors - sinaliza possível misconfiguração em produção
+        console.log('API check failed:', e);
         if (import.meta.env.PROD) setApiMisconfigured(true);
       }
     };
