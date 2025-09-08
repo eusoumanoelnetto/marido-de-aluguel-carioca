@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom styles to override browser autofill background color */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #f3f4f6 inset !important; /* Corresponds to bg-gray-100 */
+  -webkit-text-fill-color: #1f2937 !important; /* A standard dark text color like text-gray-800 */
+  transition: background-color 5000s ease-in-out 0s;
+}

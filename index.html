@@ -28,7 +28,6 @@
 
     <!-- iOS PWA Tags removidas (duplicadas) -->
 
-    <script src="https://cdn.tailwindcss.com"></script>
     <!-- Inline safeguard: sobrescreve alert e limpa service workers/caches antes do app carregar -->
     <script>
       // Provide a minimal `process` stub for libraries that reference `process` at runtime in the browser.
@@ -47,35 +46,20 @@
             catch(e){ originalAlert(msg); }
           };
 
-          // Unregister any service workers and clear caches to avoid stale JS
-          if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.getRegistrations().then(function(regs){
-              regs.forEach(function(r){ try{ r.unregister(); }catch(_){} });
-            }).catch(function(){});
-          }
-          if (window.caches && window.caches.keys) {
-            caches.keys().then(function(keys){ keys.forEach(function(k){ caches.delete(k); }); }).catch(function(){});
+          // Apenas limpar caches antigos em desenvolvimento
+          if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            // Unregister any service workers and clear caches to avoid stale JS
+            if ('serviceWorker' in navigator) {
+              navigator.serviceWorker.getRegistrations().then(function(regs){
+                regs.forEach(function(r){ try{ r.unregister(); }catch(_){} });
+              }).catch(function(){});
+            }
+            if (window.caches && window.caches.keys) {
+              caches.keys().then(function(keys){ keys.forEach(function(k){ caches.delete(k); }); }).catch(function(){});
+            }
           }
         } catch(e) { /* noop */ }
       })();
-    </script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              'brand-navy': '#0b3051',
-              'brand-red': '#b61f16',
-              'brand-blue': '#3c84c1',
-              'brand-muted-blue': '#5f84a9',
-              'brand-beige': '#f0ceac',
-            },
-            fontFamily: {
-              sans: ['Poppins', 'sans-serif'],
-            },
-          }
-        }
-      }
     </script>
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -83,17 +67,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    /* Custom styles to override browser autofill background color */
-    input:-webkit-autofill,
-    input:-webkit-autofill:hover,
-    input:-webkit-autofill:focus,
-    input:-webkit-autofill:active {
-      -webkit-box-shadow: 0 0 0 30px #f3f4f6 inset !important; /* Corresponds to bg-gray-100 */
-      -webkit-text-fill-color: #1f2937 !important; /* A standard dark text color like text-gray-800 */
-      transition: background-color 5000s ease-in-out 0s;
-    }
-  </style>
 <!-- Removido link /index.css inexistente (causava 404 no console). Tailwind CDN já fornece estilos. -->
 </head>
   <body>
