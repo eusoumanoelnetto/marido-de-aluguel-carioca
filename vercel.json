@@ -1,10 +1,6 @@
 {
   "buildCommand": "npm run vercel-build",
   "outputDirectory": "dist",
-  "env": {
-    "VITE_API_BASE_URL": "https://marido-de-aluguel-carioca.onrender.com",
-    "VITE_API_BASE": "https://marido-de-aluguel-carioca.onrender.com"
-  },
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]
