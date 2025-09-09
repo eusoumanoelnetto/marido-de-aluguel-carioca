@@ -1,10 +1,10 @@
 import { ServiceRequest, User, SignUpData } from '../types';
 
-// Forçar URL do backend para produção
+// Forçar URL do backend para produção - FALLBACK garantido
 const BACKEND_URL = 'https://marido-de-aluguel-carioca.onrender.com';
 
-// The base URL for our backend API
-let API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string) || (import.meta.env.VITE_API_BASE as string) || '';
+// The base URL for our backend API - sempre garante um valor válido
+let API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string) || (import.meta.env.VITE_API_BASE as string) || BACKEND_URL;
 
 // Log para debug
 console.log('🔧 API_BASE_URL inicial:', API_BASE_URL);
@@ -12,16 +12,10 @@ console.log('🔧 import.meta.env.VITE_API_BASE_URL:', import.meta.env.VITE_API_
 console.log('🔧 import.meta.env.VITE_API_BASE:', import.meta.env.VITE_API_BASE);
 console.log('🔧 import.meta.env.PROD:', import.meta.env.PROD);
 
-// Determina API_BASE_URL conforme ambiente e variável de config
-if (import.meta.env.PROD) {
-  // Em produção, usa VITE_API_BASE_URL ou VITE_API_BASE se definido, senão BACKEND_URL
-  API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string) || (import.meta.env.VITE_API_BASE as string) || BACKEND_URL;
-  console.log('🔧 URL do backend em produção:', API_BASE_URL);
-} else {
-  // Em desenvolvimento, usa VITE_API_BASE_URL ou VITE_API_BASE se definido, senão proxy local
-  API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string) || (import.meta.env.VITE_API_BASE as string) || '/api';
-  console.log('🔧 URL do backend em desenvolvimento:', API_BASE_URL);
-}
+// Sempre garante um valor válido, priorizando variáveis de ambiente mas com fallback
+API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string) || (import.meta.env.VITE_API_BASE as string) || BACKEND_URL;
+
+console.log('🔧 API_BASE_URL final determinado:', API_BASE_URL);
 
 // Normaliza e garante que contenha /api como prefixo base das rotas do backend
 if (API_BASE_URL) {
