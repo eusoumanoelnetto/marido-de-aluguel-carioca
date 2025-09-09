@@ -221,9 +221,13 @@
 
   setText('servicos-ativos', data.servicosAtivos ?? '0');
   console.log('servicosAtivos set to', data.servicosAtivos);
-  // Exibe a frase "X concluídos hoje" no card de Serviços Ativos
+  // Exibe a frase "X concluídos hoje" no card de Serviços Ativos (número + label separados)
   const concluidosEl = document.getElementById('servicos-concluidos');
-  if (concluidosEl) concluidosEl.textContent = data.fraseConcluidosHoje || `${data.servicosConcluidosHoje ?? 0} concluídos hoje`;
+  if (concluidosEl) {
+    const n = Number(data.servicosConcluidosHoje ?? 0);
+    // garantir formato: número grande (value) e label abaixo
+    concluidosEl.innerHTML = `<span style="display:block;color:var(--text-muted);font-weight:700">${n}</span><span style="display:block;color:var(--green);font-size:0.9rem">${n} concluídos hoje</span>`;
+  }
 
       setText('erros-recentes', data.errosRecentes ?? '0');
       console.log('errosRecentes set to', data.errosRecentes);
