@@ -209,7 +209,7 @@
   if (concluidosEl) {
     const n = Number(data.servicosConcluidosHoje ?? 0);
     // garantir formato: número grande (value) e label abaixo
-    concluidosEl.innerHTML = `<span style="display:block;color:var(--text-muted);font-weight:700">${n}</span><span style="display:block;color:var(--green);font-size:0.9rem">${n} concluídos hoje</span>`;
+  concluidosEl.innerHTML = `<span style="display:block;color:var(--green);font-size:0.9rem">${n} concluídos hoje</span>`;
   }
 
       setText('erros-recentes', data.errosRecentes ?? '0');
