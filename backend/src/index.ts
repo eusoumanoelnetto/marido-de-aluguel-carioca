@@ -29,6 +29,14 @@ if (frontendOrigin) {
   // allow a single origin or a comma-separated list
   corsOrigin = frontendOrigin.includes(',') ? frontendOrigin.split(',').map(s => s.trim()) : frontendOrigin;
 }
+// Em desenvolvimento, sempre permitir localhost
+if (!IS_PROD) {
+  if (Array.isArray(corsOrigin)) {
+    corsOrigin.push('http://localhost:8000', 'http://127.0.0.1:8000');
+  } else if (corsOrigin !== '*') {
+    corsOrigin = [corsOrigin as string, 'http://localhost:8000', 'http://127.0.0.1:8000'];
+  }
+}
 if (IS_PROD && corsOrigin === '*') {
   console.warn('⚠️  CORS liberado para todos (*) em produção. Defina FRONTEND_ORIGIN com o domínio(s) do seu front-end para maior segurança.');
 }
