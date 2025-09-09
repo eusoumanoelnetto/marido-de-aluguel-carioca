@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import { AuthProvider } from './src/context/AuthContext';
+import { BrowserRouter } from 'react-router-dom';
 
 // Patch global alert -> toast (evita popups nativos remanescentes de bundle antigo)
 declare global {
@@ -73,17 +74,19 @@ console.log('🔍 Debug Vercel - ENV vars:', {
   DEV: import.meta.env.DEV
 });
 
-try {
-  const root = ReactDOM.createRoot(rootElement);
-  root.render(
-    <React.StrictMode>
-      <AuthProvider>
-        <App />
-      </AuthProvider>
-    </React.StrictMode>
-  );
-  console.log('✅ React app mounted successfully');
-} catch (error) {
-  console.error('❌ Error mounting React app:', error);
-  throw error;
-}
+  try {
+    const root = ReactDOM.createRoot(rootElement);
+    root.render(
+      <React.StrictMode>
+        <BrowserRouter>
+          <AuthProvider>
+            <App />
+          </AuthProvider>
+        </BrowserRouter>
+      </React.StrictMode>
+    );
+    console.log('✅ React app mounted successfully');
+  } catch (error) {
+    console.error('❌ Error mounting React app:', error);
+    throw error;
+  }
