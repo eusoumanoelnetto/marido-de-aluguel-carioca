@@ -9,9 +9,16 @@
     "strict": true,
     "skipLibCheck": true,
     "lib": ["ES2020"],
-  "types": ["node", "jest"],
+  "types": ["node"],
     "resolveJsonModule": true
   },
   "include": ["src/**/*"],
-  "exclude": []
+  "exclude": [
+    "src/__tests__",
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts",
+    "**/__tests__/**",
+    "**/*.test.ts",
+    "**/*.spec.ts"
+  ]
 }
