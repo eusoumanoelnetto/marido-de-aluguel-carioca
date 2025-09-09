@@ -59,16 +59,26 @@ export const deleteUser = async (req: Request, res: Response) => {
         return res.status(403).json({ message: 'Acesso negado. Apenas administradores.' });
     }
 
-    try {
-        const result = await pool.query('DELETE FROM users WHERE email = $1 RETURNING email', [email.toLowerCase()]);
-        if ((result.rowCount ?? 0) === 0) {
-            return res.status(404).json({ message: 'Usuário não encontrado.' });
+        try {
+                // Buscar dados do usuário antes de deletar
+                const userRes = await pool.query('SELECT name, email FROM users WHERE email = $1', [email.toLowerCase()]);
+                if ((userRes.rowCount ?? 0) === 0) {
+                        return res.status(404).json({ message: 'Usuário não encontrado.' });
+                }
+                const user = userRes.rows[0];
+                const result = await pool.query('DELETE FROM users WHERE email = $1 RETURNING email', [email.toLowerCase()]);
+                // Enviar email de notificação de exclusão
+                try {
+                    const { sendUserDeletedEmail } = await import('../utils/mailer');
+                    await sendUserDeletedEmail(user.email, user.name);
+                } catch (mailErr) {
+                    console.error('Erro ao enviar email de exclusão:', mailErr);
+                }
+                res.status(200).json({ message: 'Usuário deletado.', email: result.rows[0].email });
+        } catch (error) {
+                console.error('Delete user error:', error);
+                res.status(500).json({ message: 'Erro ao deletar usuário.' });
         }
-        res.status(200).json({ message: 'Usuário deletado.', email: result.rows[0].email });
-    } catch (error) {
-        console.error('Delete user error:', error);
-        res.status(500).json({ message: 'Erro ao deletar usuário.' });
-    }
 };
 
 // Lista eventos recentes para admin (opcional)

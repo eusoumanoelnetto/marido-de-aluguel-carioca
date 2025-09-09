@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import { User, SignUpData } from '../../types';
 import * as api from '../../services/apiService';
+import { useNavigate } from 'react-router-dom';
 
 interface AuthContextType {
   user: User | null;
@@ -12,14 +13,7 @@ interface AuthContextType {
   updateUser: (u: User) => Promise<User | null>;
 }
 
-export const AuthContext = createContext<AuthContextType>({
-  user: null,
-  isAuthenticated: false,
-  login: async () => null,
-  signUp: async () => null,
-  logout: () => {},
-  updateUser: async () => null,
-});
+export const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(() => {
@@ -31,7 +25,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   });
 
+  const [authError, setAuthError] = useState<string | null>(null);
   const isAuthenticated = !!user;
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (user) {
@@ -50,6 +46,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     window.addEventListener('mdac:logout', handler as EventListener);
     return () => window.removeEventListener('mdac:logout', handler as EventListener);
   }, []);
+
+  useEffect(() => {
+    if (authError === 'Usuário não existe mais.') {
+      alert('Sua conta foi excluída. Entre em contato com o suporte para mais informações.');
+      logout();
+      navigate('/login');
+    }
+  }, [authError, logout, navigate]);
 
   const login = async (email: string, password?: string) => {
     const u = await api.login(email, password);
