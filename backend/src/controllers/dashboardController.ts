@@ -28,10 +28,10 @@ export const getDashboardStats = async (req: Request, res: Response) => {
     console.log('Status count:', statusDebug.rows);
     console.log('====================');
     
-    // Serviços realmente ativos (apenas Em andamento ou Aceito efetivamente)
+    // Serviços ativos: considerar também 'Pendente' e 'Orçamento Enviado'
     const servicosAtivos = await pool.query(`
       SELECT COUNT(*) FROM service_requests 
-      WHERE status IN ('Em andamento', 'Aceito') 
+      WHERE status IN ('Em andamento', 'Aceito', 'Pendente', 'Orçamento Enviado')
       AND "providerEmail" IS NOT NULL
     `);
     
@@ -55,6 +55,7 @@ export const getDashboardStats = async (req: Request, res: Response) => {
       totalPrestadores: Number(prestadores.rows[0].count),
       servicosAtivos: Number(servicosAtivos.rows[0].count),
       servicosConcluidosHoje: Number(servicosConcluidosHoje.rows[0].count),
+      fraseConcluidosHoje: `${servicosConcluidosHoje.rows[0].count} concluídos hoje`,
       errosRecentes: Number(errosRecentes.rows[0].count),
       errosCriticos: Number(errosCriticos.rows[0].count)
     });

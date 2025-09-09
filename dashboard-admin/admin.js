@@ -202,9 +202,11 @@
       const novosPrestEl = document.getElementById('novos-prestadores');
       if (novosPrestEl) novosPrestEl.textContent = '+0 novos hoje';
 
-      setText('servicos-ativos', data.servicosAtivos ?? '0');
-      console.log('servicosAtivos set to', data.servicosAtivos);
-      setText('servicos-concluidos', data.servicosConcluidosHoje ?? '0');
+  setText('servicos-ativos', data.servicosAtivos ?? '0');
+  console.log('servicosAtivos set to', data.servicosAtivos);
+  // Exibe a frase "X concluídos hoje" no card de Serviços Ativos
+  const concluidosEl = document.getElementById('servicos-concluidos');
+  if (concluidosEl) concluidosEl.textContent = data.fraseConcluidosHoje || `${data.servicosConcluidosHoje ?? 0} concluídos hoje`;
 
       setText('erros-recentes', data.errosRecentes ?? '0');
       console.log('errosRecentes set to', data.errosRecentes);
