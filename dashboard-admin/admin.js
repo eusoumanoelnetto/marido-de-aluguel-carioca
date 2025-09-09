@@ -141,7 +141,11 @@
 
   // Fetch overall dashboard statistics and update overview cards
   async function fetchDashboardStats() {
+    console.log('🚀 fetchDashboardStats iniciado');
+    console.log('🔧 Configurações:', { API, OFF, ADMIN_KEY });
+    
     if (OFF) {
+      console.log('⚠️ Modo OFFLINE ativado');
       // In offline/demo mode, show a clear message in the cards
       const elMap = {
         totalClientes: document.getElementById('total-clientes'),
@@ -157,13 +161,24 @@
       return;
     }
 
-    console.log('Fetching dashboard stats from', `${API}/api/admin/stats`);
+    console.log('🌐 Fazendo requisição para:', `${API}/api/admin/stats`);
+    console.log('🔑 Headers:', { 'X-Admin-Key': ADMIN_KEY });
+    
     try {
-      const res = await fetch(`${API}/api/admin/stats`, { headers: { 'X-Admin-Key': ADMIN_KEY } });
-      console.log('Stats fetch response status:', res.status);
-      if (!res.ok) return; // silently ignore, events or users will show messages
+      const res = await fetch(`${API}/api/admin/stats`, { 
+        headers: { 'X-Admin-Key': ADMIN_KEY },
+        mode: 'cors'
+      });
+      console.log('📡 Response status:', res.status);
+      console.log('📡 Response headers:', [...res.headers.entries()]);
+      
+      if (!res.ok) {
+        console.error('❌ Response não OK:', res.status, res.statusText);
+        return; // silently ignore, events or users will show messages
+      }
+      
       const data = await res.json();
-      console.log('Stats data received:', data);
+      console.log('✅ Stats data received:', data);
 
       const setText = (id, val) => {
         const el = document.getElementById(id);
@@ -198,7 +213,22 @@
       console.log('errosCriticos set to', data.errosCriticos);
 
     } catch (err) {
-      console.error('Error fetching dashboard stats:', err);
+      console.error('💥 Erro ao fazer fetch das estatísticas:', err);
+      console.error('💥 Erro detalhado:', {
+        message: err.message,
+        name: err.name,
+        stack: err.stack
+      });
+      
+      // Mostrar erro visualmente nos cards
+      const setText = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = 'Erro';
+      };
+      setText('total-clientes', 'Erro');
+      setText('total-prestadores', 'Erro');
+      setText('servicos-ativos', 'Erro');
+      setText('servicos-concluidos', 'Erro');
     }
   }
 
