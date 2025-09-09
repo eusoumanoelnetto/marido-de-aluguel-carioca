@@ -46,7 +46,7 @@
     }
     listEl.innerHTML = users.map(u => {
       const tag = u.role === 'provider' ? 'tag-prestador' : (u.role === 'admin' ? 'tag-admin' : 'tag-cliente');
-      return `<div class="user-item"><span class="user-tag ${tag}">${u.role}</span><div class="user-info"><div class="name">${escapeHtml(u.name)}</div><div class="contact">${escapeHtml(u.email)} • ${escapeHtml(u.phone || '')}</div></div><div class="user-actions"><button class="btn view" data-email="${encodeURIComponent(u.email)}" style="background:var(--blue)"><i class="fas fa-eye"></i></button><button class="btn password" data-email="${encodeURIComponent(u.email)}" style="background:var(--orange)"><i class="fas fa-key"></i></button><button class="btn delete" data-email="${encodeURIComponent(u.email)}" style="background:var(--red)"><i class="fas fa-trash"></i></button></div></div>`;
+  return `<div class="user-item"><span class="user-tag ${tag}">${u.role}</span><div class="user-info"><div class="name">${escapeHtml(u.name)}</div><div class="contact">${escapeHtml(u.email)} • ${escapeHtml(u.phone || '')}</div></div><div class="user-actions"><button class="btn view" data-email="${encodeURIComponent(u.email)}" style="background:var(--blue)" title="Ver perfil"><i class="fas fa-eye"></i></button><button class="btn edit" data-email="${encodeURIComponent(u.email)}" style="background:var(--green)" title="Editar"><i class="fas fa-pencil-alt"></i></button><button class="btn password" data-email="${encodeURIComponent(u.email)}" style="background:var(--orange)" title="Redefinir senha"><i class="fas fa-key"></i></button><button class="btn delete" data-email="${encodeURIComponent(u.email)}" style="background:var(--red)" title="Excluir"><i class="fas fa-trash"></i></button></div></div>`;
     }).join('');
 
     // Delete button logic
@@ -66,37 +66,74 @@
       });
     });
 
-    // Edit button logic (simple prompt-based)
+    // Botão visualizar perfil (popup)
     document.querySelectorAll('.user-actions .view').forEach(btn => {
       btn.addEventListener('click', async () => {
         const email = decodeURIComponent(btn.getAttribute('data-email'));
-        const name = prompt('Novo nome (deixe em branco para manter)');
-        const phone = prompt('Novo telefone (deixe em branco para manter)');
-        const cep = prompt('Novo CEP (deixe em branco para manter)');
-        if (OFF) {
-          const arr = JSON.parse(localStorage.getItem('admin_users') || '[]');
-          const idx = arr.findIndex(u => (u.email || '').toLowerCase() === email.toLowerCase());
-          if (idx > -1) {
-            if (name) arr[idx].name = name;
-            if (phone) arr[idx].phone = phone;
-            if (cep) arr[idx].cep = cep;
-            localStorage.setItem('admin_users', JSON.stringify(arr));
-            fetchUsers();
-          }
-          return;
+        let user = users.find(u => u.email === email);
+        if (!user && !OFF) {
+          const res = await fetch(`${API}/api/users/` + encodeURIComponent(email), { headers: { 'X-Admin-Key': ADMIN_KEY } });
+          if (res.ok) user = await res.json();
         }
-        const body = {};
-        if (name) body.name = name;
-        if (phone) body.phone = phone;
-        if (cep) body.cep = cep;
-        const up = await fetch(`${API}/api/users/` + encodeURIComponent(email), {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json', 'X-Admin-Key': ADMIN_KEY },
-          body: JSON.stringify(body)
-        });
-        if (up.ok) fetchUsers(); else alert('Falha ao atualizar usuário');
+        if (!user) return alert('Usuário não encontrado.');
+        showUserModal(user, false);
       });
     });
+    // Botão editar perfil (popup)
+    document.querySelectorAll('.user-actions .edit').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const email = decodeURIComponent(btn.getAttribute('data-email'));
+        let user = users.find(u => u.email === email);
+        if (!user && !OFF) {
+          const res = await fetch(`${API}/api/users/` + encodeURIComponent(email), { headers: { 'X-Admin-Key': ADMIN_KEY } });
+          if (res.ok) user = await res.json();
+        }
+        if (!user) return alert('Usuário não encontrado.');
+        showUserModal(user, true);
+      });
+    });
+  // Função para exibir modal de usuário (view/edit)
+  function showUserModal(user, editMode) {
+    const modal = document.getElementById('user-modal');
+    const viewDiv = document.getElementById('user-modal-view');
+    const editForm = document.getElementById('user-modal-edit');
+    if (!modal || !viewDiv || !editForm) return;
+    if (editMode) {
+      viewDiv.style.display = 'none';
+      editForm.style.display = 'flex';
+      editForm.name.value = user.name || '';
+      editForm.email.value = user.email || '';
+      editForm.phone.value = user.phone || '';
+      editForm.cep.value = user.cep || '';
+    } else {
+      viewDiv.style.display = 'block';
+      editForm.style.display = 'none';
+      viewDiv.innerHTML = `<h3 style="margin-bottom:8px;">${escapeHtml(user.name)}</h3><div style="color:var(--text-muted);margin-bottom:8px;">${escapeHtml(user.email)} • ${escapeHtml(user.phone || '')}</div><div><b>CEP:</b> ${escapeHtml(user.cep || '-')}</div><div><b>Tipo:</b> ${escapeHtml(user.role)}</div>`;
+    }
+    modal.style.display = 'flex';
+    // Fechar modal
+    document.getElementById('close-user-modal').onclick = () => { modal.style.display = 'none'; };
+    // Submissão do form de edição
+    editForm.onsubmit = async function(e) {
+      e.preventDefault();
+      const body = {
+        name: editForm.name.value,
+        phone: editForm.phone.value,
+        cep: editForm.cep.value
+      };
+      const up = await fetch(`${API}/api/users/` + encodeURIComponent(editForm.email.value), {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'X-Admin-Key': ADMIN_KEY },
+        body: JSON.stringify(body)
+      });
+      if (up.ok) {
+        modal.style.display = 'none';
+        fetchUsers();
+      } else {
+        alert('Falha ao atualizar usuário');
+      }
+    };
+  }
 
     // Password reset button logic
     document.querySelectorAll('.user-actions .password').forEach(btn => {

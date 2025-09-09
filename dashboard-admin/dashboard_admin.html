@@ -252,7 +252,21 @@
                     <p class="subtitle">Filtre e gerencie perfis de clientes e prestadores.</p>
                     <div class="search-filter" style="margin-bottom: 24px;"><input type="text" placeholder="Filtrar por email, nome ou telefone..."></div>
                     <h3 style="margin-bottom:16px;">Usuários</h3>
-                    <div class="user-list"></div>
+                                        <div class="user-list"></div>
+                                        <!-- Modal de Usuário -->
+                                        <div id="user-modal" class="modal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.3);z-index:1000;align-items:center;justify-content:center;">
+                                            <div class="modal-content" style="background:#fff;padding:32px 24px;border-radius:12px;min-width:320px;max-width:90vw;box-shadow:0 4px 24px rgba(0,0,0,0.15);position:relative;">
+                                                <button id="close-user-modal" style="position:absolute;top:12px;right:12px;background:none;border:none;font-size:1.5rem;cursor:pointer;color:#888;"><i class="fas fa-times"></i></button>
+                                                <div id="user-modal-view" style="display:block;"></div>
+                                                <form id="user-modal-edit" style="display:none;flex-direction:column;gap:12px;">
+                                                    <label>Nome<input type="text" name="name" required style="width:100%;padding:8px;margin-top:4px;"></label>
+                                                    <label>Email<input type="email" name="email" required style="width:100%;padding:8px;margin-top:4px;" readonly></label>
+                                                    <label>Telefone<input type="text" name="phone" style="width:100%;padding:8px;margin-top:4px;"></label>
+                                                    <label>CEP<input type="text" name="cep" style="width:100%;padding:8px;margin-top:4px;"></label>
+                                                    <button type="submit" class="btn-purple" style="margin-top:12px;">Salvar Alterações</button>
+                                                </form>
+                                            </div>
+                                        </div>
                 </div>
             </div>
 
