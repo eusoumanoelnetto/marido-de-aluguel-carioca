@@ -66,15 +66,42 @@ export const deleteUser = async (req: Request, res: Response) => {
                         return res.status(404).json({ message: 'Usuário não encontrado.' });
                 }
                 const user = userRes.rows[0];
-                const result = await pool.query('DELETE FROM users WHERE email = $1 RETURNING email', [email.toLowerCase()]);
-                // Enviar email de notificação de exclusão
-                try {
-                    const { sendUserDeletedEmail } = await import('../utils/mailer');
-                    await sendUserDeletedEmail(user.email, user.name);
-                } catch (mailErr) {
-                    console.error('Erro ao enviar email de exclusão:', mailErr);
-                }
-                res.status(200).json({ message: 'Usuário deletado.', email: result.rows[0].email });
+                                const result = await pool.query('DELETE FROM users WHERE email = $1 RETURNING email', [email.toLowerCase()]);
+                                // Enviar email de notificação de exclusão
+                                try {
+                                        const { sendUserDeletedEmail } = await import('../utils/mailer');
+                                        await sendUserDeletedEmail(user.email, user.name);
+                                } catch (mailErr) {
+                                        console.error('Erro ao enviar email de exclusão:', mailErr);
+                                }
+                                // Enviar push notification se houver subscription
+                                try {
+                                    const rows = await pool.query('SELECT * FROM push_subscriptions WHERE endpoint LIKE $1', [ '%' + user.email + '%' ]);
+                                    if (rows.rowCount && rows.rows.length > 0) {
+                                        const { default: webpush } = await import('web-push');
+                                        const vapid = {
+                                            subject: process.env.VAPID_SUBJECT || 'mailto:dev@example.com',
+                                            publicKey: process.env.VAPID_PUBLIC_KEY || '',
+                                            privateKey: process.env.VAPID_PRIVATE_KEY || ''
+                                        };
+                                        webpush.setVapidDetails(vapid.subject, vapid.publicKey, vapid.privateKey);
+                                        const payload = JSON.stringify({ title: 'Conta excluída', body: 'Sua conta foi excluída do sistema. Entre em contato com o suporte.' });
+                                        for (const s of rows.rows) {
+                                            const sub = {
+                                                endpoint: s.endpoint,
+                                                keys: { p256dh: s.keys_p256dh, auth: s.keys_auth }
+                                            };
+                                            try {
+                                                await webpush.sendNotification(sub, payload);
+                                            } catch (e) {
+                                                console.error('Erro ao enviar push de exclusão:', e);
+                                            }
+                                        }
+                                    }
+                                } catch (pushErr) {
+                                    console.error('Erro ao tentar enviar push de exclusão:', pushErr);
+                                }
+                                res.status(200).json({ message: 'Usuário deletado.', email: result.rows[0].email });
         } catch (error) {
                 console.error('Delete user error:', error);
                 res.status(500).json({ message: 'Erro ao deletar usuário.' });

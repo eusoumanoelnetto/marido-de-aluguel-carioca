@@ -76,9 +76,9 @@ export const login = async (req: Request, res: Response) => {
     [normalizedEmail]
   );
     
-    if ((result.rowCount ?? 0) === 0) {
-        return res.status(401).json({ message: 'E-mail ou senha inválidos.' });
-    }
+  if ((result.rowCount ?? 0) === 0) {
+    return res.status(403).json({ message: 'Conta excluída. Entre em contato com o suporte.' });
+  }
 
     const user: User = result.rows[0];
 

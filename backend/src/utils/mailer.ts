@@ -10,10 +10,12 @@ export async function sendUserDeletedEmail(to: string, name?: string) {
     throw new Error('Configuração do EmailJS ausente.');
   }
 
+  const geekMsg = `Olá${name ? ' ' + name : ''},\n\nSua conta foi deletada do nosso sistema.\n\nMas calma, não foi Thanos que estalou os dedos! 😅\n\nSe você acha que isso foi um bug digno do Matrix ou um erro do multiverso, entre em contato com nosso suporte Jedi e vamos restaurar o equilíbrio na Força!\n\nLive long and prosper!\nEquipe Marido de Aluguel`;
+
   const templateParams = {
     to_email: to,
     to_name: name || '',
-    message: `Olá${name ? ' ' + name : ''},\n\nSua conta foi excluída do sistema Marido de Aluguel. Caso tenha dúvidas ou ache que isso foi um engano, entre em contato com o suporte.`
+    message: geekMsg
   };
 
   await emailjs.send(serviceID, templateID, templateParams, userID);

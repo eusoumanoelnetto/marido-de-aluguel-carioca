@@ -48,12 +48,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   useEffect(() => {
-    if (authError === 'Usuário não existe mais.') {
-      alert('Sua conta foi excluída. Entre em contato com o suporte para mais informações.');
-      logout();
-      navigate('/login');
+    if (authError === 'Usuário não existe mais.' || authError === 'Conta excluída. Entre em contato com o suporte.') {
+      window.location.href = '/conta-excluida.html';
     }
-  }, [authError, logout, navigate]);
+  }, [authError]);
 
   const login = async (email: string, password?: string) => {
     const u = await api.login(email, password);

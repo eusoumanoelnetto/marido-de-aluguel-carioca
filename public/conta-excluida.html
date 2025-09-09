@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Conta Excluída</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        --slate-50: #f8fafc;
+        --slate-200: #e2e8f0;
+        --slate-300: #cbd5e1;
+        --slate-500: #64748b;
+        --slate-600: #475569;
+        --slate-800: #1e293b;
+        --slate-900: #0f172a;
+        --gray-50: #f9fafb;
+        --red-100: #fee2e2;
+        --red-500: #ef4444;
+        --amber-50: #fffbeb;
+        --amber-400: #f59e0b;
+        --amber-500: #f59e0b;
+        --amber-900: #78350f;
+        --white: #ffffff;
+      }
+
+      body {
+        font-family: 'Inter', sans-serif;
+        margin: 0;
+        background-color: var(--gray-50);
+      }
+
+      .main-container {
+        background-image: linear-gradient(to bottom right, var(--gray-50), var(--red-100));
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+      }
+
+      .card {
+        position: relative;
+        background-color: var(--white);
+        border-radius: 1rem;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        padding: 1.5rem;
+        max-width: 28rem;
+        width: 100%;
+        text-align: center;
+        opacity: 0;
+        transform: translateY(1rem);
+        transition: opacity 700ms cubic-bezier(0.4, 0, 0.2, 1), transform 700ms cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      
+      .card.is-mounted {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .icon-wrapper {
+        position: absolute;
+        top: -2rem;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: var(--red-500);
+        border-radius: 9999px;
+        padding: 1rem;
+        box-shadow: 0 0 0 8px var(--white), 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+      }
+      
+      .icon-wrapper svg {
+        color: var(--white);
+        height: 2rem;
+        width: 2rem;
+      }
+      
+      .card-content {
+        padding-top: 3rem;
+      }
+
+      h1 {
+        font-size: 1.875rem; /* 30px */
+        font-weight: 900;
+        color: var(--slate-800);
+        margin-top: 0;
+        margin-bottom: 0.5rem;
+        letter-spacing: -0.025em;
+      }
+
+      .description {
+        color: var(--slate-500);
+        margin-bottom: 1.5rem;
+        font-size: 1rem; /* 16px */
+      }
+      
+      .info-box {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        background-color: var(--amber-50);
+        border-left: 4px solid var(--amber-400);
+        color: var(--amber-900);
+        font-size: 0.875rem; /* 14px */
+        border-top-right-radius: 0.5rem;
+        border-bottom-right-radius: 0.5rem;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        text-align: left;
+      }
+      
+      .info-box svg {
+        height: 1.25rem;
+        width: 1.25rem;
+        flex-shrink: 0;
+        margin-top: 0.125rem;
+        color: var(--amber-500);
+      }
+      
+      .support-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.625rem;
+        width: 100%;
+        background-image: linear-gradient(to right, var(--slate-800), var(--slate-900));
+        color: var(--white);
+        font-weight: 700;
+        padding: 0.875rem 1.5rem;
+        border-radius: 0.5rem;
+        transition: all 300ms;
+        transform: translateY(0);
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem; /* 16px */
+      }
+      
+      .support-button:hover {
+        box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.2), 0 4px 6px -4px rgba(15, 23, 42, 0.2);
+        transform: translateY(-2px);
+      }
+      
+      .support-button:focus {
+        outline: none;
+        box-shadow: 0 0 0 4px var(--slate-300);
+      }
+      
+      .support-button svg {
+        height: 1.25rem;
+        width: 1.25rem;
+      }
+      
+      .gif-section {
+        margin: 1.5rem 0;
+      }
+      
+      .gif-card {
+        background-color: var(--slate-50);
+        padding: 1.5rem;
+        border-radius: 0.75rem;
+        border: 1px solid var(--slate-200);
+      }
+      
+      .gif-card img {
+        margin-left: auto;
+        margin-right: auto;
+        border-radius: 0.5rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+        width: 9rem;
+        height: auto;
+        object-fit: cover;
+      }
+      
+      blockquote {
+        margin-top: 1rem;
+        margin-inline-start: 0;
+        margin-inline-end: 0;
+      }
+      
+      blockquote p {
+        font-size: 1.25rem; /* 20px */
+        font-weight: 900;
+        text-transform: uppercase;
+        color: var(--slate-600);
+        letter-spacing: 0.05em;
+        line-height: 1.4;
+      }
+      
+      /* Small devices (sm) */
+      @media (min-width: 640px) {
+        .main-container { padding: 1.5rem; }
+        .card { padding: 2.5rem; }
+        .description { margin-bottom: 2rem; font-size: 1rem; }
+        .info-box { margin-bottom: 2rem; font-size: 0.875rem; }
+        .support-button { font-size: 1rem; }
+        .gif-section { margin: 2rem 0; }
+        .gif-card img { width: 11rem; }
+        blockquote p { font-size: 1.25rem; }
+        h1 { font-size: 2.25rem; }
+      }
+      
+      /* Large devices (lg) */
+      @media (min-width: 1024px) {
+        .card {
+          max-width: 56rem;
+          text-align: left;
+          display: grid;
+          grid-template-columns: repeat(5, minmax(0, 1fr));
+          gap: 4rem;
+          align-items: center;
+        }
+        .icon-wrapper {
+          left: 2.5rem;
+          transform: translateX(0);
+        }
+        .card-content {
+          padding-top: 0;
+          grid-column: span 3 / span 3;
+        }
+        .support-button {
+          width: auto;
+        }
+        .gif-section {
+          margin: 0;
+          grid-column: span 2 / span 2;
+        }
+        .gif-card img {
+          width: 100%;
+          max-width: 16rem; /* Equivalent to lg:max-w-xs */
+        }
+      }
+    </style>
+</head>
+<body>
+    <main class="main-container" aria-labelledby="page-title">
+        <div id="animated-card" class="card">
+            <div class="icon-wrapper">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+                <path d="M12 9v4" />
+                <path d="M12 17h.01" />
+              </svg>
+            </div>
+    
+            <div class="card-content">
+              <h1 id="page-title">Conta Excluída</h1>
+              
+              <p class="description">
+                Sua conta e todos os dados associados foram permanentemente removidos.
+              </p>
+    
+              <div class="info-box" role="alert">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M12 16v-4" />
+                  <path d="M12 8h.01" />
+                </svg>
+                <p>Se você acredita que isso foi um engano, por favor, entre em contato com nossa equipe de suporte para análise.</p>
+              </div>
+    
+              <a href="mailto:suporte@exemplo.com?subject=Revisão%20de%20Exclusão%20de%20Conta" class="support-button">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect width="20" height="16" x="2" y="4" rx="2" />
+                  <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                </svg>
+                Entrar em Contato com o Suporte
+              </a>
+            </div>
+            
+            <div class="gif-section">
+                <div class="gif-card">
+                    <img 
+                        src="https://p2.trrsf.com.br/image/fget/cf/540/960/smart/images.terra.com/2022/04/08/seeverino-zorratotal-1k1zhq1wwib7d.gif" 
+                        alt="Severino com crachá dizendo 'Crachá, cara, crachá!'" 
+                    />
+                    <blockquote>
+                      <p>Cara, Crachá... <br/> Cara, Crachá!</p>
+                    </blockquote>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const card = document.getElementById('animated-card');
+            if (card) {
+                // Use a short timeout to allow the initial styles to apply before transitioning
+                setTimeout(() => {
+                    card.classList.add('is-mounted');
+                }, 100);
+            }
+        });
+    </script>
+</body>
+</html>
