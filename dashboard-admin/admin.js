@@ -178,8 +178,7 @@
 
   // Fetch overall dashboard statistics and update overview cards
   async function fetchDashboardStats() {
-    console.log('🚀 fetchDashboardStats iniciado');
-    console.log('🔧 Configurações:', { API, OFF, ADMIN_KEY });
+  // reduzir verbosidade ao buscar estatísticas
     
     if (OFF) {
       console.log('⚠️ Modo OFFLINE ativado');
@@ -198,16 +197,14 @@
       return;
     }
 
-    console.log('🌐 Fazendo requisição para:', `${API}/api/admin/stats`);
-    console.log('🔑 Headers:', { 'X-Admin-Key': ADMIN_KEY });
+  // requisição silenciosa a menos que em dev
     
     try {
       const res = await fetch(`${API}/api/admin/stats`, { 
         headers: { 'X-Admin-Key': ADMIN_KEY },
         mode: 'cors'
       });
-      console.log('📡 Response status:', res.status);
-      console.log('📡 Response headers:', [...res.headers.entries()]);
+  // status recebido (silenciado em produção)
       
       if (!res.ok) {
         console.error('❌ Response não OK:', res.status, res.statusText);
@@ -215,7 +212,7 @@
       }
       
       const data = await res.json();
-      console.log('✅ Stats data received:', data);
+  // dados recebidos
 
       const setText = (id, val) => {
         const el = document.getElementById(id);
@@ -341,10 +338,7 @@
   // On dashboard page, fetch users
   if (location.pathname.toLowerCase().endsWith('dashboard_admin.html')) {
     document.addEventListener('DOMContentLoaded', () => {
-      console.log('Dashboard loading...');
-      console.log('API_BASE:', API);
-      console.log('ADMIN_KEY:', ADMIN_KEY);
-      console.log('OFFLINE mode:', OFF);
+  // inicialização do dashboard (logs reduzidos)
       
       fetchUsers();
       fetchAdminEvents(); // Also fetch recent events
