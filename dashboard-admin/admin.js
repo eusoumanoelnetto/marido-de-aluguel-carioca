@@ -141,6 +141,23 @@
 
   // Fetch overall dashboard statistics and update overview cards
   async function fetchDashboardStats() {
+    // Preencher estatísticas de clientes e prestadores na aba correta
+    const statsClientes = document.getElementById('stats-clientes');
+    if (statsClientes) {
+      statsClientes.innerHTML = `
+        <div class="item"><span>Total de Cadastros</span><span class="stat-value">${data.totalClientes ?? 0}</span></div>
+        <div class="item"><span>Ativos este mês</span><span class="stat-value">-</span></div>
+        <div class="item"><span>Novos hoje</span><span class="stat-value">-</span></div>
+      `;
+    }
+    const statsPrestadores = document.getElementById('stats-prestadores');
+    if (statsPrestadores) {
+      statsPrestadores.innerHTML = `
+        <div class="item"><span>Total de Cadastros</span><span class="stat-value">${data.totalPrestadores ?? 0}</span></div>
+        <div class="item"><span>Ativos este mês</span><span class="stat-value">-</span></div>
+        <div class="item"><span>Novos hoje</span><span class="stat-value">-</span></div>
+      `;
+    }
     console.log('🚀 fetchDashboardStats iniciado');
     console.log('🔧 Configurações:', { API, OFF, ADMIN_KEY });
     
