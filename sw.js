@@ -35,21 +35,23 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Não interceptar requisições cross-origin (CDNs etc.).
+  // Não interceptar requisições cross-origin (CDNs etc.) ou API requests
   // Isso evita erros do tipo: "an 'opaque' response was used for a request whose type is not no-cors"
   try {
     const reqUrl = new URL(event.request.url);
+    
+    // Não interceptar requests cross-origin
     if (reqUrl.origin !== self.location.origin) {
+      return; // deixa o navegador lidar normalmente
+    }
+    
+    // Não interceptar requests da API para evitar problemas de CORS e autenticação
+    if (event.request.url.includes('/api/')) {
       return; // deixa o navegador lidar normalmente
     }
   } catch (_) {
     // se falhar ao parsear URL, não intercepta
     return;
-  }
-
-  // Log requests para debug
-  if (event.request.url.includes('/api/')) {
-    console.log('🌐 SW: interceptando request para API:', event.request.url);
   }
 
   try {
@@ -71,20 +73,15 @@ self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request).then(cachedResponse => {
       if (cachedResponse) {
-        if (event.request.url.includes('/api/')) {
-          console.log('🌐 SW: retornando da cache para API (pode estar causando problemas):', event.request.url);
-        }
         return cachedResponse;
       }
       return fetch(event.request).then(networkResponse => {
         try {
-          // Não cachear requests da API para evitar problemas de CORS e dados desatualizados
-          if (!event.request.url.includes('/api/')) {
-            const responseToCache = networkResponse.clone();
-            caches.open(CACHE_NAME).then(cache => {
-              try { cache.put(event.request, responseToCache); } catch (_) { }
-            });
-          }
+          // Cachear apenas assets estáticos (não API)
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then(cache => {
+            try { cache.put(event.request, responseToCache); } catch (_) { }
+          });
         } catch (_) { /* ignore caching errors */ }
         return networkResponse;
       }).catch((error) => {

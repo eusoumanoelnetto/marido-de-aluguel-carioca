@@ -20,5 +20,9 @@
         "type": "image/png",
         "purpose": "maskable"
       }
-  ]
+  ],
+  "scope": "/",
+  "id": "marido-de-aluguel-carioca",
+  "lang": "pt-BR",
+  "categories": ["business", "utilities"]
 }
