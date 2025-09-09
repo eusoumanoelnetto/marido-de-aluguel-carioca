@@ -58,14 +58,32 @@ if ('serviceWorker' in navigator) {
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
+  console.error('❌ Root element not found!');
   throw new Error("Could not find root element to mount to");
 }
 
-const root = ReactDOM.createRoot(rootElement);
-root.render(
-  <React.StrictMode>
-    <AuthProvider>
-      <App />
-    </AuthProvider>
-  </React.StrictMode>
-);
+console.log('✅ Root element found, mounting React app...');
+
+// Debug: verificar se variáveis estão sendo carregadas
+console.log('🔍 Debug Vercel - ENV vars:', {
+  VITE_API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
+  VITE_API_BASE: import.meta.env.VITE_API_BASE,
+  MODE: import.meta.env.MODE,
+  PROD: import.meta.env.PROD,
+  DEV: import.meta.env.DEV
+});
+
+try {
+  const root = ReactDOM.createRoot(rootElement);
+  root.render(
+    <React.StrictMode>
+      <AuthProvider>
+        <App />
+      </AuthProvider>
+    </React.StrictMode>
+  );
+  console.log('✅ React app mounted successfully');
+} catch (error) {
+  console.error('❌ Error mounting React app:', error);
+  throw error;
+}
