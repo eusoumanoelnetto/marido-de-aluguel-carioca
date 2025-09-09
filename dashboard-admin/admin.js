@@ -21,9 +21,9 @@
   const res = await fetch(`${API}/api/users`, { headers: { 'X-Admin-Key': ADMIN_KEY } });
       if (!res.ok) {
         if (res.status === 401 || res.status === 403) {
-          // token inválido — redireciona para login
+          // token inválido — remover token e mostrar mensagem no lugar de redirecionar
           localStorage.removeItem('admin_token');
-          location.replace('/dashboard-admin/login.html');
+          listEl.innerHTML = '<div class="card">Sessão inválida. Sem acesso ao backend.</div>';
           return;
         }
         listEl.innerHTML = '<div class="card">Erro ao carregar usuários.</div>';
@@ -157,10 +157,13 @@
       return;
     }
 
+    console.log('Fetching dashboard stats from', `${API}/api/admin/stats`);
     try {
       const res = await fetch(`${API}/api/admin/stats`, { headers: { 'X-Admin-Key': ADMIN_KEY } });
+      console.log('Stats fetch response status:', res.status);
       if (!res.ok) return; // silently ignore, events or users will show messages
       const data = await res.json();
+      console.log('Stats data received:', data);
 
       const setText = (id, val) => {
         const el = document.getElementById(id);
@@ -168,6 +171,7 @@
       };
 
       setText('total-clientes', data.totalClientes ?? '0');
+      console.log('totalClientes set to', data.totalClientes);
       const novos = data.servicosConcluidosHoje != null ? `+${data.servicosConcluidosHoje} concluídos hoje` : '+0 concluidos hoje';
       // Try to update the novos-clientes element only if exists
       const novosClientesEl = document.getElementById('novos-clientes');
@@ -175,21 +179,26 @@
         // prefer explicit value if backend provides "new signups" in future; currently reuse concluded today as an indicator
         novosClientesEl.textContent = data.newSignupsToday != null ? `+${data.newSignupsToday} novos hoje` : '+0 novos hoje';
         novosClientesEl.style.color = (data.newSignupsToday > 0) ? 'var(--green)' : 'var(--text-muted)';
+        console.log('novos-clientes set to', novosClientesEl.textContent);
       }
 
       setText('total-prestadores', data.totalPrestadores ?? '0');
+      console.log('totalPrestadores set to', data.totalPrestadores);
       const novosPrestEl = document.getElementById('novos-prestadores');
       if (novosPrestEl) novosPrestEl.textContent = '+0 novos hoje';
 
       setText('servicos-ativos', data.servicosAtivos ?? '0');
+      console.log('servicosAtivos set to', data.servicosAtivos);
       setText('servicos-concluidos', data.servicosConcluidosHoje ?? '0');
 
       setText('erros-recentes', data.errosRecentes ?? '0');
+      console.log('errosRecentes set to', data.errosRecentes);
       const critEl = document.getElementById('erros-criticos');
       if (critEl) critEl.textContent = (data.errosCriticos ?? 0) > 0 ? `${data.errosCriticos} críticos` : '0 críticos';
+      console.log('errosCriticos set to', data.errosCriticos);
 
     } catch (err) {
-      // ignore dashboard stats errors
+      console.error('Error fetching dashboard stats:', err);
     }
   }
 
@@ -232,15 +241,24 @@
   };
 
   // Logout sem sessão
-  window.adminLogout = function () { alert('Sem sessão. Configure ADMIN_KEY no config.js.'); }
+  window.adminLogout = function () { 
+    // Removido redirecionamento para login (login.html foi excluído);
+    localStorage.removeItem('admin_token');
+    alert('Sessão encerrada. Recarregue a página para ver o estado atual.');
+  }
 
   // On dashboard page, fetch users
   if (location.pathname.toLowerCase().endsWith('dashboard_admin.html')) {
     document.addEventListener('DOMContentLoaded', () => {
-  fetchUsers();
-  fetchAdminEvents(); // Also fetch recent events
-  fetchDashboardStats(); // Atualizar cards do dashboard
-  // não adiciona mais botão logout
+      console.log('Dashboard loading...');
+      console.log('API_BASE:', API);
+      console.log('ADMIN_KEY:', ADMIN_KEY);
+      console.log('OFFLINE mode:', OFF);
+      
+      fetchUsers();
+      fetchAdminEvents(); // Also fetch recent events
+      fetchDashboardStats(); // Atualizar cards do dashboard
+      // não adiciona mais botão logout
     });
   }
 })();
