@@ -140,11 +140,25 @@ export const login = async (email: string, password?: string): Promise<User | nu
     
   if (import.meta.env.DEV) console.log('login response status:', response.status);
     
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('🔑 login: erro de resposta:', errorText);
-      return null;
-    }
+      if (!response.ok) {
+        // Se conta excluída, redirecionar para a página estática explicativa
+        if (response.status === 403) {
+          try {
+            const errJson = await response.json().catch(() => ({} as any));
+            const msg = (errJson && errJson.message) || '';
+            if (String(msg).toLowerCase().includes('conta excluída')) {
+              // redireciona imediatamente para a página pública
+              window.location.href = '/conta-excluida.html';
+              return null; // evita continuar
+            }
+          } catch (e) {
+            // ignore
+          }
+        }
+        const errorText = await response.text();
+        if (import.meta.env.DEV) console.error('login: erro de resposta:', errorText);
+        return null;
+      }
     
     const data = await response.json();
   if (import.meta.env.DEV) console.log('login: received data flags', { hasUser: !!data.user, hasToken: !!data.token });
