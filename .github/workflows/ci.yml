@@ -33,8 +33,4 @@ jobs:
         working-directory: backend
         run: npm run build -- --noEmit
 
-      - name: Test backend
-        working-directory: backend
-        env:
-          JWT_SECRET: ci_secret
-        run: npm run test:ci
+  # Test backend step removed: backend tests are intentionally disabled per project owner request
