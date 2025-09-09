@@ -16,9 +16,7 @@ beforeAll(async () => {
   await initDb();
 });
 
-afterAll(async () => {
-  try { (pool as any).end && (pool as any).end(); } catch {}
-});
+
 
 const baseReq = (over: Partial<ServiceRequest>): ServiceRequest => ({
   id: over.id || 'req-1',
