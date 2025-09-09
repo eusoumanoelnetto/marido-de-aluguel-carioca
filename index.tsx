@@ -33,7 +33,7 @@ if ('serviceWorker' in navigator) {
         for (const reg of registrations) {
           try { await reg.unregister(); } catch (e) { /* ignore */ }
         }
-        console.log('Service workers unregistered (dev mode)');
+  // development: unregister service workers to avoid stale bundles
         return;
       }
 
@@ -46,8 +46,7 @@ if ('serviceWorker' in navigator) {
       try {
         // Use URL to normalize when base is absolute
         const normalized = (swPath.startsWith('http') || swPath.startsWith('/')) ? swPath : new URL(swPath, location.href).toString();
-        await navigator.serviceWorker.register(normalized);
-        console.log('Service worker registered (production) at', normalized);
+  await navigator.serviceWorker.register(normalized);
       } catch (e) {
         console.log('Service worker registration failed:', e);
       }
@@ -59,20 +58,12 @@ if ('serviceWorker' in navigator) {
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
-  console.error('❌ Root element not found!');
+  // Root element missing is fatal; keep explicit error
+  console.error('Root element not found!');
   throw new Error("Could not find root element to mount to");
 }
 
-console.log('✅ Root element found, mounting React app...');
-
-// Debug: verificar se variáveis estão sendo carregadas
-console.log('🔍 Debug Vercel - ENV vars:', {
-  VITE_API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
-  VITE_API_BASE: import.meta.env.VITE_API_BASE,
-  MODE: import.meta.env.MODE,
-  PROD: import.meta.env.PROD,
-  DEV: import.meta.env.DEV
-});
+// Env vars are read at build time; do not log sensitive data in production
 
   try {
     const root = ReactDOM.createRoot(rootElement);
@@ -85,8 +76,8 @@ console.log('🔍 Debug Vercel - ENV vars:', {
         </BrowserRouter>
       </React.StrictMode>
     );
-    console.log('✅ React app mounted successfully');
+  // app mounted
   } catch (error) {
-    console.error('❌ Error mounting React app:', error);
+  console.error('Error mounting React app:', error);
     throw error;
   }

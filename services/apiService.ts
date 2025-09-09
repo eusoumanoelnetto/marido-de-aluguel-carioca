@@ -7,15 +7,11 @@ const BACKEND_URL = 'https://marido-de-aluguel-carioca.onrender.com';
 let API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string) || (import.meta.env.VITE_API_BASE as string) || BACKEND_URL;
 
 // Log para debug
-console.log('🔧 API_BASE_URL inicial:', API_BASE_URL);
-console.log('🔧 import.meta.env.VITE_API_BASE_URL:', import.meta.env.VITE_API_BASE_URL);
-console.log('🔧 import.meta.env.VITE_API_BASE:', import.meta.env.VITE_API_BASE);
-console.log('🔧 import.meta.env.PROD:', import.meta.env.PROD);
+// Debug logging removed for production; keep only DEV logs when necessary
 
 // Sempre garante um valor válido, priorizando variáveis de ambiente mas com fallback
 API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string) || (import.meta.env.VITE_API_BASE as string) || BACKEND_URL;
 
-console.log('🔧 API_BASE_URL final determinado:', API_BASE_URL);
 
 // Normaliza e garante que contenha /api como prefixo base das rotas do backend
 if (API_BASE_URL) {
@@ -25,7 +21,7 @@ if (API_BASE_URL) {
   }
 }
 
-console.log('🔧 API_BASE_URL final:', API_BASE_URL);
+// Final API_BASE_URL determined at build time
 
 // Token helpers (localStorage)
 const TOKEN_KEY = 'mdac_token';
@@ -132,8 +128,8 @@ const handleResponse = async (response: Response) => {
 // --- API Functions hitting the backend ---
 
 export const login = async (email: string, password?: string): Promise<User | null> => {
-  console.log('🔑 login: tentando fazer login para:', email);
-  console.log('🔑 login: usando API_BASE_URL:', API_BASE_URL);
+  // login: keep minimal logs only in DEV
+  if (import.meta.env.DEV) console.log('login attempt for', email);
   
   try {
     const response = await fetch(`${API_BASE_URL}/auth/login`, {
@@ -142,8 +138,7 @@ export const login = async (email: string, password?: string): Promise<User | nu
       body: JSON.stringify({ email, password }),
     });
     
-    console.log('🔑 login: response status:', response.status);
-    console.log('🔑 login: response ok:', response.ok);
+  if (import.meta.env.DEV) console.log('login response status:', response.status);
     
     if (!response.ok) {
       const errorText = await response.text();
@@ -152,22 +147,19 @@ export const login = async (email: string, password?: string): Promise<User | nu
     }
     
     const data = await response.json();
-    console.log('🔑 login: dados recebidos:', { hasUser: !!data.user, hasToken: !!data.token });
+  if (import.meta.env.DEV) console.log('login: received data flags', { hasUser: !!data.user, hasToken: !!data.token });
     
     // backend returns { user, token }
     if (data?.token) setToken(data.token);
     return data.user ?? null;
   } catch (error) {
-    console.error('🔑 login: erro na requisição:', error);
+    if (import.meta.env.DEV) console.error('login request error:', error);
     return null;
   }
 };
 
 export const signUp = async (data: SignUpData): Promise<User> => {
-  if (import.meta.env.DEV) {
-    // eslint-disable-next-line no-console
-    console.log('signUp: usando API_BASE_URL:', API_BASE_URL);
-  }
+  if (import.meta.env.DEV) console.log('signUp: using API_BASE_URL');
   try {
     const response = await fetch(`${API_BASE_URL}/auth/signup`, {
       method: 'POST',

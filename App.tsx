@@ -26,7 +26,8 @@ const App: React.FC = () => {
   const [newPending, setNewPending] = useState<ServiceRequest[]>([]);
   const [showNewRequestsAlert, setShowNewRequestsAlert] = useState(false);
   const [lastRequestsMap, setLastRequestsMap] = useState<Record<string, ServiceRequest['status']>>({});
-  const [apiMisconfigured, setApiMisconfigured] = useState(false);
+  // null = ainda checando, false = ok, true = misconfigured
+  const [apiMisconfigured, setApiMisconfigured] = useState<boolean | null>(null);
 
   // Buscar solicitações tanto para prestador quanto para cliente (cliente filtra localmente pelos seus pedidos)
   useEffect(() => {
@@ -57,29 +58,24 @@ const App: React.FC = () => {
     // só checar em produção para não mostrar alerta em ambiente dev
     if (!import.meta.env.PROD) return;
     const checkApi = async () => {
+      // marcar que estamos checando para evitar mostrar banner transitório
+      setApiMisconfigured(null);
       try {
         // Forçar URL do backend
         const base = 'https://marido-de-aluguel-carioca.onrender.com';
-        console.log('🔍 Verificando API em:', base);
-        
-        // tentar buscar rota de API diretamente (401 ou 200 indica que está funcionando)
-        const apiUrl = `${base}/api/requests`;
-        console.log('🔍 Testando URL:', apiUrl);
-        
-        const res = await fetch(apiUrl, { method: 'GET', cache: 'no-store' });
-        console.log('🔍 Status da resposta:', res.status);
+  // tentar buscar rota de API diretamente (401 ou 200 indica que está funcionando)
+  const apiUrl = `${base}/api/requests`;
+  const res = await fetch(apiUrl, { method: 'GET', cache: 'no-store' });
         
         // Se 401 ou 200, significa que a API está funcionando
         if (res.status === 401 || res.status === 200) {
-          console.log('✅ API funcionando - ocultando banner');
           setApiMisconfigured(false);
-        } else if (res.status === 404) {
-          console.log('❌ API não encontrada - mostrando banner');
+        } else {
           setApiMisconfigured(true);
         }
       } catch (e) {
         // network errors - sinaliza possível misconfiguração em produção
-        console.log('❌ Erro ao verificar API:', e);
+  // network error while checking API
         if (import.meta.env.PROD) {
           console.log('❌ Erro em produção - mostrando banner');
           setApiMisconfigured(true);
