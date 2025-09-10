@@ -1,0 +1,25 @@
+{
+  "endpoint": "/api/admin/stats",
+  "method": "GET",
+  "headers": {
+    "X-Admin-Key": "<admin key>"
+  },
+  "responseExample": {
+    "totalClientes": 123,
+    "totalPrestadores": 45,
+    "servicosAtivos": 7,
+    "servicosConcluidosHoje": 2,
+    "fraseConcluidosHoje": "2 concluídos hoje",
+    "newClientsToday": 1,
+    "newSignupsToday": 1,
+    "newProvidersToday": 0,
+    "activeClientsThisMonth": 12,
+    "errosRecentes": 0,
+    "errosCriticos": 0
+  },
+  "notes": [
+    "newClientsToday é um alias claro para clientes cadastrados hoje (mantemos newSignupsToday por compatibilidade)",
+    "newProvidersToday traz prestadores cadastrados hoje",
+    "Alguns campos podem depender de dados disponíveis no banco"
+  ]
+}

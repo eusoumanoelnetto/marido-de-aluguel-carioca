@@ -77,6 +77,7 @@ export const getDashboardStats = async (req: any, res: any) => {
       servicosConcluidosHoje: Number(servicosConcluidosHoje.rows[0].count),
       fraseConcluidosHoje: `${servicosConcluidosHoje.rows[0].count} concluídos hoje`,
   newSignupsToday,
+  newClientsToday: newSignupsToday,
   newProvidersToday,
   activeClientsThisMonth,
       errosRecentes: Number(errosRecentes.rows[0].count),

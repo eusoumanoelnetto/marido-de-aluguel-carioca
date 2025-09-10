@@ -225,8 +225,8 @@
       // Try to update the novos-clientes element only if exists
       const novosClientesEl = document.getElementById('novos-clientes');
       if (novosClientesEl) {
-        // usar o valor real vindo do backend; garantir que seja um número e formatar como +N novos hoje
-        const n = Number(data.newSignupsToday ?? 0);
+        // Prioriza newClientsToday; fallback para newSignupsToday
+        const n = Number((data.newClientsToday ?? data.newSignupsToday) ?? 0);
         novosClientesEl.textContent = `+${n} novos hoje`;
         novosClientesEl.style.color = n > 0 ? 'var(--green)' : 'var(--text-muted)';
         console.log('novos-clientes set to', novosClientesEl.textContent);
