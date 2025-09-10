@@ -94,6 +94,12 @@ export const login = async (req: Request, res: Response) => {
     const secret = process.env.JWT_SECRET || 'dev_secret';
   const token = jwt.sign({ email: user.email, role: user.role }, secret, { expiresIn: '7d' });
     console.log('User logged in:', user.email);
+    try {
+      // Atualiza última data de login
+      await pool.query('UPDATE users SET last_login_at = NOW() WHERE email = $1', [user.email.toLowerCase()]);
+    } catch (e) {
+      console.warn('Falha ao atualizar last_login_at:', (e as any)?.message || e);
+    }
     res.status(200).json({ user, token });
   } else {
     res.status(401).json({ message: 'E-mail ou senha inválidos.' });

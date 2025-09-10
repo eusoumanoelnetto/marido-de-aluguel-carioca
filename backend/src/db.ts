@@ -44,18 +44,61 @@ const inMemoryQuery = async (text: string, params?: any[]) => {
     return makeResult(user ? [ { ...user } ] : []);
   }
 
+  // select count users by role (and optional date filters)
+  if (/SELECT\s+COUNT\(\*\)\s+FROM\s+users/i.test(q)) {
+    // Base filter by role
+    let rows = memUsers.slice();
+    const roleParamIdx = (q.match(/role\s*=\s*\$1/) ? 0 : q.match(/role\s*=\s*\$2/) ? 1 : null);
+    if (roleParamIdx !== null) {
+      const role = (params && params[roleParamIdx]) as string;
+      rows = rows.filter(u => u.role === role);
+    }
+    // created_at::date = $n (new signups today)
+    if (/created_at\s*::date\s*=\s*\$\d+/i.test(q)) {
+      const idx = Number((q.match(/\$(\d+)/) || [])[1]) - 1;
+      const dateStr = (params && params[idx]) as string; // 'YYYY-MM-DD'
+      rows = rows.filter(u => (u.created_at || '').startsWith(dateStr));
+    }
+    // last_login_at >= $n::date (active this month)
+    if (/last_login_at\s*>?=\s*\$\d+/i.test(q)) {
+      const idx = Number((q.match(/\$(\d+)/) || [])[1]) - 1;
+      const fromIso = (params && params[idx]) as string;
+      const fromTs = new Date(fromIso).getTime();
+      rows = rows.filter(u => u.last_login_at && new Date(u.last_login_at).getTime() >= fromTs);
+    }
+    return makeResult([ { count: String(rows.length) } ]);
+  }
+
   // insert user
   if (/INSERT\s+INTO\s+users/i.test(q)) {
     // expect params in order: name, email, phone, role, cep, password, services
     const [name, email, phone, role, cep, password, services] = params || [];
-    const newUser = { name, email: email?.toLowerCase(), phone, role, cep, password, services };
+    const newUser = { 
+      name, 
+      email: email?.toLowerCase(), 
+      phone, 
+      role, 
+      cep, 
+      password, 
+      services,
+      created_at: new Date().toISOString(),
+      last_login_at: null
+    };
     memUsers.push(newUser);
     return makeResult([ { ...newUser } ]);
   }
 
   // update user
   if (/UPDATE\s+users\s+SET/i.test(q) && /WHERE\s+email/i.test(q)) {
-    // params: name, phone, cep, services, profilePictureBase64, email
+    // branch for last_login_at update
+    if (/last_login_at\s*=\s*NOW\(\)/i.test(q)) {
+      const email = (params && params[0])?.toLowerCase();
+      const idx = memUsers.findIndex(u => u.email === email);
+      if (idx === -1) return makeResult([]);
+      memUsers[idx] = { ...memUsers[idx], last_login_at: new Date().toISOString() };
+      return makeResult([ { ...memUsers[idx] } ]);
+    }
+    // general profile update: params: name, phone, cep, services, profilePictureBase64, email
     const [name, phone, cep, services, profilePictureBase64, email] = params || [];
     const idx = memUsers.findIndex(u => u.email === (email || '').toLowerCase());
     if (idx === -1) return makeResult([]);
@@ -139,7 +182,9 @@ export const initDb = async () => {
         cep VARCHAR(20),
         password VARCHAR(255),
         "profilePictureBase64" TEXT,
-        services TEXT[]
+  services TEXT[],
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  last_login_at TIMESTAMPTZ
       );
     `);
 
@@ -181,6 +226,8 @@ export const initDb = async () => {
   // Garantir colunas novas em bases já existentes
   await pgPool.query('ALTER TABLE service_requests ADD COLUMN IF NOT EXISTS "clientEmail" VARCHAR(255)');
   await pgPool.query('ALTER TABLE service_requests ADD COLUMN IF NOT EXISTS "providerEmail" VARCHAR(255)');
+  await pgPool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW()');
+  await pgPool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMPTZ');
 
     console.log('Database connected and tables checked/created successfully.');
     isDbConnected = true;

@@ -41,6 +41,22 @@ export const getDashboardStats = async (req: Request, res: Response) => {
       `SELECT COUNT(*) FROM service_requests WHERE status = $1 AND "requestDate"::date = $2`,
       ['Concluído', hoje]
     );
+    // Novos clientes cadastrados hoje
+    const newSignupsTodayRes = await pool.query(
+      `SELECT COUNT(*) FROM users WHERE role = $1 AND created_at::date = $2`,
+      ['client', hoje]
+    );
+    const newSignupsToday = Number(newSignupsTodayRes.rows?.[0]?.count || 0);
+    // Clientes ativos no mês (fizeram login neste mês)
+    const now = new Date();
+    const firstDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1))
+      .toISOString()
+      .split('T')[0];
+    const activeThisMonthRes = await pool.query(
+      `SELECT COUNT(*) FROM users WHERE role = $1 AND last_login_at >= $2::date`,
+      ['client', firstDay]
+    );
+    const activeClientsThisMonth = Number(activeThisMonthRes.rows?.[0]?.count || 0);
     // Erros recentes (últimas 24h)
     const errosRecentes = await pool.query(
       `SELECT COUNT(*) FROM admin_events WHERE event_type = 'error' AND created_at >= NOW() - INTERVAL '1 day'`
@@ -50,12 +66,14 @@ export const getDashboardStats = async (req: Request, res: Response) => {
       `SELECT COUNT(*) FROM admin_events WHERE event_type = 'error' AND data->>'level' = 'critical' AND created_at >= NOW() - INTERVAL '1 day'`
     );
 
-    res.status(200).json({
+  res.status(200).json({
       totalClientes: Number(clientes.rows[0].count),
       totalPrestadores: Number(prestadores.rows[0].count),
       servicosAtivos: Number(servicosAtivos.rows[0].count),
       servicosConcluidosHoje: Number(servicosConcluidosHoje.rows[0].count),
       fraseConcluidosHoje: `${servicosConcluidosHoje.rows[0].count} concluídos hoje`,
+  newSignupsToday,
+  activeClientsThisMonth,
       errosRecentes: Number(errosRecentes.rows[0].count),
       errosCriticos: Number(errosCriticos.rows[0].count)
     });
@@ -99,8 +117,8 @@ export const cleanTestData = async (req: Request, res: Response) => {
       message: 'Dados de teste removidos',
       deletedServices: deletedServices.rowCount,
       deletedUsers: deletedUsers.rowCount,
-      serviceIds: deletedServices.rows.map(r => r.id),
-      userEmails: deletedUsers.rows.map(r => r.email)
+      serviceIds: deletedServices.rows.map((r: any) => r.id),
+      userEmails: deletedUsers.rows.map((r: any) => r.email)
     });
   } catch (error) {
     console.error('Erro ao limpar dados de teste:', error);

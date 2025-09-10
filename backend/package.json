@@ -4,9 +4,9 @@
   "description": "Backend for the Marido de Aluguel Hub application.",
   "main": "dist/index.js",
   "scripts": {
-  "build": "tsc",
-  "start": "node dist/index.js",
-  "dev": "nodemon src/index.ts"
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "nodemon src/index.ts"
   },
   "keywords": [],
   "author": "",
@@ -24,6 +24,7 @@
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.0",
+    "marido-de-aluguel-carioca": "file:..",
     "pg": "^8.12.0",
     "web-push": "^3.5.0"
   },

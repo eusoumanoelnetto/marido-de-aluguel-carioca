@@ -225,9 +225,10 @@
       // Try to update the novos-clientes element only if exists
       const novosClientesEl = document.getElementById('novos-clientes');
       if (novosClientesEl) {
-        // prefer explicit value if backend provides "new signups" in future; currently reuse concluded today as an indicator
-        novosClientesEl.textContent = data.newSignupsToday != null ? `+${data.newSignupsToday} novos hoje` : '+0 novos hoje';
-        novosClientesEl.style.color = (data.newSignupsToday > 0) ? 'var(--green)' : 'var(--text-muted)';
+        // agora usamos o valor real vindo do backend
+        const n = Number(data.newSignupsToday ?? 0);
+        novosClientesEl.textContent = `+${n} novos hoje`;
+        novosClientesEl.style.color = n > 0 ? 'var(--green)' : 'var(--text-muted)';
         console.log('novos-clientes set to', novosClientesEl.textContent);
       }
 
@@ -255,10 +256,13 @@
       // Preencher estatísticas de clientes e prestadores na aba correta
       const statsClientes = document.getElementById('stats-clientes');
       if (statsClientes) {
+        const total = Number(data.totalClientes ?? 0);
+        const ativosMes = Number(data.activeClientsThisMonth ?? 0);
+        const novosHoje = Number(data.newSignupsToday ?? 0);
         statsClientes.innerHTML = `
-          <div class="item"><span>Total de Cadastros</span><span class="stat-value">${data.totalClientes ?? 0}</span></div>
-          <div class="item"><span>Ativos este mês</span><span class="stat-value">-</span></div>
-          <div class="item"><span>Novos hoje</span><span class="stat-value">-</span></div>
+          <div class="item"><span>Total de Cadastros</span><span class="stat-value">${total}</span></div>
+          <div class="item"><span>Ativos este mês</span><span class="stat-value" style="color:${ativosMes>0?'var(--blue)':'var(--text-muted)'}">${ativosMes}</span></div>
+          <div class="item"><span>Novos hoje</span><span class="stat-value" style="color:${novosHoje>0?'var(--green)':'var(--text-muted)'}">${novosHoje}</span></div>
         `;
       }
       const statsPrestadores = document.getElementById('stats-prestadores');

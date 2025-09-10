@@ -37,6 +37,8 @@ export interface User {
   password?: string;
   profilePictureBase64?: string | null;
   services?: string[];
+  created_at?: string; // ISO timestamp
+  last_login_at?: string | null; // ISO timestamp
 }
 
 export interface SignUpData {
