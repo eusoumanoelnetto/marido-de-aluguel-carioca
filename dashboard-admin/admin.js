@@ -262,7 +262,7 @@
       if (statsClientes) {
         const total = Number(data.totalClientes ?? 0);
         const ativosMes = Number(data.activeClientsThisMonth ?? 0);
-        const novosHoje = Number(data.newSignupsToday ?? 0);
+        const novosHoje = Number((data.newClientsToday ?? data.newSignupsToday) ?? 0);
         statsClientes.innerHTML = `
           <div class="item"><span>Total de Cadastros</span><span class="stat-value">${total}</span></div>
           <div class="item"><span>Ativos este mês</span><span class="stat-value" style="color:${ativosMes>0?'var(--blue)':'var(--text-muted)'}">${ativosMes}</span></div>
@@ -300,7 +300,11 @@
 
   function updateDashboardWithEvents(events) {
     // Count new user signups today and always update the "novos clientes" detail
-    const today = new Date().toISOString().split('T')[0];
+  // Compute local date string (America/Sao_Paulo) in YYYY-MM-DD
+  const now = new Date();
+  const saoPauloOffsetMs = -3 * 60 * 60 * 1000; // Fixo para simplificar; ideal: Intl with timeZone
+  const local = new Date(now.getTime() + saoPauloOffsetMs);
+  const today = `${local.getUTCFullYear()}-${String(local.getUTCMonth()+1).padStart(2,'0')}-${String(local.getUTCDate()).padStart(2,'0')}`;
     const todaySignups = events.filter(e =>
       e.event_type === 'user_signup' && e.created_at && e.created_at.startsWith(today)
     );
@@ -312,6 +316,20 @@
     if (novosEl) {
       novosEl.textContent = `+${newSignupsToday} novos hoje`;
       novosEl.style.color = newSignupsToday > 0 ? 'var(--green)' : 'var(--text-muted)';
+    }
+
+    // Also update the "Usuários > Estatísticas de Clientes" section if loaded
+    const statsClientes = document.getElementById('stats-clientes');
+    if (statsClientes && statsClientes.innerHTML.includes('Novos hoje')) {
+      // Re-render only the 'Novos hoje' value preserving structure
+      const statValues = statsClientes.querySelectorAll('.stat-value');
+      // Convention: 0=Total, 1=Ativos, 2=Novos hoje
+      const novIdx = 2;
+      const el = statValues[novIdx];
+      if (el) {
+        el.textContent = String(newSignupsToday);
+        el.style.color = newSignupsToday > 0 ? 'var(--green)' : 'var(--text-muted)';
+      }
     }
 
     // Update providers detail if available

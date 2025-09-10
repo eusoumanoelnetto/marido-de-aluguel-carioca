@@ -38,17 +38,21 @@ export const getDashboardStats = async (req: any, res: any) => {
       `SELECT COUNT(*) FROM service_requests WHERE status = $1 AND "requestDate"::date = $2`,
       ['Concluído', hoje]
     );
-    // Novos clientes cadastrados hoje
+    // Novos clientes cadastrados hoje (ajustado para fuso America/Sao_Paulo)
     const newSignupsTodayRes = await pool.query(
-      `SELECT COUNT(*) FROM users WHERE role = $1 AND created_at::date = $2`,
-      ['client', hoje]
+      `SELECT COUNT(*) FROM users 
+       WHERE role = $1 
+         AND (created_at AT TIME ZONE 'America/Sao_Paulo')::date = (NOW() AT TIME ZONE 'America/Sao_Paulo')::date`,
+      ['client']
     );
     const newSignupsToday = Number(newSignupsTodayRes.rows?.[0]?.count || 0);
 
-    // Novos prestadores cadastrados hoje
+    // Novos prestadores cadastrados hoje (ajustado para fuso America/Sao_Paulo)
     const newProvidersTodayRes = await pool.query(
-      `SELECT COUNT(*) FROM users WHERE role = $1 AND created_at::date = $2`,
-      ['provider', hoje]
+      `SELECT COUNT(*) FROM users 
+       WHERE role = $1 
+         AND (created_at AT TIME ZONE 'America/Sao_Paulo')::date = (NOW() AT TIME ZONE 'America/Sao_Paulo')::date`,
+      ['provider']
     );
     const newProvidersToday = Number(newProvidersTodayRes.rows?.[0]?.count || 0);
     // Clientes ativos no mês (fizeram login neste mês)
