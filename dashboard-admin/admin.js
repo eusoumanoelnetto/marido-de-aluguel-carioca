@@ -225,7 +225,7 @@
       // Try to update the novos-clientes element only if exists
       const novosClientesEl = document.getElementById('novos-clientes');
       if (novosClientesEl) {
-        // agora usamos o valor real vindo do backend
+        // usar o valor real vindo do backend; garantir que seja um número e formatar como +N novos hoje
         const n = Number(data.newSignupsToday ?? 0);
         novosClientesEl.textContent = `+${n} novos hoje`;
         novosClientesEl.style.color = n > 0 ? 'var(--green)' : 'var(--text-muted)';
@@ -295,17 +295,17 @@
   }
 
   function updateDashboardWithEvents(events) {
-    // Simple logic: count new user signups today
+    // Count new user signups today and always update the "novos clientes" detail
     const today = new Date().toISOString().split('T')[0];
-    const newSignupsToday = events.filter(e => 
+    const newSignupsToday = events.filter(e =>
       e.event_type === 'user_signup' && e.created_at && e.created_at.startsWith(today)
     ).length;
-    
-    // Update overview cards if visible
-    const newUsersElement = document.querySelector('.overview-grid .stat-card .detail');
-    if (newUsersElement && newUsersElement.textContent.includes('novos hoje')) {
-      newUsersElement.textContent = `+${newSignupsToday} novos hoje`;
-      newUsersElement.style.color = newSignupsToday > 0 ? 'var(--green)' : 'var(--text-muted)';
+
+    // Update the specific overview card detail by id so we always show the real value
+    const novosEl = document.getElementById('novos-clientes');
+    if (novosEl) {
+      novosEl.textContent = `+${newSignupsToday} novos hoje`;
+      novosEl.style.color = newSignupsToday > 0 ? 'var(--green)' : 'var(--text-muted)';
     }
   }
 
