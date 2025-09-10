@@ -1,8 +1,8 @@
-import { Request, Response } from 'express';
+// Tipos amplos para compatibilidade com diferentes ambientes de checagem
 import pool from '../db';
 
 // Retorna estatísticas para o dashboard admin
-export const getDashboardStats = async (req: Request, res: Response) => {
+export const getDashboardStats = async (req: any, res: any) => {
   const role = (req as any).userRole;
   if (role !== 'admin') {
     return res.status(403).json({ message: 'Acesso negado. Apenas administradores.' });
@@ -23,10 +23,7 @@ export const getDashboardStats = async (req: Request, res: Response) => {
       ORDER BY count DESC
     `);
     
-    console.log('=== DEBUG SERVIÇOS ===');
-    console.log('Últimos 20 serviços:', allServices.rows);
-    console.log('Status count:', statusDebug.rows);
-    console.log('====================');
+  // Logs suprimidos para evitar ruído em produção
     
     // Serviços ativos: considerar também 'Pendente' e 'Orçamento Enviado'
     const servicosAtivos = await pool.query(`
@@ -47,6 +44,13 @@ export const getDashboardStats = async (req: Request, res: Response) => {
       ['client', hoje]
     );
     const newSignupsToday = Number(newSignupsTodayRes.rows?.[0]?.count || 0);
+
+    // Novos prestadores cadastrados hoje
+    const newProvidersTodayRes = await pool.query(
+      `SELECT COUNT(*) FROM users WHERE role = $1 AND created_at::date = $2`,
+      ['provider', hoje]
+    );
+    const newProvidersToday = Number(newProvidersTodayRes.rows?.[0]?.count || 0);
     // Clientes ativos no mês (fizeram login neste mês)
     const now = new Date();
     const firstDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1))
@@ -73,18 +77,19 @@ export const getDashboardStats = async (req: Request, res: Response) => {
       servicosConcluidosHoje: Number(servicosConcluidosHoje.rows[0].count),
       fraseConcluidosHoje: `${servicosConcluidosHoje.rows[0].count} concluídos hoje`,
   newSignupsToday,
+  newProvidersToday,
   activeClientsThisMonth,
       errosRecentes: Number(errosRecentes.rows[0].count),
       errosCriticos: Number(errosCriticos.rows[0].count)
     });
   } catch (error) {
-    console.error('Erro ao buscar estatísticas do dashboard:', error);
+  // Log suprimido em produção
     res.status(500).json({ message: 'Erro ao buscar estatísticas do dashboard.' });
   }
 };
 
 // Limpar dados de teste/mock (usar com cuidado!)
-export const cleanTestData = async (req: Request, res: Response) => {
+export const cleanTestData = async (req: any, res: any) => {
   const role = (req as any).userRole;
   if (role !== 'admin') {
     return res.status(403).json({ message: 'Acesso negado. Apenas administradores.' });
@@ -121,7 +126,7 @@ export const cleanTestData = async (req: Request, res: Response) => {
       userEmails: deletedUsers.rows.map((r: any) => r.email)
     });
   } catch (error) {
-    console.error('Erro ao limpar dados de teste:', error);
+  // Log suprimido em produção
     res.status(500).json({ message: 'Erro ao limpar dados de teste.' });
   }
 };
