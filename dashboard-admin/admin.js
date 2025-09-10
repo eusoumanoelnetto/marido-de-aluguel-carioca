@@ -235,7 +235,11 @@
       setText('total-prestadores', data.totalPrestadores ?? '0');
       console.log('totalPrestadores set to', data.totalPrestadores);
       const novosPrestEl = document.getElementById('novos-prestadores');
-      if (novosPrestEl) novosPrestEl.textContent = '+0 novos hoje';
+      if (novosPrestEl) {
+        const p = Number(data.newProvidersToday ?? 0);
+        novosPrestEl.textContent = `+${p} novos hoje`;
+        novosPrestEl.style.color = p > 0 ? 'var(--green)' : 'var(--text-muted)';
+      }
 
   setText('servicos-ativos', data.servicosAtivos ?? '0');
   console.log('servicosAtivos set to', data.servicosAtivos);
@@ -297,15 +301,24 @@
   function updateDashboardWithEvents(events) {
     // Count new user signups today and always update the "novos clientes" detail
     const today = new Date().toISOString().split('T')[0];
-    const newSignupsToday = events.filter(e =>
+    const todaySignups = events.filter(e =>
       e.event_type === 'user_signup' && e.created_at && e.created_at.startsWith(today)
-    ).length;
+    );
+    const newSignupsToday = todaySignups.length;
+    const newProvidersToday = todaySignups.filter(e => (e.role || e.user_role) === 'provider').length;
 
     // Update the specific overview card detail by id so we always show the real value
     const novosEl = document.getElementById('novos-clientes');
     if (novosEl) {
       novosEl.textContent = `+${newSignupsToday} novos hoje`;
       novosEl.style.color = newSignupsToday > 0 ? 'var(--green)' : 'var(--text-muted)';
+    }
+
+    // Update providers detail if available
+    const novosPrestEl = document.getElementById('novos-prestadores');
+    if (novosPrestEl) {
+      novosPrestEl.textContent = `+${newProvidersToday} novos hoje`;
+      novosPrestEl.style.color = newProvidersToday > 0 ? 'var(--green)' : 'var(--text-muted)';
     }
   }
 
@@ -348,6 +361,14 @@
       fetchAdminEvents(); // Also fetch recent events
       fetchDashboardStats(); // Atualizar cards do dashboard
       // não adiciona mais botão logout
+
+      // Atualização automática leve a cada 60s para refletir novos cadastros do dia
+      try {
+        setInterval(() => {
+          fetchDashboardStats();
+          fetchAdminEvents();
+        }, 60000);
+      } catch (_) { /* noop */ }
     });
   }
 })();
