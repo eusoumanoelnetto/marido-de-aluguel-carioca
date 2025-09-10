@@ -271,10 +271,13 @@
       }
       const statsPrestadores = document.getElementById('stats-prestadores');
       if (statsPrestadores) {
+        const totalP = Number(data.totalPrestadores ?? 0);
+        const ativosP = Number(data.activeProvidersThisMonth ?? 0);
+        const novosP = Number(data.newProvidersToday ?? 0);
         statsPrestadores.innerHTML = `
-          <div class="item"><span>Total de Cadastros</span><span class="stat-value">${data.totalPrestadores ?? 0}</span></div>
-          <div class="item"><span>Ativos este mês</span><span class="stat-value">-</span></div>
-          <div class="item"><span>Novos hoje</span><span class="stat-value">-</span></div>
+          <div class="item"><span>Total de Cadastros</span><span class="stat-value">${totalP}</span></div>
+          <div class="item"><span>Ativos este mês</span><span class="stat-value" style="color:${ativosP>0?'var(--blue)':'var(--text-muted)'}">${ativosP}</span></div>
+          <div class="item"><span>Novos hoje</span><span class="stat-value" style="color:${novosP>0?'var(--green)':'var(--text-muted)'}">${novosP}</span></div>
         `;
       }
 
@@ -337,6 +340,18 @@
     if (novosPrestEl) {
       novosPrestEl.textContent = `+${newProvidersToday} novos hoje`;
       novosPrestEl.style.color = newProvidersToday > 0 ? 'var(--green)' : 'var(--text-muted)';
+    }
+
+    // Atualizar seção de prestadores na aba Usuários
+    const statsPrest = document.getElementById('stats-prestadores');
+    if (statsPrest && statsPrest.innerHTML.includes('Novos hoje')) {
+      const statValues = statsPrest.querySelectorAll('.stat-value');
+      const novIdx = 2;
+      const el = statValues[novIdx];
+      if (el) {
+        el.textContent = String(newProvidersToday);
+        el.style.color = newProvidersToday > 0 ? 'var(--green)' : 'var(--text-muted)';
+      }
     }
   }
 

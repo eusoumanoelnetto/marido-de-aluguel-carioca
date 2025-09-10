@@ -65,6 +65,12 @@ export const getDashboardStats = async (req: any, res: any) => {
       ['client', firstDay]
     );
     const activeClientsThisMonth = Number(activeThisMonthRes.rows?.[0]?.count || 0);
+    // Prestadores ativos no mês (fizeram login neste mês)
+    const activeProvidersRes = await pool.query(
+      `SELECT COUNT(*) FROM users WHERE role = $1 AND last_login_at >= $2::date`,
+      ['provider', firstDay]
+    );
+    const activeProvidersThisMonth = Number(activeProvidersRes.rows?.[0]?.count || 0);
     // Erros recentes (últimas 24h)
     const errosRecentes = await pool.query(
       `SELECT COUNT(*) FROM admin_events WHERE event_type = 'error' AND created_at >= NOW() - INTERVAL '1 day'`
@@ -84,6 +90,7 @@ export const getDashboardStats = async (req: any, res: any) => {
   newClientsToday: newSignupsToday,
   newProvidersToday,
   activeClientsThisMonth,
+  activeProvidersThisMonth,
       errosRecentes: Number(errosRecentes.rows[0].count),
       errosCriticos: Number(errosCriticos.rows[0].count)
     });
