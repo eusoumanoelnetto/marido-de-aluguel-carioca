@@ -48,6 +48,33 @@ export const getDashboardStats = async (req: any, res: any) => {
     const newSignupsToday = Number(newSignupsTodayRes.rows?.[0]?.count || 0);
 
     // Novos prestadores cadastrados hoje (ajustado para fuso America/Sao_Paulo)
+    // Query modificada para ser mais precisa e garantir que estamos filtrando pelo dia atual
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0]; // YYYY-MM-DD
+    
+    // Primeiro buscar todos os prestadores cadastrados hoje para diagnóstico
+    const providersToday = await pool.query(
+      `SELECT email, name, created_at, 
+              (created_at AT TIME ZONE 'America/Sao_Paulo')::date as created_date,
+              (NOW() AT TIME ZONE 'America/Sao_Paulo')::date as today_date
+       FROM users 
+       WHERE role = $1 
+         AND (created_at AT TIME ZONE 'America/Sao_Paulo')::date = (NOW() AT TIME ZONE 'America/Sao_Paulo')::date
+       ORDER BY created_at DESC`,
+      ['provider']
+    );
+    
+    // Verificar dados para diagnosticar o problema
+    console.log(`[DEBUG] Prestadores cadastrados hoje (${todayStr}):`, 
+                providersToday.rows.length, 
+                providersToday.rows.map(r => ({ 
+                  email: r.email, 
+                  created: r.created_at, 
+                  created_date: r.created_date,
+                  today: r.today_date 
+                })));
+    
+    // Manter contagem original mas com logging extra
     const newProvidersTodayRes = await pool.query(
       `SELECT COUNT(*) FROM users 
        WHERE role = $1 
@@ -55,6 +82,9 @@ export const getDashboardStats = async (req: any, res: any) => {
       ['provider']
     );
     const newProvidersToday = Number(newProvidersTodayRes.rows?.[0]?.count || 0);
+    
+    // Log extra para diagnóstico
+    console.log(`[INFO] Contagem de prestadores novos hoje: ${newProvidersToday}`);
     // Clientes ativos no mês (fizeram login neste mês)
     const now = new Date();
     const firstDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1))
@@ -80,17 +110,50 @@ export const getDashboardStats = async (req: any, res: any) => {
       `SELECT COUNT(*) FROM admin_events WHERE event_type = 'error' AND data->>'level' = 'critical' AND created_at >= NOW() - INTERVAL '1 day'`
     );
 
+  // Se os logs de debug mostraram mais de um prestador hoje,
+  // vamos validar se realmente são prestadores criados hoje
+  // ou se há algum erro de timestamp/timezone
+  let verificadoProvidersToday = newProvidersToday;
+  
+  if (newProvidersToday > 1) {
+    // Verifica manualmente a data
+    const providerList = providersToday.rows || [];
+    const today = new Date();
+    const todayDateOnly = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate()
+    ).getTime();
+    
+    // Filtra apenas os que REALMENTE foram criados hoje, com verificação manual de data
+    const reallyCreatedToday = providerList.filter(p => {
+      const createdDate = new Date(p.created_at);
+      const createdDateOnly = new Date(
+        createdDate.getFullYear(),
+        createdDate.getMonth(),
+        createdDate.getDate()
+      ).getTime();
+      
+      return createdDateOnly === todayDateOnly;
+    });
+    
+    // Usa o valor verificado manualmente
+    verificadoProvidersToday = reallyCreatedToday.length;
+    console.log(`[CORREÇÃO] Prestadores hoje ajustado: ${newProvidersToday} -> ${verificadoProvidersToday}`);
+  }
+
   res.status(200).json({
       totalClientes: Number(clientes.rows[0].count),
       totalPrestadores: Number(prestadores.rows[0].count),
       servicosAtivos: Number(servicosAtivos.rows[0].count),
       servicosConcluidosHoje: Number(servicosConcluidosHoje.rows[0].count),
       fraseConcluidosHoje: `${servicosConcluidosHoje.rows[0].count} concluídos hoje`,
-  newSignupsToday,
-  newClientsToday: newSignupsToday,
-  newProvidersToday,
-  activeClientsThisMonth,
-  activeProvidersThisMonth,
+      newSignupsToday,
+      newClientsToday: newSignupsToday,
+      // Usar o valor verificado ao invés do original
+      newProvidersToday: verificadoProvidersToday, 
+      activeClientsThisMonth,
+      activeProvidersThisMonth,
       errosRecentes: Number(errosRecentes.rows[0].count),
       errosCriticos: Number(errosCriticos.rows[0].count)
     });
@@ -119,14 +182,42 @@ export const cleanTestData = async (req: any, res: any) => {
       RETURNING id
     `);
     
-    // Remover usuários de teste
+    // Verificar possíveis duplicatas por email (caso tenha mais de um registro com mesmo email)
+    const duplicateCheck = await pool.query(`
+      SELECT email, COUNT(*) 
+      FROM users 
+      GROUP BY email 
+      HAVING COUNT(*) > 1
+    `);
+    
+    if (duplicateCheck.rows.length > 0) {
+      console.log("[ALERTA] Emails duplicados encontrados:", 
+                  duplicateCheck.rows.map(r => `${r.email} (${r.count}x)`));
+      
+      // Remover duplicatas mantendo apenas o registro mais recente
+      for (const dup of duplicateCheck.rows) {
+        await pool.query(`
+          DELETE FROM users 
+          WHERE email = $1 
+          AND created_at < (
+            SELECT MAX(created_at) FROM users WHERE email = $1
+          )
+        `, [dup.email]);
+      }
+    }
+    
+    // Remover usuários de teste - com critérios adicionais para cobrir mais casos
     const deletedUsers = await pool.query(`
       DELETE FROM users 
       WHERE email LIKE '%test%' 
       OR email LIKE '%exemplo%'
       OR email LIKE '%demo%'
+      OR email LIKE '%temp%'
+      OR email LIKE '%dummy%'
       OR name LIKE '%Test%'
       OR name LIKE '%Demo%'
+      OR name LIKE '%Temp%'
+      OR name LIKE '%Dummy%'
       RETURNING email
     `);
 

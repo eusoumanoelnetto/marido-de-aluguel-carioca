@@ -227,9 +227,15 @@
       if (novosClientesEl) {
         // Prioriza newClientsToday; fallback para newSignupsToday
         const n = Number((data.newClientsToday ?? data.newSignupsToday) ?? 0);
-        novosClientesEl.textContent = `+${n} novos hoje`;
-        novosClientesEl.style.color = n > 0 ? 'var(--green)' : 'var(--text-muted)';
-        console.log('novos-clientes set to', novosClientesEl.textContent);
+        if (n > 0) {
+          novosClientesEl.textContent = `+${n} novos hoje`;
+          novosClientesEl.style.color = 'var(--green)';
+          novosClientesEl.style.display = 'block';
+          console.log('novos-clientes set to', novosClientesEl.textContent);
+        } else {
+          novosClientesEl.style.display = 'none';
+          console.log('novos-clientes ocultado (0 cadastros hoje)');
+        }
       }
 
       setText('total-prestadores', data.totalPrestadores ?? '0');
@@ -237,8 +243,13 @@
       const novosPrestEl = document.getElementById('novos-prestadores');
       if (novosPrestEl) {
         const p = Number(data.newProvidersToday ?? 0);
-        novosPrestEl.textContent = `+${p} novos hoje`;
-        novosPrestEl.style.color = p > 0 ? 'var(--green)' : 'var(--text-muted)';
+        if (p > 0) {
+          novosPrestEl.textContent = `+${p} novos hoje`;
+          novosPrestEl.style.color = 'var(--green)';
+          novosPrestEl.style.display = 'block';
+        } else {
+          novosPrestEl.style.display = 'none';
+        }
       }
 
   setText('servicos-ativos', data.servicosAtivos ?? '0');
@@ -263,10 +274,16 @@
         const total = Number(data.totalClientes ?? 0);
         const ativosMes = Number(data.activeClientsThisMonth ?? 0);
         const novosHoje = Number((data.newClientsToday ?? data.newSignupsToday) ?? 0);
+        
+        let novosHtml = '';
+        if (novosHoje > 0) {
+          novosHtml = `<div class="item"><span>Novos hoje</span><span class="stat-value" style="color:var(--green)">${novosHoje}</span></div>`;
+        }
+        
         statsClientes.innerHTML = `
           <div class="item"><span>Total de Cadastros</span><span class="stat-value">${total}</span></div>
           <div class="item"><span>Ativos este mês</span><span class="stat-value" style="color:${ativosMes>0?'var(--blue)':'var(--text-muted)'}">${ativosMes}</span></div>
-          <div class="item"><span>Novos hoje</span><span class="stat-value" style="color:${novosHoje>0?'var(--green)':'var(--text-muted)'}">${novosHoje}</span></div>
+          ${novosHtml}
         `;
       }
       const statsPrestadores = document.getElementById('stats-prestadores');
@@ -274,10 +291,16 @@
         const totalP = Number(data.totalPrestadores ?? 0);
         const ativosP = Number(data.activeProvidersThisMonth ?? 0);
         const novosP = Number(data.newProvidersToday ?? 0);
+        
+        let novosPHtml = '';
+        if (novosP > 0) {
+          novosPHtml = `<div class="item"><span>Novos hoje</span><span class="stat-value" style="color:var(--green)">${novosP}</span></div>`;
+        }
+        
         statsPrestadores.innerHTML = `
           <div class="item"><span>Total de Cadastros</span><span class="stat-value">${totalP}</span></div>
           <div class="item"><span>Ativos este mês</span><span class="stat-value" style="color:${ativosP>0?'var(--blue)':'var(--text-muted)'}">${ativosP}</span></div>
-          <div class="item"><span>Novos hoje</span><span class="stat-value" style="color:${novosP>0?'var(--green)':'var(--text-muted)'}">${novosP}</span></div>
+          ${novosPHtml}
         `;
       }
 

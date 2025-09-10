@@ -44,6 +44,21 @@ const inMemoryQuery = async (text: string, params?: any[]) => {
     return makeResult(user ? [ { ...user } ] : []);
   }
 
+  // select specific columns from users (used by admin listUsers)
+  if (/SELECT\s+name\s*,\s*email\s*,/i.test(q) && /FROM\s+users/i.test(q)) {
+    // project only the requested fields to mimic real DB response
+    const rows = memUsers.map(u => ({
+      name: u.name,
+      email: u.email,
+      phone: u.phone,
+      role: u.role,
+      cep: u.cep,
+      profilePictureBase64: u.profilePictureBase64,
+      services: u.services
+    }));
+    return makeResult(rows);
+  }
+
   // select count users by role (and optional date filters)
   if (/SELECT\s+COUNT\(\*\)\s+FROM\s+users/i.test(q)) {
     // Base filter by role
