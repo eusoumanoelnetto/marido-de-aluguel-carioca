@@ -264,35 +264,29 @@
 
       setText('total-clientes', data.totalClientes ?? '0');
       console.log('totalClientes set to', data.totalClientes);
-      const novos = data.servicosConcluidosHoje != null ? `+${data.servicosConcluidosHoje} concluídos hoje` : '+0 concluidos hoje';
-      // Try to update the novos-clientes element only if exists
+      
+      // Atualizar novos clientes hoje
       const novosClientesEl = document.getElementById('novos-clientes');
       if (novosClientesEl) {
         // Prioriza newClientsToday; fallback para newSignupsToday
         const n = Number((data.newClientsToday ?? data.newSignupsToday) ?? 0);
-        if (n > 0) {
-          novosClientesEl.textContent = `+${n} novos hoje`;
-          novosClientesEl.style.color = 'var(--green)';
-          novosClientesEl.style.display = 'block';
-          console.log('novos-clientes set to', novosClientesEl.textContent);
-        } else {
-          novosClientesEl.style.display = 'none';
-          console.log('novos-clientes ocultado (0 cadastros hoje)');
-        }
+        novosClientesEl.textContent = `+${n} novos hoje`;
+        novosClientesEl.style.color = 'var(--green)';
+        novosClientesEl.style.display = 'block';
+        console.log('novos-clientes set to', novosClientesEl.textContent);
       }
 
       setText('total-prestadores', data.totalPrestadores ?? '0');
       console.log('totalPrestadores set to', data.totalPrestadores);
+      
+      // Atualizar novos prestadores hoje
       const novosPrestEl = document.getElementById('novos-prestadores');
       if (novosPrestEl) {
         const p = Number(data.newProvidersToday ?? 0);
-        if (p > 0) {
-          novosPrestEl.textContent = `+${p} novos hoje`;
-          novosPrestEl.style.color = 'var(--green)';
-          novosPrestEl.style.display = 'block';
-        } else {
-          novosPrestEl.style.display = 'none';
-        }
+        novosPrestEl.textContent = `+${p} novos hoje`;
+        novosPrestEl.style.color = 'var(--green)';
+        novosPrestEl.style.display = 'block';
+        console.log('novos-prestadores set to', novosPrestEl.textContent);
       }
 
   setText('servicos-ativos', data.servicosAtivos ?? '0');
