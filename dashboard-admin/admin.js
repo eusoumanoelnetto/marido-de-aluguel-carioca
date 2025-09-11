@@ -312,8 +312,32 @@
 
       setText('erros-recentes', data.errosRecentes ?? '0');
       console.log('errosRecentes set to', data.errosRecentes);
+      
       const critEl = document.getElementById('erros-criticos');
-      if (critEl) critEl.textContent = (data.errosCriticos ?? 0) > 0 ? `${data.errosCriticos} críticos` : '0 críticos';
+      const errorCard = document.getElementById('error-stats-card');
+      
+      if (critEl) {
+        const errosCriticos = Number(data.errosCriticos ?? 0);
+        if (errosCriticos > 0) {
+          critEl.textContent = `${errosCriticos} crítico${errosCriticos > 1 ? 's' : ''}`;
+          critEl.style.color = 'var(--red)';
+          critEl.style.fontWeight = '600';
+          
+          // Adicionar classe de erro crítico ao card
+          if (errorCard) {
+            errorCard.classList.add('has-critical-errors');
+          }
+        } else {
+          critEl.textContent = '0 críticos';
+          critEl.style.color = 'var(--green)';
+          critEl.style.fontWeight = '500';
+          
+          // Remover classe de erro crítico
+          if (errorCard) {
+            errorCard.classList.remove('has-critical-errors');
+          }
+        }
+      }
       console.log('errosCriticos set to', data.errosCriticos);
 
       // Preencher estatísticas de clientes e prestadores na aba correta
@@ -376,7 +400,7 @@
     setText('total-clientes', '127');
     setText('total-prestadores', '89');
     setText('servicos-ativos', '15');
-    setText('erros-recentes', '2');
+    setText('erros-recentes', '3');
 
     // Atualizar detalhes
     const novosClientesEl = document.getElementById('novos-clientes');
@@ -397,7 +421,7 @@
     }
 
     const critEl = document.getElementById('erros-criticos');
-    if (critEl) critEl.textContent = '0 críticos';
+    if (critEl) critEl.textContent = '1 crítico';
 
     // Preencher estatísticas na aba Usuários
     const statsClientes = document.getElementById('stats-clientes');
@@ -505,6 +529,19 @@
 
   // Sistema de Logs e Diagnósticos
   const diagnosticData = {
+    'database-error': {
+      title: 'Erro Crítico no Banco de Dados',
+      icon: 'fas fa-database',
+      severity: 'error',
+      description: 'Falha na conexão ou operação com o banco PostgreSQL.',
+      steps: [
+        'Verifique se o banco PostgreSQL está online',
+        'Confirme as credenciais de conexão',
+        'Verifique logs do banco de dados',
+        'Teste conexão manual com psql',
+        'Considere reiniciar o serviço do banco'
+      ]
+    },
     'api-connection': {
       title: 'Problema de Conexão com API',
       icon: 'fas fa-wifi',
@@ -567,47 +604,98 @@
         'Monitore tempo de resposta dos prestadores',
         'Acompanhe até a conclusão do serviço'
       ]
+    },
+    'system-healthy': {
+      title: 'Sistema Funcionando Normalmente',
+      icon: 'fas fa-check-circle',
+      severity: 'success',
+      description: 'Todas as verificações do sistema passaram com sucesso.',
+      steps: [
+        'Sistema operando dentro dos parâmetros normais',
+        'Todas as APIs respondendo adequadamente',
+        'Banco de dados estável',
+        'Usuários conseguindo acessar normalmente',
+        'Monitore para manter esta estabilidade'
+      ]
     }
   };
 
   function generateSystemLogs() {
-    const logs = [
-      {
+    const now = new Date();
+    const logs = [];
+    
+    // Se temos dados reais de erros, adicionar logs baseados nisso
+    const errosRecentesEl = document.getElementById('erros-recentes');
+    const errosCriticosEl = document.getElementById('erros-criticos');
+    
+    const numErros = errosRecentesEl ? parseInt(errosRecentesEl.textContent) || 0 : 0;
+    const temCriticos = errosCriticosEl ? errosCriticosEl.textContent.includes('crítico') && !errosCriticosEl.textContent.includes('0') : false;
+    
+    if (numErros > 0) {
+      if (temCriticos) {
+        logs.push({
+          id: 'database-error',
+          type: 'error',
+          title: 'Erro crítico no banco de dados',
+          description: 'Falha na conexão com PostgreSQL',
+          timestamp: '3 min atrás'
+        });
+      }
+      
+      logs.push({
         id: 'api-connection',
         type: 'error',
-        title: 'Falha na conexão com API',
-        description: 'Timeout ao tentar conectar com o backend',
-        timestamp: '2 min atrás'
-      },
-      {
-        id: 'user-signup',
+        title: 'Timeout na API',
+        description: 'Requisição demorou mais que o esperado',
+        timestamp: '8 min atrás'
+      });
+      
+      if (numErros > 2) {
+        logs.push({
+          id: 'auth-failed',
+          type: 'warning',
+          title: 'Tentativa de acesso negado',
+          description: 'Usuário tentou acessar área restrita',
+          timestamp: '12 min atrás'
+        });
+      }
+    }
+    
+    // Logs de atividade normal
+    logs.push({
+      id: 'user-signup',
+      type: 'success',
+      title: 'Novo usuário cadastrado',
+      description: 'Cliente Maria Santos se cadastrou',
+      timestamp: '15 min atrás'
+    });
+
+    logs.push({
+      id: 'service-request',
+      type: 'info',
+      title: 'Nova solicitação de serviço',
+      description: 'Reparo elétrico - Copacabana',
+      timestamp: '18 min atrás'
+    });
+
+    // Se não há erros, adicionar logs mais positivos
+    if (numErros === 0) {
+      logs.push({
+        id: 'system-healthy',
         type: 'success',
-        title: 'Novo usuário cadastrado',
-        description: 'Cliente João Silva se cadastrou',
-        timestamp: '5 min atrás'
-      },
-      {
-        id: 'auth-failed',
-        type: 'warning',
-        title: 'Tentativa de acesso negada',
-        description: 'Chave de admin inválida detectada',
-        timestamp: '12 min atrás'
-      },
-      {
-        id: 'service-request',
-        type: 'info',
-        title: 'Nova solicitação de serviço',
-        description: 'Reparo elétrico - Copacabana',
-        timestamp: '18 min atrás'
-      },
-      {
+        title: 'Sistema funcionando normalmente',
+        description: 'Todas as verificações passaram',
+        timestamp: '20 min atrás'
+      });
+    } else {
+      logs.push({
         id: 'slow-response',
         type: 'warning',
         title: 'Performance degradada',
-        description: 'API respondendo em >3s',
+        description: 'Tempo de resposta acima do normal',
         timestamp: '25 min atrás'
-      }
-    ];
+      });
+    }
 
     return logs;
   }
@@ -773,6 +861,27 @@
           closeAllModals();
         }
       });
+
+      // Click no card de erros para ir para a aba de erros
+      const errorStatsCard = document.getElementById('error-stats-card');
+      if (errorStatsCard) {
+        errorStatsCard.addEventListener('click', () => {
+          // Remover active de todos os links
+          navLinks.forEach(nav => nav.classList.remove('active'));
+          pages.forEach(page => page.classList.remove('active'));
+          
+          // Ativar a aba de erros
+          const errorLink = document.querySelector('[data-target="erros"]');
+          const errorPage = document.getElementById('erros');
+          
+          if (errorLink && errorPage) {
+            errorLink.classList.add('active');
+            errorPage.classList.add('active');
+            renderSystemLogs();
+            updateSystemStatus();
+          }
+        });
+      }
 
       // inicialização do dashboard (logs reduzidos)
       
