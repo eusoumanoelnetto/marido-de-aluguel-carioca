@@ -215,8 +215,14 @@
       const res = await fetch(`${API}/api/users/events`, { headers: { 'X-Admin-Key': ADMIN_KEY } });
       if (!res.ok) return;
       const data = await res.json();
+      
+      // Armazenar eventos reais globalmente para uso nos logs
+      window.realAdminEvents = data.events || [];
+      console.log('📋 Eventos admin carregados:', window.realAdminEvents.length);
+      
       updateDashboardWithEvents(data.events || []);
     } catch (err) {
+      console.log('Não foi possível carregar eventos admin:', err.message);
       // ignore events fetch errors
     }
   }
@@ -712,22 +718,51 @@
       }
     }
     
-    // Logs de atividade normal
-    logs.push({
-      id: 'user-signup',
-      type: 'success',
-      title: 'Novo usuário cadastrado',
-      description: 'Cliente Maria Santos se cadastrou',
-      timestamp: '15 min atrás'
-    });
+    // Tentar buscar eventos reais primeiro
+    if (window.realAdminEvents && window.realAdminEvents.length > 0) {
+      console.log('📋 Usando eventos reais:', window.realAdminEvents.length);
+      
+      window.realAdminEvents.forEach((event, index) => {
+        const timeAgo = formatTimeAgo(event.created_at);
+        
+        if (event.event_type === 'user_signup') {
+          const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+          logs.push({
+            id: `real-signup-${index}`,
+            type: 'success',
+            title: 'Novo usuário cadastrado',
+            description: `${data.role === 'client' ? 'Cliente' : 'Prestador'} ${data.name} se cadastrou`,
+            timestamp: timeAgo
+          });
+        } else if (event.event_type === 'service_request') {
+          const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+          logs.push({
+            id: `real-service-${index}`,
+            type: 'info',
+            title: 'Nova solicitação de serviço',
+            description: `${data.category} - ${data.address}`,
+            timestamp: timeAgo
+          });
+        }
+      });
+    } else {
+      // Fallback para logs de exemplo quando não há eventos reais
+      logs.push({
+        id: 'user-signup',
+        type: 'success',
+        title: 'Novo usuário cadastrado',
+        description: 'Cliente Maria Santos se cadastrou',
+        timestamp: '15 min atrás'
+      });
 
-    logs.push({
-      id: 'service-request',
-      type: 'info',
-      title: 'Nova solicitação de serviço',
-      description: 'Reparo elétrico - Copacabana',
-      timestamp: '18 min atrás'
-    });
+      logs.push({
+        id: 'service-request',
+        type: 'info',
+        title: 'Nova solicitação de serviço',
+        description: 'Reparo elétrico - Copacabana',
+        timestamp: '18 min atrás'
+      });
+    }
 
     // Se não há erros, adicionar logs mais positivos
     if (numErros === 0) {
@@ -749,6 +784,23 @@
     }
 
     return logs;
+  }
+
+  // Função auxiliar para formatar tempo relativo
+  function formatTimeAgo(dateString) {
+    const now = new Date();
+    const eventDate = new Date(dateString);
+    const diffMs = now.getTime() - eventDate.getTime();
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    
+    if (diffMins < 1) return 'agora';
+    if (diffMins < 60) return `${diffMins} min atrás`;
+    
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours}h atrás`;
+    
+    const diffDays = Math.floor(diffHours / 24);
+    return `${diffDays}d atrás`;
   }
 
   function renderSystemLogs() {
@@ -868,6 +920,26 @@
           }
         });
       });
+
+      // Botão de atualizar logs
+      const refreshLogsBtn = document.getElementById('refresh-logs-btn');
+      if (refreshLogsBtn) {
+        refreshLogsBtn.addEventListener('click', async () => {
+          refreshLogsBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Atualizando...';
+          refreshLogsBtn.disabled = true;
+          
+          // Buscar eventos mais recentes
+          await fetchAdminEvents();
+          
+          // Atualizar logs na tela
+          renderSystemLogs();
+          
+          setTimeout(() => {
+            refreshLogsBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Atualizar';
+            refreshLogsBtn.disabled = false;
+          }, 1000);
+        });
+      }
 
       // Modal de diagnóstico
       const diagnosticModal = document.getElementById('diagnostic-modal');

@@ -148,7 +148,12 @@
                      </div>
 
                      <!-- Logs de Atividade -->
-                     <h3 style="margin-bottom: 16px;">Logs de Atividade</h3>
+                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                         <h3 style="margin: 0;">Logs de Atividade</h3>
+                         <button id="refresh-logs-btn" style="background: var(--blue); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.9rem;">
+                             <i class="fas fa-sync-alt"></i> Atualizar
+                         </button>
+                     </div>
                      <div class="logs-container" id="logs-container" style="max-height: 400px; overflow-y: auto;">
                          <!-- Logs serão inseridos aqui -->
                      </div>

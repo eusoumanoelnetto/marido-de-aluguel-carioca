@@ -39,6 +39,25 @@ export const createServiceRequest = async (req: Request, res: Response) => {
       [id, clientName, clientEmail, address, contact, category, description, photoBase64, status, isEmergency, requestDate]
     );
     console.log('New service request created:', result.rows[0].id);
+
+    // Log event for admin notifications
+    try {
+      await pool.query(
+        'INSERT INTO admin_events (event_type, data, created_at) VALUES ($1, $2, NOW())',
+        ['service_request', JSON.stringify({ 
+          id, 
+          clientName, 
+          clientEmail,
+          category, 
+          address: address.substring(0, 50) + '...', // Truncar endereço para privacidade
+          isEmergency,
+          status
+        })]
+      );
+    } catch (eventError) {
+      console.log('Could not log service request event:', eventError.message);
+    }
+
     res.status(201).json(result.rows[0]);
   } catch (error) {
     console.error('Error creating service request:', error);
