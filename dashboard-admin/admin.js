@@ -504,28 +504,79 @@
     }
   }
 
-  // Send notification function — can be called from the notification page
-  window.sendNotification = async function () {
-    const title = prompt('Título da notificação');
-    const body = prompt('Mensagem da notificação');
-    if (!title || !body) return;
+  // Sistema de Notificações Melhorado
+  function showNotificationStatus(message, type = 'success') {
+    const statusDiv = document.getElementById('notification-status');
+    const alertDiv = statusDiv.querySelector('.alert');
     
-    if (OFF) {
-      alert('Notificações disponíveis apenas online.');
+    alertDiv.className = `alert ${type}`;
+    alertDiv.textContent = message;
+    statusDiv.style.display = 'block';
+    
+    // Auto-hide after 5 seconds for success messages
+    if (type === 'success') {
+      setTimeout(() => {
+        statusDiv.style.display = 'none';
+      }, 5000);
+    }
+  }
+
+  async function sendNotificationForm(event) {
+    event.preventDefault();
+    
+    const title = document.getElementById('notification-title').value.trim();
+    const message = document.getElementById('notification-message').value.trim();
+    const recipients = document.getElementById('notification-recipients').value;
+    
+    if (!title || !message) {
+      showNotificationStatus('Por favor, preencha título e mensagem.', 'error');
       return;
     }
+    
+    if (OFF) {
+      showNotificationStatus('Notificações disponíveis apenas online.', 'error');
+      return;
+    }
+    
+    // Mostrar loading
+    showNotificationStatus('Enviando notificação...', 'loading');
     
     try {
       const res = await fetch(`${API}/api/push/send-test`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Admin-Key': ADMIN_KEY },
-        body: JSON.stringify({ title, body })
+        body: JSON.stringify({ 
+          title, 
+          body: message,
+          recipients 
+        })
       });
-      if (res.ok) alert('Notificação enviada para todos os usuários inscritos.'); else alert('Falha ao enviar notificação.');
+      
+      if (res.ok) {
+        const data = await res.json();
+        const sentCount = data.results ? data.results.filter(r => r.status === 'sent').length : 0;
+        const totalCount = data.results ? data.results.length : 0;
+        
+        if (totalCount === 0) {
+          showNotificationStatus('Notificação preparada, mas nenhum usuário inscrito para push notifications ainda.', 'success');
+        } else {
+          showNotificationStatus(`Notificação enviada! ${sentCount}/${totalCount} usuários notificados com sucesso.`, 'success');
+        }
+        
+        // Limpar formulário
+        document.getElementById('notification-form').reset();
+      } else {
+        const errorData = await res.json().catch(() => ({}));
+        showNotificationStatus(`Falha ao enviar notificação: ${errorData.message || 'Erro no servidor'}`, 'error');
+      }
     } catch (err) {
-      alert('Erro ao enviar notificação.');
+      console.error('Erro ao enviar notificação:', err);
+      showNotificationStatus('Erro de conexão ao enviar notificação.', 'error');
     }
-  };
+  }
+
+  // Send notification function — legacy support but improved
+  window.sendNotification = sendNotificationForm;
 
   // Sistema de Logs e Diagnósticos
   const diagnosticData = {
@@ -881,6 +932,12 @@
             updateSystemStatus();
           }
         });
+      }
+
+      // Formulário de notificações
+      const notificationForm = document.getElementById('notification-form');
+      if (notificationForm) {
+        notificationForm.addEventListener('submit', sendNotificationForm);
       }
 
       // inicialização do dashboard (logs reduzidos)
