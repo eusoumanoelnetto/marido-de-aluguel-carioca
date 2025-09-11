@@ -126,8 +126,20 @@
         showUserModal(user, true);
       });
     });
+  // Função para fechar todos os modais
+  function closeAllModals() {
+    const modals = document.querySelectorAll('.modal');
+    modals.forEach(modal => {
+      modal.classList.remove('show');
+      modal.style.display = 'none'; // Garantir que qualquer display inline seja removido
+    });
+  }
+
   // Função para exibir modal de usuário (view/edit)
   function showUserModal(user, editMode) {
+    // Fechar todos os modais antes de abrir o novo
+    closeAllModals();
+    
     const modal = document.getElementById('user-modal');
     const viewDiv = document.getElementById('user-modal-view');
     const editForm = document.getElementById('user-modal-edit');
@@ -144,9 +156,8 @@
       editForm.style.display = 'none';
       viewDiv.innerHTML = `<h3 style="margin-bottom:8px;">${escapeHtml(user.name)}</h3><div style="color:var(--text-muted);margin-bottom:8px;">${escapeHtml(user.email)} • ${escapeHtml(user.phone || '')}</div><div><b>CEP:</b> ${escapeHtml(user.cep || '-')}</div><div><b>Tipo:</b> ${escapeHtml(user.role)}</div>`;
     }
-    modal.style.display = 'flex';
-    // Fechar modal
-    document.getElementById('close-user-modal').onclick = () => { modal.style.display = 'none'; };
+    modal.classList.add('show');
+    // O event listener para fechar já foi configurado globalmente
     // Submissão do form de edição
     editForm.onsubmit = async function(e) {
       e.preventDefault();
@@ -161,7 +172,7 @@
         body: JSON.stringify(body)
       });
       if (up.ok) {
-        modal.style.display = 'none';
+        modal.classList.remove('show');
         fetchUsers();
       } else {
         alert('Falha ao atualizar usuário');
@@ -628,6 +639,9 @@
   }
 
   function showDiagnostic(logId) {
+    // Fechar todos os modais antes de abrir o novo
+    closeAllModals();
+    
     const modal = document.getElementById('diagnostic-modal');
     const title = document.getElementById('diagnostic-title');
     const content = document.getElementById('diagnostic-content');
@@ -720,13 +734,23 @@
       const diagnosticModal = document.getElementById('diagnostic-modal');
       const closeDiagnostic = document.getElementById('close-diagnostic');
       
+      // Modal de usuário
+      const userModal = document.getElementById('user-modal');
+      const closeUserModal = document.getElementById('close-user-modal');
+      
       if (closeDiagnostic) {
         closeDiagnostic.addEventListener('click', () => {
           diagnosticModal.classList.remove('show');
         });
       }
       
-      // Fechar modal clicando fora
+      if (closeUserModal) {
+        closeUserModal.addEventListener('click', () => {
+          userModal.classList.remove('show');
+        });
+      }
+      
+      // Fechar modais clicando fora
       if (diagnosticModal) {
         diagnosticModal.addEventListener('click', (e) => {
           if (e.target === diagnosticModal) {
@@ -734,6 +758,21 @@
           }
         });
       }
+      
+      if (userModal) {
+        userModal.addEventListener('click', (e) => {
+          if (e.target === userModal) {
+            userModal.classList.remove('show');
+          }
+        });
+      }
+      
+      // Fechar modais com tecla ESC
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          closeAllModals();
+        }
+      });
 
       // inicialização do dashboard (logs reduzidos)
       
