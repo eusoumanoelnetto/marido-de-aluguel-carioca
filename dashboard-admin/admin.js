@@ -411,7 +411,22 @@
   // On dashboard page, fetch users
   if (location.pathname.toLowerCase().endsWith('dashboard_admin.html')) {
     document.addEventListener('DOMContentLoaded', () => {
-  // inicialização do dashboard (logs reduzidos)
+      // Navegação
+      const navLinks = document.querySelectorAll('.nav-link');
+      const pages = document.querySelectorAll('.page');
+      navLinks.forEach(link => {
+        link.addEventListener('click', (event) => {
+          event.preventDefault();
+          navLinks.forEach(nav => nav.classList.remove('active'));
+          link.classList.add('active');
+          const targetPageId = link.getAttribute('data-target');
+          pages.forEach(page => {
+            page.classList.toggle('active', page.id === targetPageId);
+          });
+        });
+      });
+
+      // inicialização do dashboard (logs reduzidos)
       
       fetchUsers();
       fetchAdminEvents(); // Also fetch recent events
