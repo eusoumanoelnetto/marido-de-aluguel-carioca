@@ -187,36 +187,80 @@
 
         /* Mobile */
         @media (max-width: 768px) {
-            .main-header { padding: 14px 16px; gap: 10px; }
-            .header-title { gap: 10px; }
-            .header-title .title-text h1 { font-size: 1.25rem; }
-            .header-title .title-text p { font-size: 0.8rem; }
-            .status-badge { padding: 6px 12px; font-size: 0.8rem; border-radius: 14px; }
+            .main-header { padding: 14px 16px; gap: 10px; flex-direction: column; align-items: stretch; }
+            .header-title { gap: 10px; justify-content: center; }
+            .header-title .title-text h1 { font-size: 1.25rem; text-align: center; }
+            .header-title .title-text p { font-size: 0.8rem; text-align: center; }
+            .status-badge { padding: 6px 12px; font-size: 0.8rem; border-radius: 14px; align-self: center; margin-top: 8px; }
 
             .main-nav { padding: 8px 12px; }
-            .main-nav ul { gap: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: thin; }
-            .main-nav a { padding: 8px 12px; font-size: 0.9rem; flex: 0 0 auto; }
+            .main-nav ul { gap: 6px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: thin; padding: 4px 0; }
+            .main-nav a { 
+                padding: 8px 10px; 
+                font-size: 0.8rem; 
+                flex: 0 0 auto; 
+                white-space: nowrap; 
+                min-width: fit-content;
+                text-align: center;
+            }
 
-            .content-area { padding: 16px; }
+            .content-area { padding: 12px; }
             .card { padding: 16px; border-radius: 10px; }
 
-            .overview-grid { grid-template-columns: 1fr; gap: 12px; }
-            .stat-card .value { font-size: 1.8rem; }
-            .stat-card .title { font-size: 1rem; }
-            .stat-card .detail { font-size: 0.9rem; }
-            .stat-card .icon { font-size: 1.8rem; top: 12px; right: 12px; }
+            .overview-grid { 
+                grid-template-columns: 1fr; 
+                gap: 12px; 
+                max-width: 100%;
+            }
+            
+            .stat-card { 
+                position: relative; 
+                min-height: 100px;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+            }
+            
+            .stat-card .title { 
+                font-size: 0.95rem; 
+                margin-bottom: 8px;
+                padding-right: 40px; /* Espaço para o ícone */
+            }
+            
+            .stat-card .value { 
+                font-size: 2.2rem; 
+                line-height: 1;
+                margin: 8px 0;
+            }
+            
+            .stat-card .detail { 
+                font-size: 0.85rem; 
+                margin-top: auto;
+            }
+            
+            .stat-card .icon { 
+                font-size: 1.5rem; 
+                top: 16px; 
+                right: 16px; 
+                opacity: 0.3;
+            }
 
             .user-stats-grid { grid-template-columns: 1fr; gap: 12px; }
-            .stat-list .item { padding: 10px 0; }
+            .stat-list .item { padding: 10px 0; flex-wrap: wrap; }
             .stat-list .stat-value { font-size: 0.85rem; padding: 2px 8px; }
 
             .manage-header { flex-direction: column; align-items: stretch; gap: 12px; }
-            .user-item { flex-direction: column; align-items: flex-start; }
-            .user-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-            .user-actions .btn { padding: 8px 10px; }
+            .user-item { flex-direction: column; align-items: flex-start; gap: 8px; }
+            .user-actions { display: flex; gap: 8px; flex-wrap: wrap; width: 100%; }
+            .user-actions .btn { padding: 8px 10px; flex: 1; min-width: 70px; }
 
             /* Modal ajustes para telas pequenas */
             #user-modal .modal-content { width: 92vw !important; max-width: 92vw !important; }
+            
+            /* Melhorar navegação mobile */
+            .main-nav ul::-webkit-scrollbar { height: 4px; }
+            .main-nav ul::-webkit-scrollbar-track { background: transparent; }
+            .main-nav ul::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 2px; }
         }
         /* Telas muito pequenas */
         @media (max-width: 380px) {
