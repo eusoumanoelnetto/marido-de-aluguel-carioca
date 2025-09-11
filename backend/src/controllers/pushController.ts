@@ -51,7 +51,7 @@ export const sendTestPush = async (req: Request, res: Response) => {
     }
 
     const payload = JSON.stringify({ title, body });
-    const results = [];
+    const results: Array<{ endpoint: string; status: string; error?: string }> = [];
     
     console.log('🚀 Enviando notificações...');
     for (const s of subs) {

@@ -5,12 +5,19 @@
     "rootDir": "./src",
     "outDir": "./dist",
     "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
+    "noImplicitAny": false,
     "skipLibCheck": true,
-  "lib": ["ES2020"],
-  "types": ["node"],
-    "resolveJsonModule": true
+    "lib": ["ES2020"],
+    "types": ["node"],
+    "resolveJsonModule": true,
+    "declaration": false,
+    "sourceMap": false,
+    "removeComments": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   },
   "include": ["src/**/*"],
   "exclude": [
@@ -19,6 +26,8 @@
     "src/**/*.spec.ts",
     "**/__tests__/**",
     "**/*.test.ts",
-    "**/*.spec.ts"
+    "**/*.spec.ts",
+    "node_modules",
+    "dist"
   ]
 }

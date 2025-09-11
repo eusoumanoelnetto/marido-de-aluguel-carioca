@@ -54,7 +54,7 @@ export const createServiceRequest = async (req: Request, res: Response) => {
           status
         })]
       );
-    } catch (eventError) {
+    } catch (eventError: any) {
       console.log('Could not log service request event:', eventError.message);
     }
 
