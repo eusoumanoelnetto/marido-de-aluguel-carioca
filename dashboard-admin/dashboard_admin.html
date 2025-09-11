@@ -98,11 +98,48 @@
             <!-- PÁGINA: Erros -->
             <div id="erros" class="page">
                 <div class="card">
-                     <h2 class="title">Log de Erros do Backend</h2>
-                     <p class="subtitle">Monitore erros e problemas do sistema para suporte.</p>
-                     <div class="user-list" style="max-height:450px;">
-                            <!-- Erros reais serão carregados via JS -->
+                     <h2 class="title">Sistema e Logs de Atividade</h2>
+                     <p class="subtitle">Monitore a saúde do sistema e atividades recentes.</p>
+                     
+                     <!-- Status do Sistema -->
+                     <div style="margin-bottom: 24px;">
+                         <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                             <div class="status-indicator" id="api-status">
+                                 <span class="status-dot"></span>
+                                 <span>API Backend</span>
+                                 <span class="status-text">Verificando...</span>
+                             </div>
+                             <div class="status-indicator" id="db-status">
+                                 <span class="status-dot"></span>
+                                 <span>Database</span>
+                                 <span class="status-text">Verificando...</span>
+                             </div>
+                             <div class="status-indicator" id="auth-status">
+                                 <span class="status-dot"></span>
+                                 <span>Autenticação</span>
+                                 <span class="status-text">Verificando...</span>
+                             </div>
+                         </div>
                      </div>
+
+                     <!-- Logs de Atividade -->
+                     <h3 style="margin-bottom: 16px;">Logs de Atividade</h3>
+                     <div class="logs-container" id="logs-container" style="max-height: 400px; overflow-y: auto;">
+                         <!-- Logs serão inseridos aqui -->
+                     </div>
+                </div>
+                
+                <!-- Modal de Diagnóstico -->
+                <div id="diagnostic-modal" class="modal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.4);z-index:1000;align-items:center;justify-content:center;">
+                    <div class="modal-content" style="background:#fff;padding:24px;border-radius:12px;min-width:400px;max-width:90vw;max-height:80vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.2);">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                            <h3 id="diagnostic-title">Diagnóstico</h3>
+                            <button id="close-diagnostic" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:#888;"><i class="fas fa-times"></i></button>
+                        </div>
+                        <div id="diagnostic-content">
+                            <!-- Conteúdo do diagnóstico será inserido aqui -->
+                        </div>
+                    </div>
                 </div>
             </div>
             

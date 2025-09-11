@@ -162,11 +162,125 @@
         .user-info { flex-grow: 1; } .user-info .name { font-weight: 600; } .user-info .contact { font-size: 0.85rem; color: var(--text-muted); }
         .user-actions .btn { border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; color: white; }
 
-        /* --- Erros --- */
-        .log-item { display: flex; gap: 16px; padding: 16px; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 12px; }
-        .log-tag { font-size: 0.8rem; font-weight: 600; padding: 4px 10px; border-radius: 12px; color: #fff; }
-        .tag-error { background-color: var(--red); } .tag-warning { background-color: var(--orange); }
-        .log-message { flex-grow: 1; } .log-timestamp { font-size: 0.85rem; color: var(--text-muted); align-self: flex-start; }
+        /* --- Erros e Logs --- */
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text-muted);
+        }
+        
+        .status-dot.online { background: var(--green); }
+        .status-dot.warning { background: var(--orange); }
+        .status-dot.error { background: var(--red); }
+        
+        .status-text {
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+        
+        .log-item { 
+            display: flex; 
+            gap: 16px; 
+            padding: 16px; 
+            border: 1px solid var(--border-color); 
+            border-radius: 8px; 
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .log-item:hover {
+            background: #f8f9fa;
+            border-color: var(--blue);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .log-tag { 
+            font-size: 0.75rem; 
+            font-weight: 600; 
+            padding: 4px 8px; 
+            border-radius: 12px; 
+            color: #fff;
+            min-width: 60px;
+            text-align: center;
+        }
+        
+        .tag-info { background-color: var(--blue); }
+        .tag-success { background-color: var(--green); }
+        .tag-error { background-color: var(--red); } 
+        .tag-warning { background-color: var(--orange); }
+        
+        .log-message { 
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .log-title {
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+        
+        .log-description {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+        
+        .log-timestamp { 
+            font-size: 0.8rem; 
+            color: var(--text-muted); 
+            align-self: flex-start;
+            white-space: nowrap;
+        }
+        
+        .modal {
+            display: none;
+        }
+        
+        .modal.show {
+            display: flex !important;
+        }
+        
+        .diagnostic-section {
+            margin-bottom: 20px;
+        }
+        
+        .diagnostic-section h4 {
+            color: var(--text-dark);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .diagnostic-steps {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 4px solid var(--blue);
+        }
+        
+        .diagnostic-steps ol {
+            margin-left: 16px;
+        }
+        
+        .diagnostic-steps li {
+            margin-bottom: 4px;
+            font-size: 0.9rem;
+        }
         
         /* --- Backup --- */
         .backup-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; text-align: center; }

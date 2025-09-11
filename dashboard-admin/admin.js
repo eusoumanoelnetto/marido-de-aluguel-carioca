@@ -492,6 +492,199 @@
     }
   };
 
+  // Sistema de Logs e Diagnósticos
+  const diagnosticData = {
+    'api-connection': {
+      title: 'Problema de Conexão com API',
+      icon: 'fas fa-wifi',
+      severity: 'error',
+      description: 'O painel não conseguiu se conectar com o backend.',
+      steps: [
+        'Verifique se o backend está online no Render/Vercel',
+        'Confirme se a URL da API está correta no config.js',
+        'Teste a URL diretamente no navegador',
+        'Verifique se há problemas de CORS no backend',
+        'Confira os logs do servidor backend'
+      ]
+    },
+    'auth-failed': {
+      title: 'Falha na Autenticação',
+      icon: 'fas fa-key',
+      severity: 'warning',
+      description: 'A chave de admin não está funcionando.',
+      steps: [
+        'Verifique se ADMIN_KEY no config.js está correto',
+        'Confirme se a variável ADMIN_PANEL_KEY no backend é igual',
+        'Regenere a chave se necessário',
+        'Verifique se o header X-Admin-Key está sendo enviado',
+        'Teste com uma requisição manual (Postman/curl)'
+      ]
+    },
+    'slow-response': {
+      title: 'Resposta Lenta do Servidor',
+      icon: 'fas fa-clock',
+      severity: 'warning',
+      description: 'O backend está respondendo devagar.',
+      steps: [
+        'Verifique a utilização de recursos no Render/Vercel',
+        'Considere upgradar o plano de hospedagem',
+        'Otimize consultas no banco de dados',
+        'Implemente cache quando possível',
+        'Monitore picos de tráfego'
+      ]
+    },
+    'user-signup': {
+      title: 'Novo Cadastro Realizado',
+      icon: 'fas fa-user-plus',
+      severity: 'success',
+      description: 'Um novo usuário se cadastrou no sistema.',
+      steps: [
+        'Verifique se o perfil está completo',
+        'Confirme se o email foi validado',
+        'Avalie se precisam de orientação inicial',
+        'Monitore primeira interação no app'
+      ]
+    },
+    'service-request': {
+      title: 'Nova Solicitação de Serviço',
+      icon: 'fas fa-tools',
+      severity: 'info',
+      description: 'Um cliente solicitou um novo serviço.',
+      steps: [
+        'Verifique se há prestadores disponíveis na região',
+        'Confirme se a descrição está clara',
+        'Monitore tempo de resposta dos prestadores',
+        'Acompanhe até a conclusão do serviço'
+      ]
+    }
+  };
+
+  function generateSystemLogs() {
+    const logs = [
+      {
+        id: 'api-connection',
+        type: 'error',
+        title: 'Falha na conexão com API',
+        description: 'Timeout ao tentar conectar com o backend',
+        timestamp: '2 min atrás'
+      },
+      {
+        id: 'user-signup',
+        type: 'success',
+        title: 'Novo usuário cadastrado',
+        description: 'Cliente João Silva se cadastrou',
+        timestamp: '5 min atrás'
+      },
+      {
+        id: 'auth-failed',
+        type: 'warning',
+        title: 'Tentativa de acesso negada',
+        description: 'Chave de admin inválida detectada',
+        timestamp: '12 min atrás'
+      },
+      {
+        id: 'service-request',
+        type: 'info',
+        title: 'Nova solicitação de serviço',
+        description: 'Reparo elétrico - Copacabana',
+        timestamp: '18 min atrás'
+      },
+      {
+        id: 'slow-response',
+        type: 'warning',
+        title: 'Performance degradada',
+        description: 'API respondendo em >3s',
+        timestamp: '25 min atrás'
+      }
+    ];
+
+    return logs;
+  }
+
+  function renderSystemLogs() {
+    const container = document.getElementById('logs-container');
+    if (!container) return;
+
+    const logs = generateSystemLogs();
+    
+    container.innerHTML = logs.map(log => `
+      <div class="log-item" data-log-id="${log.id}">
+        <span class="log-tag tag-${log.type}">${log.type}</span>
+        <div class="log-message">
+          <div class="log-title">${log.title}</div>
+          <div class="log-description">${log.description}</div>
+        </div>
+        <div class="log-timestamp">${log.timestamp}</div>
+      </div>
+    `).join('');
+
+    // Adicionar event listeners para cliques
+    container.querySelectorAll('.log-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const logId = item.getAttribute('data-log-id');
+        showDiagnostic(logId);
+      });
+    });
+  }
+
+  function showDiagnostic(logId) {
+    const modal = document.getElementById('diagnostic-modal');
+    const title = document.getElementById('diagnostic-title');
+    const content = document.getElementById('diagnostic-content');
+    
+    const diagnostic = diagnosticData[logId];
+    if (!diagnostic) return;
+
+    title.innerHTML = `<i class="${diagnostic.icon}"></i> ${diagnostic.title}`;
+    
+    content.innerHTML = `
+      <div class="diagnostic-section">
+        <h4><i class="fas fa-info-circle"></i> Descrição</h4>
+        <p>${diagnostic.description}</p>
+      </div>
+      
+      <div class="diagnostic-section">
+        <h4><i class="fas fa-wrench"></i> Como Corrigir</h4>
+        <div class="diagnostic-steps">
+          <ol>
+            ${diagnostic.steps.map(step => `<li>${step}</li>`).join('')}
+          </ol>
+        </div>
+      </div>
+      
+      <div class="diagnostic-section">
+        <h4><i class="fas fa-lightbulb"></i> Prevenção</h4>
+        <p>Configure alertas automáticos para detectar esse tipo de problema mais cedo.</p>
+      </div>
+    `;
+
+    modal.classList.add('show');
+  }
+
+  function updateSystemStatus() {
+    // Simular verificação de status do sistema
+    const statuses = [
+      { id: 'api-status', status: OFF ? 'warning' : 'online', text: OFF ? 'Modo Demo' : 'Online' },
+      { id: 'db-status', status: OFF ? 'warning' : 'online', text: OFF ? 'Demo' : 'Conectado' },
+      { id: 'auth-status', status: 'online', text: 'Autenticado' }
+    ];
+
+    statuses.forEach(({ id, status, text }) => {
+      const element = document.getElementById(id);
+      if (element) {
+        const dot = element.querySelector('.status-dot');
+        const textEl = element.querySelector('.status-text');
+        
+        if (dot) {
+          dot.className = `status-dot ${status}`;
+        }
+        if (textEl) {
+          textEl.textContent = text;
+        }
+      }
+    });
+  }
+
   // Logout sem sessão
   window.adminLogout = function () { 
     // Removido redirecionamento para login (login.html foi excluído);
@@ -514,8 +707,33 @@
           pages.forEach(page => {
             page.classList.toggle('active', page.id === targetPageId);
           });
+          
+          // Carregar dados específicos da página
+          if (targetPageId === 'erros') {
+            renderSystemLogs();
+            updateSystemStatus();
+          }
         });
       });
+
+      // Modal de diagnóstico
+      const diagnosticModal = document.getElementById('diagnostic-modal');
+      const closeDiagnostic = document.getElementById('close-diagnostic');
+      
+      if (closeDiagnostic) {
+        closeDiagnostic.addEventListener('click', () => {
+          diagnosticModal.classList.remove('show');
+        });
+      }
+      
+      // Fechar modal clicando fora
+      if (diagnosticModal) {
+        diagnosticModal.addEventListener('click', (e) => {
+          if (e.target === diagnosticModal) {
+            diagnosticModal.classList.remove('show');
+          }
+        });
+      }
 
       // inicialização do dashboard (logs reduzidos)
       
