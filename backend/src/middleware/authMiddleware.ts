@@ -11,6 +11,7 @@ interface JwtPayload {
 export const authenticate = async (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    console.log('❌ Token ausente ou inválido na requisição para:', req.path);
     return res.status(401).json({ message: 'Token ausente ou inválido.' });
   }
 
@@ -18,9 +19,12 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
   try {
     const secret = process.env.JWT_SECRET || 'dev_secret';
     const payload = jwt.verify(token, secret) as JwtPayload;
+    console.log('✅ Token válido para usuário:', payload.email, 'role:', payload.role);
+    
     // Checar se usuário ainda existe
-  const userResult = await dbClient.query('SELECT 1 FROM users WHERE email = $1', [payload.email]);
+    const userResult = await dbClient.query('SELECT 1 FROM users WHERE email = $1', [payload.email]);
     if (!userResult.rowCount) {
+      console.log('❌ Usuário não existe mais:', payload.email);
       return res.status(401).json({ message: 'Usuário não existe mais.' });
     }
     // anexar email ao request para uso nas rotas
@@ -28,6 +32,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
     (req as any).userRole = payload.role;
     next();
   } catch (err) {
+    console.log('❌ Token inválido:', err);
     return res.status(401).json({ message: 'Token inválido.' });
   }
 };

@@ -116,11 +116,14 @@ export const getAdminEvents = async (req: Request, res: Response) => {
     }
 
     try {
+        console.log('📋 Buscando eventos admin...');
         const result = await pool.query(
             'SELECT * FROM admin_events ORDER BY created_at DESC LIMIT 20'
         );
+        console.log(`📋 Encontrados ${result.rows.length} eventos:`, result.rows.map(r => r.event_type));
         res.status(200).json({ events: result.rows });
     } catch (error) {
+        console.log('❌ Erro ao buscar eventos admin:', error);
         // Table may not exist
         res.status(200).json({ events: [] });
     }

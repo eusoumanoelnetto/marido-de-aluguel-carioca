@@ -7,6 +7,10 @@
   async function fetchUsers() {
     const listEl = document.querySelector('.user-list');
     if (!listEl) return;
+
+    // Mostrar indicador de carregamento
+    listEl.innerHTML = '<div class="card" style="text-align: center; padding: 40px;"><i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--blue); margin-bottom: 16px;"></i><br>Carregando usuários...</div>';
+
     try {
       if (OFF) {
         // Offline mode: do not expose example/demo users here.
@@ -721,9 +725,11 @@
     // Tentar buscar eventos reais primeiro
     if (window.realAdminEvents && window.realAdminEvents.length > 0) {
       console.log('📋 Usando eventos reais:', window.realAdminEvents.length);
+      console.log('📋 Eventos disponíveis:', window.realAdminEvents.map(e => e.event_type));
       
       window.realAdminEvents.forEach((event, index) => {
         const timeAgo = formatTimeAgo(event.created_at);
+        console.log(`📋 Processando evento ${index}:`, event.event_type, event.data);
         
         if (event.event_type === 'user_signup') {
           const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
@@ -736,6 +742,7 @@
           });
         } else if (event.event_type === 'service_request') {
           const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+          console.log('📋 Dados da solicitação:', data);
           logs.push({
             id: `real-service-${index}`,
             type: 'info',
@@ -917,6 +924,9 @@
           if (targetPageId === 'erros') {
             renderSystemLogs();
             updateSystemStatus();
+          } else if (targetPageId === 'gerenciar') {
+            // Recarregar usuários quando acessar a aba Gerenciar
+            fetchUsers();
           }
         });
       });
@@ -937,6 +947,26 @@
           setTimeout(() => {
             refreshLogsBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Atualizar';
             refreshLogsBtn.disabled = false;
+          }, 1000);
+        });
+      }
+
+      // Botão de atualizar usuários
+      const refreshUsersBtn = document.getElementById('refresh-users-btn');
+      if (refreshUsersBtn) {
+        refreshUsersBtn.addEventListener('click', async () => {
+          refreshUsersBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Atualizando...';
+          refreshUsersBtn.disabled = true;
+          
+          // Buscar lista de usuários atualizada
+          await fetchUsers();
+          
+          // Também atualizar estatísticas do dashboard
+          await fetchDashboardStats();
+          
+          setTimeout(() => {
+            refreshUsersBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Atualizar';
+            refreshUsersBtn.disabled = false;
           }, 1000);
         });
       }

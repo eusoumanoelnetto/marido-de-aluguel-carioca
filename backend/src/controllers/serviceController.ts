@@ -42,6 +42,7 @@ export const createServiceRequest = async (req: Request, res: Response) => {
 
     // Log event for admin notifications
     try {
+      console.log('📝 Tentando registrar evento de solicitação de serviço...');
       await pool.query(
         'INSERT INTO admin_events (event_type, data, created_at) VALUES ($1, $2, NOW())',
         ['service_request', JSON.stringify({ 
@@ -54,8 +55,9 @@ export const createServiceRequest = async (req: Request, res: Response) => {
           status
         })]
       );
+      console.log('✅ Evento de solicitação registrado com sucesso');
     } catch (eventError: any) {
-      console.log('Could not log service request event:', eventError.message);
+      console.log('❌ Erro ao registrar evento de solicitação:', eventError.message);
     }
 
     res.status(201).json(result.rows[0]);

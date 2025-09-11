@@ -101,7 +101,12 @@
                     <div class="manage-header"><h2 class="title">Gerenciar Perfis</h2><button class="btn-purple" style="padding:10px 20px"><i class="fas fa-plus"></i> Cadastrar Usuário</button></div>
                     <p class="subtitle">Filtre e gerencie perfis de clientes e prestadores.</p>
                     <div class="search-filter" style="margin-bottom: 24px;"><input type="text" placeholder="Filtrar por email, nome ou telefone..."></div>
-                    <h3 style="margin-bottom:16px;">Usuários</h3>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <h3 style="margin: 0;">Usuários</h3>
+                        <button id="refresh-users-btn" style="background: var(--blue); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.9rem;">
+                            <i class="fas fa-sync-alt"></i> Atualizar
+                        </button>
+                    </div>
                                         <div class="user-list"></div>
                                         <!-- Modal de Usuário -->
                                         <div id="user-modal" class="modal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.3);z-index:1000;align-items:center;justify-content:center;">
