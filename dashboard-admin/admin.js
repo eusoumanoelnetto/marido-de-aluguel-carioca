@@ -432,7 +432,7 @@
     const novosEl = document.getElementById('novos-clientes');
     if (novosEl) {
       novosEl.textContent = `+${newSignupsToday} novos hoje`;
-      novosEl.style.color = newSignupsToday > 0 ? 'var(--green)' : 'var(--text-muted)';
+      novosEl.style.color = 'var(--green)';
     }
 
     // Also update the "Usuários > Estatísticas de Clientes" section if loaded
@@ -445,7 +445,7 @@
       const el = statValues[novIdx];
       if (el) {
         el.textContent = String(newSignupsToday);
-        el.style.color = newSignupsToday > 0 ? 'var(--green)' : 'var(--text-muted)';
+        el.style.color = 'var(--green)';
       }
     }
 
@@ -453,7 +453,7 @@
     const novosPrestEl = document.getElementById('novos-prestadores');
     if (novosPrestEl) {
       novosPrestEl.textContent = `+${newProvidersToday} novos hoje`;
-      novosPrestEl.style.color = newProvidersToday > 0 ? 'var(--green)' : 'var(--text-muted)';
+      novosPrestEl.style.color = 'var(--green)';
     }
 
     // Atualizar seção de prestadores na aba Usuários
@@ -464,7 +464,7 @@
       const el = statValues[novIdx];
       if (el) {
         el.textContent = String(newProvidersToday);
-        el.style.color = newProvidersToday > 0 ? 'var(--green)' : 'var(--text-muted)';
+        el.style.color = 'var(--green)';
       }
     }
   }
