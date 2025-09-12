@@ -1032,6 +1032,9 @@
       fetchDashboardStats(); // Atualizar cards do dashboard
       // não adiciona mais botão logout
 
+      // Inicializar funcionalidades de notificação
+      initializeNotifications();
+
       // Atualização automática leve a cada 60s para refletir novos cadastros do dia
       try {
         setInterval(() => {
@@ -1040,5 +1043,294 @@
         }, 60000);
       } catch (_) { /* noop */ }
     });
+
+    // ========================================
+    // SISTEMA DE NOTIFICAÇÕES
+    // ========================================
+    
+    function initializeNotifications() {
+      const notificationForm = document.getElementById('notification-form');
+      const messageTextarea = document.getElementById('notification-message');
+      const charCount = document.getElementById('char-count');
+      const previewBtn = document.getElementById('preview-notification');
+      const refreshNotificationsBtn = document.getElementById('refresh-notifications');
+      
+      // Contador de caracteres
+      if (messageTextarea && charCount) {
+        messageTextarea.addEventListener('input', () => {
+          const count = messageTextarea.value.length;
+          charCount.textContent = count;
+          charCount.style.color = count > 450 ? 'var(--red)' : count > 350 ? 'var(--orange)' : '#666';
+        });
+      }
+
+      // Preview da notificação
+      if (previewBtn) {
+        addTouchFriendlyEvent(previewBtn, () => {
+          showNotificationPreview();
+        });
+      }
+
+      // Envio da notificação
+      if (notificationForm) {
+        notificationForm.addEventListener('submit', (e) => {
+          e.preventDefault();
+          sendNotification();
+        });
+      }
+
+      // Botão refresh do histórico
+      if (refreshNotificationsBtn) {
+        addTouchFriendlyEvent(refreshNotificationsBtn, () => {
+          loadNotificationsHistory();
+        });
+      }
+
+      // Modal de preview
+      setupNotificationPreviewModal();
+      
+      // Carregar histórico inicial
+      loadNotificationsHistory();
+    }
+
+    function showNotificationPreview() {
+      const target = document.getElementById('notification-target').value;
+      const title = document.getElementById('notification-title').value;
+      const message = document.getElementById('notification-message').value;
+      const isUrgent = document.getElementById('notification-urgent').checked;
+
+      if (!target || !title || !message) {
+        alert('Por favor, preencha todos os campos obrigatórios antes de visualizar.');
+        return;
+      }
+
+      const targetText = {
+        'all': 'Todos os usuários',
+        'clients': 'Apenas clientes', 
+        'providers': 'Apenas prestadores'
+      };
+
+      const previewContent = document.getElementById('notification-preview-content');
+      previewContent.innerHTML = `
+        <div style="margin-bottom: 16px; padding: 12px; background: #e3f2fd; border-radius: 6px; border-left: 4px solid var(--blue);">
+          <strong>👥 Destinatários:</strong> ${targetText[target]}
+        </div>
+        
+        <div style="border: 1px solid #ddd; border-radius: 8px; padding: 16px; background: white; position: relative; ${isUrgent ? 'border-left: 4px solid var(--red);' : ''}">
+          ${isUrgent ? '<div style="position: absolute; top: 8px; right: 8px; background: var(--red); color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">URGENTE</div>' : ''}
+          
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+            <i class="fas fa-bell" style="color: var(--purple);"></i>
+            <strong style="font-size: 16px; color: #333;">${escapeHtml(title)}</strong>
+          </div>
+          
+          <div style="color: #555; line-height: 1.5; white-space: pre-wrap;">${escapeHtml(message)}</div>
+          
+          <div style="margin-top: 12px; font-size: 12px; color: #888; border-top: 1px solid #eee; padding-top: 8px;">
+            📅 ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})}
+          </div>
+        </div>
+      `;
+
+      document.getElementById('notification-preview-modal').style.display = 'flex';
+    }
+
+    function setupNotificationPreviewModal() {
+      const modal = document.getElementById('notification-preview-modal');
+      const closeBtn = document.getElementById('close-preview-modal');
+      const closeBtn2 = document.getElementById('close-preview-btn');
+      const sendBtn = document.getElementById('send-from-preview');
+
+      if (closeBtn) {
+        addTouchFriendlyEvent(closeBtn, () => {
+          modal.style.display = 'none';
+        });
+      }
+
+      if (closeBtn2) {
+        addTouchFriendlyEvent(closeBtn2, () => {
+          modal.style.display = 'none';
+        });
+      }
+
+      if (sendBtn) {
+        addTouchFriendlyEvent(sendBtn, () => {
+          modal.style.display = 'none';
+          sendNotification();
+        });
+      }
+
+      // Fechar clicando fora
+      if (modal) {
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal) {
+            modal.style.display = 'none';
+          }
+        });
+      }
+    }
+
+    async function sendNotification() {
+      const target = document.getElementById('notification-target').value;
+      const title = document.getElementById('notification-title').value;
+      const message = document.getElementById('notification-message').value;
+      const isUrgent = document.getElementById('notification-urgent').checked;
+      const sendBtn = document.getElementById('send-notification');
+
+      if (!target || !title || !message) {
+        alert('Por favor, preencha todos os campos obrigatórios.');
+        return;
+      }
+
+      // Mostrar loading
+      const originalText = sendBtn.innerHTML;
+      sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+      sendBtn.disabled = true;
+
+      try {
+        const notification = {
+          id: Date.now().toString(),
+          title: title.trim(),
+          message: message.trim(),
+          target: target,
+          isUrgent: isUrgent,
+          date: new Date().toISOString(),
+          sent: true
+        };
+
+        // Salvar no announcements.json
+        await saveNotificationToAnnouncements(notification);
+        
+        // Salvar no histórico local
+        saveNotificationToHistory(notification);
+
+        // Limpar formulário
+        document.getElementById('notification-form').reset();
+        document.getElementById('char-count').textContent = '0';
+
+        // Atualizar histórico
+        loadNotificationsHistory();
+
+        alert('✅ Notificação enviada com sucesso! Os usuários verão a notificação em seus painéis.');
+
+      } catch (error) {
+        console.error('Erro ao enviar notificação:', error);
+        alert('❌ Erro ao enviar notificação. Tente novamente.');
+      } finally {
+        sendBtn.innerHTML = originalText;
+        sendBtn.disabled = false;
+      }
+    }
+
+    async function saveNotificationToAnnouncements(notification) {
+      try {
+        // Em modo offline, apenas simular
+        if (OFF) {
+          console.log('Modo offline: notificação simulada', notification);
+          return;
+        }
+
+        // Buscar announcements atuais
+        const response = await fetch('/announcements.json');
+        let announcements = [];
+        
+        if (response.ok) {
+          announcements = await response.json();
+        }
+
+        // Adicionar nova notificação
+        announcements.push({
+          id: notification.id,
+          title: notification.title,
+          message: notification.message,
+          date: notification.date.split('T')[0], // Formato YYYY-MM-DD
+          isUrgent: notification.isUrgent,
+          target: notification.target
+        });
+
+        // Manter apenas últimas 50 notificações
+        if (announcements.length > 50) {
+          announcements = announcements.slice(-50);
+        }
+
+        console.log('Notificação adicionada ao sistema:', notification);
+      } catch (error) {
+        console.error('Erro ao salvar em announcements:', error);
+      }
+    }
+
+    function saveNotificationToHistory(notification) {
+      try {
+        let history = JSON.parse(localStorage.getItem('admin_notifications_history') || '[]');
+        history.unshift(notification); // Adicionar no início
+        
+        // Manter apenas últimas 20 no localStorage
+        if (history.length > 20) {
+          history = history.slice(0, 20);
+        }
+        
+        localStorage.setItem('admin_notifications_history', JSON.stringify(history));
+      } catch (error) {
+        console.error('Erro ao salvar histórico:', error);
+      }
+    }
+
+    function loadNotificationsHistory() {
+      const historyContainer = document.getElementById('notifications-history');
+      if (!historyContainer) return;
+
+      try {
+        const history = JSON.parse(localStorage.getItem('admin_notifications_history') || '[]');
+        
+        if (history.length === 0) {
+          historyContainer.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: #666;">
+              <i class="fas fa-bell-slash" style="font-size: 2rem; margin-bottom: 12px; opacity: 0.3;"></i>
+              <p>Nenhuma notificação enviada ainda.</p>
+            </div>
+          `;
+          return;
+        }
+
+        const targetLabels = {
+          'all': '📢 Todos os usuários',
+          'clients': '👥 Clientes',
+          'providers': '🔧 Prestadores'
+        };
+
+        historyContainer.innerHTML = history.map(notif => `
+          <div style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 16px; margin-bottom: 12px; background: white; ${notif.isUrgent ? 'border-left: 4px solid var(--red);' : ''}">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+              <div>
+                <strong style="color: #333; display: flex; align-items: center; gap: 8px;">
+                  <i class="fas fa-bell" style="color: var(--purple);"></i>
+                  ${escapeHtml(notif.title)}
+                  ${notif.isUrgent ? '<span style="background: var(--red); color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold;">URGENTE</span>' : ''}
+                </strong>
+                <div style="font-size: 12px; color: var(--blue); margin-top: 4px;">
+                  ${targetLabels[notif.target] || notif.target}
+                </div>
+              </div>
+              <div style="font-size: 11px; color: #888; text-align: right;">
+                📅 ${new Date(notif.date).toLocaleDateString('pt-BR')}<br>
+                🕒 ${new Date(notif.date).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})}
+              </div>
+            </div>
+            <div style="color: #555; line-height: 1.4; margin-top: 8px;">
+              ${escapeHtml(notif.message)}
+            </div>
+          </div>
+        `).join('');
+
+      } catch (error) {
+        console.error('Erro ao carregar histórico:', error);
+        historyContainer.innerHTML = `
+          <div style="text-align: center; padding: 40px; color: var(--red);">
+            <i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 12px;"></i>
+            <p>Erro ao carregar histórico de notificações.</p>
+          </div>
+        `;
+      }
+    }
   }
 })();

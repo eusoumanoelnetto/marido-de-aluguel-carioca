@@ -606,6 +606,49 @@
             .main-nav ul::-webkit-scrollbar-track { background: transparent; }
             .main-nav ul::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 2px; }
         }
+
+        /* Estilos para notificações */
+        #notification-form .form-group {
+            margin-bottom: 20px;
+        }
+
+        #notification-form input:focus,
+        #notification-form select:focus,
+        #notification-form textarea:focus {
+            border-color: var(--purple);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(139, 69, 255, 0.1);
+        }
+
+        #notification-form button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        #notification-form button:active {
+            transform: translateY(0);
+        }
+
+        .notification-history-item {
+            transition: all 0.3s ease;
+        }
+
+        .notification-history-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        @media (max-width: 768px) {
+            #notification-form {
+                gap: 16px;
+            }
+            
+            #notification-form button {
+                width: 100%;
+                margin-bottom: 8px;
+            }
+        }
+
         /* Telas muito pequenas */
         @media (max-width: 380px) {
             .header-title .title-text h1 { font-size: 1.1rem; }
