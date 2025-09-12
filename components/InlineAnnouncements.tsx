@@ -30,6 +30,11 @@ const InlineAnnouncements: React.FC<Props> = ({ limit }) => {
     let cancelled = false;
     (async () => {
       try {
+        // Limpar cache antigo se necessário
+        if (typeof window !== 'undefined') {
+          console.log('🔍 InlineAnnouncements carregando...');
+        }
+        
         const candidates = [
           '/announcements.json',
           `${import.meta.env.BASE_URL}announcements.json`,

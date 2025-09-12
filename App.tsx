@@ -9,7 +9,6 @@ import { ServiceRequest, User, SignUpData } from './types';
 import * as api from './services/apiService';
 import { AuthContext } from './src/context/AuthContext';
 import Toast from './components/Toast';
-import AnnouncementBanner from './components/AnnouncementBanner';
 import PWAInstall from './components/PWAInstall';
 import LoadingOverlay from './components/LoadingOverlay';
 import NewRequestAlert from './components/NewRequestAlert';
@@ -344,8 +343,7 @@ const App: React.FC = () => {
             </div>
           </div>
         )}
-  {/* Banner global removido para client e provider: client vê só "Atualizações" e provider verá banner dentro do dashboard */}
-  {false && <AnnouncementBanner role={currentUser?.role} />}
+  {/* Banner global REMOVIDO - usando apenas InlineAnnouncements nos painéis */}
   <main>
         {renderPage()}
       </main>
