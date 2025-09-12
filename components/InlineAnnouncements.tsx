@@ -15,6 +15,7 @@ interface Props {
 const InlineAnnouncements: React.FC<Props> = ({ limit }) => {
   const [items, setItems] = useState<Announcement[]>([]);
   const [expanded, setExpanded] = useState(false);
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [seen, setSeen] = useState<Set<string>>(() => {
@@ -47,7 +48,17 @@ const InlineAnnouncements: React.FC<Props> = ({ limit }) => {
         }
         if (!data) throw new Error('Falha ao carregar');
         if (cancelled) return;
-        setItems(data);
+        
+        // Filtrar notificações que expiraram (7 dias após a data de criação)
+        const now = new Date();
+        const validItems = data.filter(item => {
+          if (!item.date) return true; // Se não tem data, mantém
+          const itemDate = new Date(item.date);
+          const expirationDate = new Date(itemDate.getTime() + (7 * 24 * 60 * 60 * 1000)); // +7 dias
+          return now <= expirationDate;
+        });
+        
+        setItems(validItems);
       } catch (e: any) {
         if (!cancelled) setError('Não foi possível carregar atualizações.');
       } finally {
@@ -63,6 +74,18 @@ const InlineAnnouncements: React.FC<Props> = ({ limit }) => {
       const next = new Set(prev);
       next.add(id);
       try { localStorage.setItem('mdac_seenAnnouncements', JSON.stringify(Array.from(next))); } catch(_) {}
+      return next;
+    });
+  };
+
+  const toggleItemExpanded = (id: string) => {
+    setExpandedItems(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
       return next;
     });
   };
@@ -112,8 +135,9 @@ const InlineAnnouncements: React.FC<Props> = ({ limit }) => {
       </div>
       {visible.length > 0 ? (
         <div className="space-y-3">
-          {visible.map(a => {
+          {(expanded ? visible : visible.slice(0, 1)).map(a => {
             const isSeen = seen.has(a.id);
+            const isItemExpanded = expandedItems.has(a.id);
             return (
               <div key={a.id} className={`border rounded-lg p-4 bg-white shadow-sm relative overflow-hidden`}> 
                 {!isSeen && (
@@ -123,12 +147,20 @@ const InlineAnnouncements: React.FC<Props> = ({ limit }) => {
                   <div className="mt-0.5 text-brand-blue"><i className="fa-solid fa-wrench" /></div>
                   <div className="flex-1 min-w-0">
                     <div className="font-medium text-sm text-brand-navy leading-snug">{a.title}{a.date && <span className="ml-2 text-[11px] font-normal text-gray-500">{new Date(a.date).toLocaleDateString('pt-BR')}</span>}</div>
-                    <div className="text-xs text-gray-600 mt-1 line-clamp-2">
-                      {expanded ? a.message : a.message}
+                    <div className={`text-xs text-gray-600 mt-1 ${isItemExpanded || !expanded ? 'line-clamp-2' : ''}`}>
+                      {a.message}
                     </div>
-                    <div className="mt-2">
+                    <div className="mt-2 flex gap-3">
                       {!isSeen && (
                         <button onClick={() => markSeen(a.id)} className="text-[11px] text-brand-blue hover:underline">Marcar como lido</button>
+                      )}
+                      {expanded && (
+                        <button 
+                          onClick={() => toggleItemExpanded(a.id)} 
+                          className="text-[11px] text-brand-blue hover:underline"
+                        >
+                          {isItemExpanded ? 'Menos detalhes' : 'Mais detalhes'}
+                        </button>
                       )}
                     </div>
                   </div>
@@ -136,6 +168,16 @@ const InlineAnnouncements: React.FC<Props> = ({ limit }) => {
               </div>
             );
           })}
+          {!expanded && visible.length > 1 && (
+            <div className="text-center py-2">
+              <button 
+                onClick={() => setExpanded(true)} 
+                className="text-xs text-brand-blue hover:underline"
+              >
+                Ver mais {visible.length - 1} notificação{visible.length - 1 > 1 ? 'ões' : ''}
+              </button>
+            </div>
+          )}
         </div>
       ) : (
         <div className="text-xs text-gray-500 border rounded-lg p-4 bg-white shadow-sm">Nenhuma novidade no momento.</div>

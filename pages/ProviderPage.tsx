@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import AnnouncementBanner from '../components/AnnouncementBanner';
+import InlineAnnouncements from '../components/InlineAnnouncements';
 import ServiceDetailView from '../components/ServiceDetailView';
 import { ServiceRequest, User } from '../types';
 
@@ -540,8 +540,6 @@ const DashboardView: React.FC<{
     updateRequestStatus: (id: string, status: ServiceRequest['status'], quote?: number, providerEmail?: string) => void;
 }> = ({ requests, setView, onViewDetails, updateRequestStatus }) => {
     
-    const [isBannerVisible, setIsBannerVisible] = useState(true);
-
     // --- Calculations for Stat Cards ---
     const isSameDay = (d1: Date, d2: Date) => d1.toDateString() === d2.toDateString();
     
@@ -577,14 +575,8 @@ const DashboardView: React.FC<{
     
     return (
         <main className="max-w-7xl mx-auto p-6">
-                        {isBannerVisible && (
-                            <div className="mt-4 mb-6 rounded-xl overflow-hidden border border-sky-600/30 shadow">
-                                <AnnouncementBanner role={'provider'} />
-                                <div className="bg-white px-4 py-2 text-xs text-right">
-                                    <button onClick={() => setIsBannerVisible(false)} className="text-slate-500 hover:text-slate-700">Fechar</button>
-                                </div>
-                            </div>
-                        )}
+            <InlineAnnouncements limit={3} />
+            
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mt-5">
                 <StatCard icon="fas fa-calendar-check" title="Serviços para Hoje" color="text-brand-blue" onClick={() => setView('today-services')}>
                      <div className="text-3xl md:text-4xl font-bold text-gray-800">{servicesToday.length}</div>

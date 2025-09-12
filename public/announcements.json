@@ -1,8 +1,20 @@
 [
   {
-    "id": "2025-08-29-hotfix-quote-badge",
-    "title": "Novidade nos orçamentos",
-    "message": "Quando pintar orçamento novo ele aparece com aviso que dá pra clicar e tem bolinha mostrando quantos você ainda não abriu. Fácil de ver e não perder nada.",
-    "date": "2025-08-29"
+    "id": "2025-09-12-nova-funcionalidade-orçamentos",
+    "title": "Nova regra de expiração",
+    "message": "Agora as notificações de novidades e melhorias ficam disponíveis por 7 dias após serem publicadas, depois somem automaticamente dos painéis de cliente e prestador.",
+    "date": "2025-09-12"
+  },
+  {
+    "id": "2025-09-11-melhorias-interface",
+    "title": "Melhorias na interface",
+    "message": "Implementamos novos botões de controle individual para expandir notificações específicas. Cada card agora tem seu próprio botão 'Mais detalhes' para melhor experiência do usuário.",
+    "date": "2025-09-11"
+  },
+  {
+    "id": "2025-09-10-sistema-expiracao",
+    "title": "Sistema de notificações aprimorado",
+    "message": "As notificações agora têm controle mais inteligente de exibição. O botão 'Recolher' permite visualizar apenas um resumo das novidades mais importantes, enquanto 'Detalhes' mostra todas as atualizações disponíveis.",
+    "date": "2025-09-10"
   }
 ]

@@ -43,11 +43,21 @@ const AnnouncementBanner: React.FC<Props> = ({ role }) => {
         }
         if (!data) return;
         if (cancelled) return;
+        
+        // Filtrar notificações que expiraram (7 dias após a data de criação)
+        const now = new Date();
+        const validItems = data.filter(item => {
+          if (!item.date) return true; // Se não tem data, mantém
+          const itemDate = new Date(item.date);
+          const expirationDate = new Date(itemDate.getTime() + (7 * 24 * 60 * 60 * 1000)); // +7 dias
+          return now <= expirationDate;
+        });
+        
         const seenRaw = localStorage.getItem('mdac_seenAnnouncements');
         let seen: string[] = [];
         try { if (seenRaw) seen = JSON.parse(seenRaw); } catch(_) {}
-        const notSeen = data.filter(a => !seen.includes(a.id));
-        setAnnouncements(data);
+        const notSeen = validItems.filter(a => !seen.includes(a.id));
+        setAnnouncements(validItems);
         setVisibleIds(notSeen.map(a => a.id));
       } catch (e) {
         // silencioso
