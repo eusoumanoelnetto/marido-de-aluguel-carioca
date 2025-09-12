@@ -570,10 +570,10 @@ const DashboardView: React.FC<{
     .filter(r => r.status === 'Aceito' && isSameDay(new Date(r.requestDate), today))
         .sort((a,b) => new Date(a.requestDate).getTime() - new Date(b.requestDate).getTime());
 
-    // Novos pedidos: solicitações pendentes para hoje
-    const pendingToday = requests
-        .filter(r => r.status === 'Pendente' && isSameDay(new Date(r.requestDate), today))
-        .sort((a,b) => new Date(a.requestDate).getTime() - new Date(b.requestDate).getTime());
+    // Novos pedidos: todas as solicitações pendentes (não apenas de hoje)
+    const pendingRequests = requests
+        .filter(r => r.status === 'Pendente')
+        .sort((a,b) => new Date(b.requestDate).getTime() - new Date(a.requestDate).getTime()); // Mais recentes primeiro
     
     return (
         <main className="max-w-7xl mx-auto p-6">
@@ -610,12 +610,14 @@ const DashboardView: React.FC<{
             </div>
             
             {/* Seção de novos pedidos pendentes */}
-            <h2 className="text-xl font-medium text-brand-navy mt-16 mb-6">Novos pedidos ({pendingToday.length})</h2>
+            <h2 className="text-xl font-medium text-brand-navy mt-16 mb-6">Novos pedidos ({pendingRequests.length})</h2>
             <div className="flex flex-col gap-4">
-                {pendingToday.length > 0 ? pendingToday.map((req) => (
+                {pendingRequests.length > 0 ? pendingRequests.map((req) => (
                     <div key={req.id} className="bg-white rounded-lg border border-gray-200 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                         <div className="w-full sm:w-auto">
-                            <div className="text-sm text-gray-500">{new Date(req.requestDate).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})}</div>
+                            <div className="text-sm text-gray-500">
+                                {new Date(req.requestDate).toLocaleDateString('pt-BR')} às {new Date(req.requestDate).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})}
+                            </div>
                             <div className="font-semibold text-brand-navy">{req.category}</div>
                             <div className="text-sm text-gray-600 truncate">Cliente: {req.clientName} — {req.address}</div>
                         </div>
@@ -626,7 +628,7 @@ const DashboardView: React.FC<{
                     </div>
                 )) : (
                     <div className="text-center py-6 bg-gray-50 rounded-lg border border-gray-200">
-                        <p className="text-gray-500">Nenhum novo pedido para hoje.</p>
+                        <p className="text-gray-500">Nenhum novo pedido pendente.</p>
                     </div>
                 )}
             </div>
@@ -920,7 +922,7 @@ const HelpView: React.FC<{ onBack: () => void }> = ({ onBack }) => (
                         </div>
                         <div>
                             <h3 className="font-semibold">Como vejo novas solicitações de serviço?</h3>
-                            <p className="text-gray-600">Novas solicitações de orçamento aparecerão no seu painel principal e na seção "Meus Orçamentos". Você será notificado sobre novos pedidos.</p>
+                            <p className="text-gray-600">Novas solicitações de orçamento aparecerão no seu painel principal e na seção "Meus Orçamentos".</p>
                         </div>
                     </div>
                 </div>
