@@ -31,7 +31,6 @@
         <nav class="main-nav">
             <ul>
                 <li><a href="#" class="nav-link active" data-target="visao-geral"><i class="fas fa-chart-pie"></i> Visão Geral</a></li>
-                <li><a href="#" class="nav-link" data-target="notificacoes"><i class="fas fa-bell"></i> Notificações</a></li>
                 <li><a href="#" class="nav-link" data-target="usuarios"><i class="fas fa-users"></i> Usuários</a></li>
                 <li><a href="#" class="nav-link" data-target="gerenciar"><i class="fas fa-cogs"></i> Gerenciar</a></li>
                 <li><a href="#" class="nav-link" data-target="erros"><i class="fas fa-exclamation-triangle"></i> Erros</a></li>
@@ -50,40 +49,6 @@
                         <div class="card stat-card"><div class="title">Total de Prestadores</div><div class="value" id="total-prestadores">...</div><div class="detail" id="novos-prestadores">+0 novos hoje</div><i class="fas fa-user-check icon"></i></div>
                         <div class="card stat-card"><div class="title">Serviços Ativos</div><div class="value" id="servicos-ativos">...</div><div class="detail" id="servicos-concluidos"></div><i class="fas fa-cog icon"></i></div>
                         <div class="card stat-card" id="error-stats-card" style="cursor: pointer;" title="Clique para ver detalhes dos erros"><div class="title">Erros Recentes</div><div class="value" id="erros-recentes">...</div><div class="detail" id="erros-criticos"></div><i class="fas fa-exclamation-triangle icon"></i></div>
-                </div>
-            </div>
-
-            <!-- PÁGINA: Notificações -->
-            <div id="notificacoes" class="page">
-                <div class="card form-section">
-                    <h2 class="title">Enviar Notificação</h2>
-                    <p class="subtitle">Envie avisos para clientes e prestadores de serviço.</p>
-                    <form id="notification-form">
-                        <div class="form-group">
-                            <label>Título da Notificação</label>
-                            <input type="text" id="notification-title" placeholder="Digite o título..." required>
-                        </div>
-                        <div class="form-group">
-                            <label>Destinatários</label>
-                            <select id="notification-recipients">
-                                <option value="all">Todos os usuários</option>
-                                <option value="clients">Apenas Clientes</option>
-                                <option value="providers">Apenas Prestadores</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Mensagem da Notificação</label>
-                            <textarea id="notification-message" placeholder="Digite sua mensagem aqui..." required></textarea>
-                        </div>
-                        <button type="submit" class="btn-purple">
-                            <i class="fas fa-paper-plane"></i> Enviar Notificação
-                        </button>
-                    </form>
-                    
-                    <!-- Status da notificação -->
-                    <div id="notification-status" style="margin-top: 16px; display: none;">
-                        <div class="alert"></div>
-                    </div>
                 </div>
             </div>
 

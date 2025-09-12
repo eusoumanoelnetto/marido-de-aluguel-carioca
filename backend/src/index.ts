@@ -5,7 +5,6 @@ import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes';
 import serviceRoutes from './routes/serviceRoutes';
 import userRoutes from './routes/userRoutes';
-import pushRoutes from './routes/pushRoutes';
 import dashboardRoutes from './routes/dashboardRoutes';
 import { initDb, isDbConnected } from './db';
 
@@ -70,7 +69,6 @@ app.use('/api/auth', authRoutes);
 
 app.use('/api/requests', serviceRoutes);
 app.use('/api/users', userRoutes);
-app.use('/api/push', pushRoutes);
 app.use('/api/admin', dashboardRoutes); // Nova rota para dashboard admin
 
 

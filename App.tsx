@@ -135,16 +135,6 @@ const App: React.FC = () => {
             } catch (e) {
               // ignore
             }
-
-            if ('Notification' in window) {
-              if (Notification.permission === 'granted') {
-                newlyArrived.forEach(n => {
-                  try { new Notification('Novo pedido', { body: `${n.clientName} solicitou ${n.category}` }); } catch (_) {}
-                });
-              } else if (Notification.permission === 'default') {
-                try { Notification.requestPermission(); } catch(_){}
-              }
-            }
           }
           setLastPendingIds(pendingIds);
         }
@@ -164,10 +154,6 @@ const App: React.FC = () => {
               newQuotes.push(r.id);
             }
           });
-          // agrupar em notificação do sistema (web notification) se mais de um chegou de uma vez
-          if (newQuotes.length > 1 && 'Notification' in window && Notification.permission === 'granted') {
-            try { new Notification('Novos orçamentos recebidos', { body: `${newQuotes.length} novos orçamentos chegaram.` }); } catch(_) {}
-          }
         }
 
         // Para prestadores: notificar quando status relevante muda (Aceito ou Cancelado) para pedido que ele orçou

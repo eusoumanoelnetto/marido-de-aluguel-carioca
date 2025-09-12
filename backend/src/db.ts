@@ -222,14 +222,6 @@ export const initDb = async () => {
     `);
 
     await pgPool.query(`
-      CREATE TABLE IF NOT EXISTS push_subscriptions (
-        endpoint TEXT PRIMARY KEY,
-        keys_p256dh TEXT,
-        keys_auth TEXT
-      );
-    `);
-
-    await pgPool.query(`
       CREATE TABLE IF NOT EXISTS admin_events (
         id SERIAL PRIMARY KEY,
         event_type VARCHAR(100),

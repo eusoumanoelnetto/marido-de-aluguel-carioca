@@ -92,39 +92,3 @@ self.addEventListener('fetch', event => {
     })
   );
 });
-
-// Push event: mostrar notificação mesmo quando PWA não está em foco
-self.addEventListener('push', function(event) {
-  try {
-    const data = event.data ? event.data.json() : { title: 'Novo', body: 'Você tem uma nova notificação' };
-    const title = data.title || 'Marido de Aluguel';
-    const options = {
-      body: data.body,
-      icon: '/assets/favicon.png',
-      badge: '/assets/favicon.png',
-      data: data,
-      vibrate: [100, 50, 100],
-    };
-    event.waitUntil(self.registration.showNotification(title, options));
-  } catch (e) {
-    console.error('Error handling push event', e);
-  }
-});
-
-self.addEventListener('notificationclick', function(event) {
-  event.notification.close();
-  const data = event.notification.data || {};
-  const url = data.url || '/';
-  event.waitUntil(
-    clients.matchAll({ type: 'window' }).then(windowClients => {
-      for (let i = 0; i < windowClients.length; i++) {
-        const client = windowClients[i];
-        if (client.url.includes('/') && 'focus' in client) {
-          client.postMessage({ type: 'notification-click', data });
-          return client.focus();
-        }
-      }
-      if (clients.openWindow) return clients.openWindow(url);
-    })
-  );
-});
