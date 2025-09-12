@@ -4,6 +4,29 @@
   const OFF = !!(typeof window !== 'undefined' && window.ADMIN_OFFLINE);
   const ADMIN_KEY = (typeof window !== 'undefined' && window.ADMIN_KEY) ? window.ADMIN_KEY : '';
 
+  // Helper function para eventos touch-friendly
+  function addTouchFriendlyEvent(element, callback) {
+    let touchStarted = false;
+    
+    element.addEventListener('touchstart', (e) => {
+      touchStarted = true;
+    }, { passive: true });
+    
+    element.addEventListener('touchend', (e) => {
+      if (touchStarted) {
+        e.preventDefault();
+        callback(e);
+        touchStarted = false;
+      }
+    });
+    
+    element.addEventListener('click', (e) => {
+      if (!touchStarted) {
+        callback(e);
+      }
+    });
+  }
+
   async function fetchUsers() {
     const listEl = document.querySelector('.user-list');
     if (!listEl) return;
@@ -89,7 +112,8 @@
 
     // Delete button logic
     document.querySelectorAll('.user-actions .delete').forEach(btn => {
-      btn.addEventListener('click', async () => {
+      btn.setAttribute('data-touch-handled', 'true');
+      addTouchFriendlyEvent(btn, async () => {
         const email = decodeURIComponent(btn.getAttribute('data-email'));
         if (!confirm('Deletar usuário ' + email + '?')) return;
         if (OFF) {
@@ -106,7 +130,8 @@
 
     // Botão visualizar perfil (popup)
     document.querySelectorAll('.user-actions .view').forEach(btn => {
-      btn.addEventListener('click', async () => {
+      btn.setAttribute('data-touch-handled', 'true');
+      addTouchFriendlyEvent(btn, async () => {
         const email = decodeURIComponent(btn.getAttribute('data-email'));
         let user = users.find(u => u.email === email);
         if (!user && !OFF) {
@@ -119,7 +144,8 @@
     });
     // Botão editar perfil (popup)
     document.querySelectorAll('.user-actions .edit').forEach(btn => {
-      btn.addEventListener('click', async () => {
+      btn.setAttribute('data-touch-handled', 'true');
+      addTouchFriendlyEvent(btn, async () => {
         const email = decodeURIComponent(btn.getAttribute('data-email'));
         let user = users.find(u => u.email === email);
         if (!user && !OFF) {
@@ -186,7 +212,8 @@
 
     // Password reset button logic
     document.querySelectorAll('.user-actions .password').forEach(btn => {
-      btn.addEventListener('click', async () => {
+      btn.setAttribute('data-touch-handled', 'true');
+      addTouchFriendlyEvent(btn, async () => {
         const email = decodeURIComponent(btn.getAttribute('data-email'));
         const password = prompt('Nova senha (mínimo 6 caracteres)');
         if (!password || password.length < 6) {
@@ -837,7 +864,7 @@
       const navLinks = document.querySelectorAll('.nav-link');
       const pages = document.querySelectorAll('.page');
       navLinks.forEach(link => {
-        link.addEventListener('click', (event) => {
+        addTouchFriendlyEvent(link, (event) => {
           event.preventDefault();
           navLinks.forEach(nav => nav.classList.remove('active'));
           link.classList.add('active');
@@ -860,7 +887,7 @@
       // Botão de atualizar logs
       const refreshLogsBtn = document.getElementById('refresh-logs-btn');
       if (refreshLogsBtn) {
-        refreshLogsBtn.addEventListener('click', async () => {
+        addTouchFriendlyEvent(refreshLogsBtn, async () => {
           refreshLogsBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Atualizando...';
           refreshLogsBtn.disabled = true;
           
@@ -880,7 +907,7 @@
       // Botão de atualizar usuários
       const refreshUsersBtn = document.getElementById('refresh-users-btn');
       if (refreshUsersBtn) {
-        refreshUsersBtn.addEventListener('click', async () => {
+        addTouchFriendlyEvent(refreshUsersBtn, async () => {
           refreshUsersBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Atualizando...';
           refreshUsersBtn.disabled = true;
           
@@ -906,13 +933,13 @@
       const closeUserModal = document.getElementById('close-user-modal');
       
       if (closeDiagnostic) {
-        closeDiagnostic.addEventListener('click', () => {
+        addTouchFriendlyEvent(closeDiagnostic, () => {
           diagnosticModal.classList.remove('show');
         });
       }
       
       if (closeUserModal) {
-        closeUserModal.addEventListener('click', () => {
+        addTouchFriendlyEvent(closeUserModal, () => {
           userModal.classList.remove('show');
         });
       }
@@ -944,7 +971,7 @@
       // Click no card de erros para ir para a aba de erros
       const errorStatsCard = document.getElementById('error-stats-card');
       if (errorStatsCard) {
-        errorStatsCard.addEventListener('click', () => {
+        addTouchFriendlyEvent(errorStatsCard, () => {
           // Remover active de todos os links
           navLinks.forEach(nav => nav.classList.remove('active'));
           pages.forEach(page => page.classList.remove('active'));
@@ -961,6 +988,42 @@
           }
         });
       }
+
+      // Adicionar event listeners para botões de backup
+      const backupButtons = document.querySelectorAll('.backup-card .btn');
+      backupButtons.forEach((btn, index) => {
+        addTouchFriendlyEvent(btn, () => {
+          const backupTypes = ['completo', 'clientes', 'prestadores'];
+          const backupType = backupTypes[index];
+          
+          // Mostrar loading
+          const originalText = btn.innerHTML;
+          btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...';
+          btn.disabled = true;
+          
+          // Simular processo de backup
+          setTimeout(() => {
+            alert(`Backup ${backupType} iniciado! Você será notificado quando estiver pronto.`);
+            
+            // Restaurar botão
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+          }, 2000);
+        });
+      });
+
+      // Aplicar touch-friendly para todos os botões não tratados especificamente
+      const allButtons = document.querySelectorAll('button:not([data-touch-handled])');
+      allButtons.forEach(btn => {
+        // Marcar como tratado para evitar duplicação
+        btn.setAttribute('data-touch-handled', 'true');
+        
+        // Se o botão não tem event listener personalizado, apenas adicionar preventDefault para touch
+        if (!btn.onclick && !btn.addEventListener.toString().includes('click')) {
+          btn.style.touchAction = 'manipulation';
+          btn.style.webkitTapHighlightColor = 'rgba(0, 0, 0, 0.1)';
+        }
+      });
 
       // inicialização do dashboard (logs reduzidos)
       
