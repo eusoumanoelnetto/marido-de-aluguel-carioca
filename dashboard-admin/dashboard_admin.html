@@ -123,11 +123,71 @@
                         </div>
                         
                         <div class="form-group">
+                            <label for="notification-type" style="display: block; font-weight: 600; margin-bottom: 8px; color: #333; font-size: 15px;">
+                                <i class="fas fa-tag" style="margin-right: 8px; color: var(--green);"></i>
+                                Tipo de Notificação:
+                            </label>
+                            <select id="notification-type" required style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; background: white; transition: border-color 0.3s;">
+                                <option value="">Selecione o tipo de notificação</option>
+                                <option value="aviso">📢 Aviso</option>
+                                <option value="notificacao">🔔 Notificação</option>
+                                <option value="atualizacao">🔄 Atualização</option>
+                                <option value="pv">💬 PV (Mensagem Privada)</option>
+                            </select>
+                        </div>
+
+                        <!-- Campo de título personalizado (oculto por padrão) -->
+                        <div class="form-group" id="custom-title-group" style="display: none;">
                             <label for="notification-title" style="display: block; font-weight: 600; margin-bottom: 8px; color: #333; font-size: 15px;">
                                 <i class="fas fa-heading" style="margin-right: 8px; color: var(--green);"></i>
-                                Título da Notificação:
+                                Título Personalizado:
                             </label>
-                            <input type="text" id="notification-title" required maxlength="100" placeholder="Ex: Nova funcionalidade disponível, Manutenção programada..." style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; transition: border-color 0.3s;">
+                            <input type="text" id="notification-title" maxlength="100" placeholder="Digite um título personalizado..." style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; transition: border-color 0.3s;">
+                        </div>
+
+                        <!-- Campos específicos para PV -->
+                        <div id="pv-options" style="display: none;">
+                            <div class="form-group" style="background: #e8f4fd; padding: 16px; border-radius: 8px; border-left: 4px solid var(--blue);">
+                                <label style="display: block; font-weight: 600; margin-bottom: 12px; color: #333; font-size: 15px;">
+                                    <i class="fas fa-users" style="margin-right: 8px; color: var(--blue);"></i>
+                                    Tipo de Destinatário para PV:
+                                </label>
+                                <div style="display: flex; flex-direction: column; gap: 8px;">
+                                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px;">
+                                        <input type="radio" name="pv-type" value="specific" style="transform: scale(1.2);">
+                                        <span>📧 Usuário específico</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px;">
+                                        <input type="radio" name="pv-type" value="group" style="transform: scale(1.2);">
+                                        <span>👥 Grupo (clientes ou prestadores)</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Campo para usuário específico -->
+                            <div class="form-group" id="specific-user-group" style="display: none;">
+                                <label for="specific-user" style="display: block; font-weight: 600; margin-bottom: 8px; color: #333; font-size: 15px;">
+                                    <i class="fas fa-user" style="margin-right: 8px; color: var(--purple);"></i>
+                                    Usuário Específico:
+                                </label>
+                                <input type="email" id="specific-user" placeholder="Digite o email do usuário..." style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; transition: border-color 0.3s;">
+                                <small style="color: #666; font-size: 12px; margin-top: 4px; display: block;">
+                                    <i class="fas fa-info-circle"></i> Digite o email exato do usuário que receberá a mensagem privada
+                                </small>
+                            </div>
+
+                            <!-- Campo para grupo -->
+                            <div class="form-group" id="group-selection-group" style="display: none;">
+                                <label for="pv-group" style="display: block; font-weight: 600; margin-bottom: 8px; color: #333; font-size: 15px;">
+                                    <i class="fas fa-users" style="margin-right: 8px; color: var(--blue);"></i>
+                                    Selecionar Grupo:
+                                </label>
+                                <select id="pv-group" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; background: white; transition: border-color 0.3s;">
+                                    <option value="">Selecione o grupo</option>
+                                    <option value="clients">👥 Todos os clientes</option>
+                                    <option value="providers">🔧 Todos os prestadores</option>
+                                </select>
+                            </div>
                         </div>
                         
                         <div class="form-group">

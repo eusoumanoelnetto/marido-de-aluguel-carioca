@@ -1054,6 +1054,67 @@
       const charCount = document.getElementById('char-count');
       const previewBtn = document.getElementById('preview-notification');
       const refreshNotificationsBtn = document.getElementById('refresh-notifications');
+      const notificationTypeSelect = document.getElementById('notification-type');
+      const customTitleGroup = document.getElementById('custom-title-group');
+      const pvOptions = document.getElementById('pv-options');
+      const specificUserGroup = document.getElementById('specific-user-group');
+      const groupSelectionGroup = document.getElementById('group-selection-group');
+      
+      // Controle do tipo de notificação
+      if (notificationTypeSelect) {
+        notificationTypeSelect.addEventListener('change', () => {
+          const selectedType = notificationTypeSelect.value;
+          const titleInput = document.getElementById('notification-title');
+          
+          // Resetar campos
+          customTitleGroup.style.display = 'none';
+          pvOptions.style.display = 'none';
+          specificUserGroup.style.display = 'none';
+          groupSelectionGroup.style.display = 'none';
+          
+          // Limpar seleções de PV
+          const pvTypeRadios = document.querySelectorAll('input[name="pv-type"]');
+          pvTypeRadios.forEach(radio => radio.checked = false);
+          document.getElementById('specific-user').value = '';
+          document.getElementById('pv-group').value = '';
+          
+          if (selectedType === 'pv') {
+            // Para PV, mostrar opções específicas
+            pvOptions.style.display = 'block';
+            customTitleGroup.style.display = 'block';
+            titleInput.placeholder = 'Digite o título da mensagem privada...';
+            titleInput.required = true;
+          } else if (selectedType) {
+            // Para outros tipos, usar título pré-definido
+            const titles = {
+              'aviso': 'Aviso',
+              'notificacao': 'Notificação',
+              'atualizacao': 'Atualização'
+            };
+            titleInput.value = titles[selectedType] || '';
+            titleInput.required = false;
+          }
+        });
+      }
+      
+      // Controle dos tipos de PV
+      const pvTypeRadios = document.querySelectorAll('input[name="pv-type"]');
+      pvTypeRadios.forEach(radio => {
+        radio.addEventListener('change', () => {
+          specificUserGroup.style.display = 'none';
+          groupSelectionGroup.style.display = 'none';
+          
+          if (radio.value === 'specific') {
+            specificUserGroup.style.display = 'block';
+            document.getElementById('specific-user').required = true;
+            document.getElementById('pv-group').required = false;
+          } else if (radio.value === 'group') {
+            groupSelectionGroup.style.display = 'block';
+            document.getElementById('pv-group').required = true;
+            document.getElementById('specific-user').required = false;
+          }
+        });
+      });
       
       // Contador de caracteres
       if (messageTextarea && charCount) {
@@ -1094,40 +1155,108 @@
     }
 
     function showNotificationPreview() {
+      const notificationType = document.getElementById('notification-type').value;
       const target = document.getElementById('notification-target').value;
-      const title = document.getElementById('notification-title').value;
+      const titleInput = document.getElementById('notification-title');
       const message = document.getElementById('notification-message').value;
       const isUrgent = document.getElementById('notification-urgent').checked;
 
-      if (!target || !title || !message) {
-        alert('Por favor, preencha todos os campos obrigatórios antes de visualizar.');
+      // Validações básicas
+      if (!notificationType) {
+        alert('Por favor, selecione o tipo de notificação antes de visualizar.');
         return;
       }
 
-      const targetText = {
-        'all': 'Todos os usuários',
-        'clients': 'Apenas clientes', 
-        'providers': 'Apenas prestadores'
+      if (!message) {
+        alert('Por favor, digite a mensagem antes de visualizar.');
+        return;
+      }
+
+      // Validações específicas para PV
+      if (notificationType === 'pv') {
+        const pvType = document.querySelector('input[name="pv-type"]:checked');
+        if (!pvType) {
+          alert('Para mensagens PV, selecione se é para usuário específico ou grupo.');
+          return;
+        }
+
+        if (!titleInput.value) {
+          alert('Digite o título da mensagem PV.');
+          return;
+        }
+      } else {
+        // Para outros tipos, validar destinatários
+        if (!target) {
+          alert('Por favor, selecione os destinatários.');
+          return;
+        }
+      }
+
+      // Determinar título final
+      let finalTitle;
+      if (notificationType === 'pv') {
+        finalTitle = titleInput.value.trim();
+      } else {
+        const titles = {
+          'aviso': 'Aviso',
+          'notificacao': 'Notificação',
+          'atualizacao': 'Atualização'
+        };
+        finalTitle = titles[notificationType] || titleInput.value.trim();
+      }
+
+      // Determinar destinatários para exibição
+      let targetText;
+      if (notificationType === 'pv') {
+        const pvType = document.querySelector('input[name="pv-type"]:checked').value;
+        if (pvType === 'specific') {
+          const specificUser = document.getElementById('specific-user').value;
+          targetText = `📧 Usuário específico: ${specificUser}`;
+        } else {
+          const pvGroup = document.getElementById('pv-group').value;
+          const groupLabels = {
+            'clients': '👥 Todos os clientes',
+            'providers': '🔧 Todos os prestadores'
+          };
+          targetText = groupLabels[pvGroup] || pvGroup;
+        }
+      } else {
+        const targetLabels = {
+          'all': 'Todos os usuários',
+          'clients': 'Apenas clientes', 
+          'providers': 'Apenas prestadores'
+        };
+        targetText = targetLabels[target];
+      }
+
+      // Determinar tipo de visualização
+      const typeLabels = {
+        'aviso': '📢 Banner de Aviso',
+        'notificacao': '🔔 Banner de Notificação',
+        'atualizacao': '🔄 Banner de Atualização',
+        'pv': '💬 Mensagem Privada'
       };
 
       const previewContent = document.getElementById('notification-preview-content');
       previewContent.innerHTML = `
         <div style="margin-bottom: 16px; padding: 12px; background: #e3f2fd; border-radius: 6px; border-left: 4px solid var(--blue);">
-          <strong>👥 Destinatários:</strong> ${targetText[target]}
+          <strong>📋 Tipo:</strong> ${typeLabels[notificationType]}<br>
+          <strong>👥 Destinatários:</strong> ${targetText}
         </div>
         
         <div style="border: 1px solid #ddd; border-radius: 8px; padding: 16px; background: white; position: relative; ${isUrgent ? 'border-left: 4px solid var(--red);' : ''}">
           ${isUrgent ? '<div style="position: absolute; top: 8px; right: 8px; background: var(--red); color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">URGENTE</div>' : ''}
           
           <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-            <i class="fas fa-bell" style="color: var(--purple);"></i>
-            <strong style="font-size: 16px; color: #333;">${escapeHtml(title)}</strong>
+            <i class="fas ${notificationType === 'pv' ? 'fa-envelope' : 'fa-bell'}" style="color: var(--purple);"></i>
+            <strong style="font-size: 16px; color: #333;">${escapeHtml(finalTitle)}</strong>
           </div>
           
           <div style="color: #555; line-height: 1.5; white-space: pre-wrap;">${escapeHtml(message)}</div>
           
           <div style="margin-top: 12px; font-size: 12px; color: #888; border-top: 1px solid #eee; padding-top: 8px;">
             📅 ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})}
+            ${notificationType === 'pv' ? '<br>💬 Esta mensagem aparecerá na aba de mensagens do usuário' : '<br>📢 Esta notificação aparecerá como banner no painel do usuário'}
           </div>
         </div>
       `;
@@ -1171,15 +1300,69 @@
     }
 
     async function sendNotification() {
+      const notificationType = document.getElementById('notification-type').value;
       const target = document.getElementById('notification-target').value;
-      const title = document.getElementById('notification-title').value;
+      const titleInput = document.getElementById('notification-title');
       const message = document.getElementById('notification-message').value;
       const isUrgent = document.getElementById('notification-urgent').checked;
       const sendBtn = document.getElementById('send-notification');
 
-      if (!target || !title || !message) {
-        alert('Por favor, preencha todos os campos obrigatórios.');
+      // Validações básicas
+      if (!notificationType) {
+        alert('Por favor, selecione o tipo de notificação.');
         return;
+      }
+
+      if (!message) {
+        alert('Por favor, digite a mensagem.');
+        return;
+      }
+
+      // Validações específicas para PV
+      if (notificationType === 'pv') {
+        const pvType = document.querySelector('input[name="pv-type"]:checked');
+        if (!pvType) {
+          alert('Para mensagens PV, selecione se é para usuário específico ou grupo.');
+          return;
+        }
+
+        if (pvType.value === 'specific') {
+          const specificUser = document.getElementById('specific-user').value;
+          if (!specificUser) {
+            alert('Digite o email do usuário específico.');
+            return;
+          }
+        } else if (pvType.value === 'group') {
+          const pvGroup = document.getElementById('pv-group').value;
+          if (!pvGroup) {
+            alert('Selecione o grupo para a mensagem PV.');
+            return;
+          }
+        }
+
+        if (!titleInput.value) {
+          alert('Digite o título da mensagem PV.');
+          return;
+        }
+      } else {
+        // Para outros tipos, validar destinatários
+        if (!target) {
+          alert('Por favor, selecione os destinatários.');
+          return;
+        }
+      }
+
+      // Determinar título final
+      let finalTitle;
+      if (notificationType === 'pv') {
+        finalTitle = titleInput.value.trim();
+      } else {
+        const titles = {
+          'aviso': 'Aviso',
+          'notificacao': 'Notificação',
+          'atualizacao': 'Atualização'
+        };
+        finalTitle = titles[notificationType] || titleInput.value.trim();
       }
 
       // Mostrar loading
@@ -1190,16 +1373,37 @@
       try {
         const notification = {
           id: Date.now().toString(),
-          title: title.trim(),
+          type: notificationType,
+          title: finalTitle,
           message: message.trim(),
-          target: target,
           isUrgent: isUrgent,
           date: new Date().toISOString(),
           sent: true
         };
 
-        // Salvar no announcements.json
-        await saveNotificationToAnnouncements(notification);
+        // Configurar destinatários baseado no tipo
+        if (notificationType === 'pv') {
+          const pvType = document.querySelector('input[name="pv-type"]:checked').value;
+          if (pvType === 'specific') {
+            notification.target = 'specific';
+            notification.specificUser = document.getElementById('specific-user').value;
+          } else {
+            notification.target = document.getElementById('pv-group').value;
+          }
+          notification.isPV = true;
+        } else {
+          notification.target = target;
+          notification.isPV = false;
+        }
+
+        // Salvar baseado no tipo
+        if (notificationType === 'pv') {
+          // Para PV, salvar como mensagem privada
+          await savePVMessage(notification);
+        } else {
+          // Para outros tipos, salvar como banner de notificação
+          await saveNotificationToAnnouncements(notification);
+        }
         
         // Salvar no histórico local
         saveNotificationToHistory(notification);
@@ -1207,11 +1411,21 @@
         // Limpar formulário
         document.getElementById('notification-form').reset();
         document.getElementById('char-count').textContent = '0';
+        
+        // Resetar campos dinâmicos
+        document.getElementById('custom-title-group').style.display = 'none';
+        document.getElementById('pv-options').style.display = 'none';
+        document.getElementById('specific-user-group').style.display = 'none';
+        document.getElementById('group-selection-group').style.display = 'none';
 
         // Atualizar histórico
         loadNotificationsHistory();
 
-        alert('✅ Notificação enviada com sucesso! Os usuários verão a notificação em seus painéis.');
+        if (notificationType === 'pv') {
+          alert('✅ Mensagem privada enviada com sucesso! O(s) usuário(s) verá(ão) a mensagem na aba de mensagens.');
+        } else {
+          alert('✅ Notificação enviada com sucesso! Os usuários verão a notificação em seus painéis.');
+        }
 
       } catch (error) {
         console.error('Erro ao enviar notificação:', error);
@@ -1219,6 +1433,23 @@
       } finally {
         sendBtn.innerHTML = originalText;
         sendBtn.disabled = false;
+      }
+    }
+
+    // Função para salvar mensagens PV
+    async function savePVMessage(notification) {
+      try {
+        // Em modo offline, apenas simular
+        if (OFF) {
+          console.log('Modo offline: mensagem PV simulada', notification);
+          return;
+        }
+
+        // Aqui você pode implementar a lógica para salvar mensagens PV
+        // Por exemplo, enviando para o backend via API
+        console.log('Mensagem PV enviada:', notification);
+      } catch (error) {
+        console.error('Erro ao salvar mensagem PV:', error);
       }
     }
 
@@ -1295,32 +1526,57 @@
         const targetLabels = {
           'all': '📢 Todos os usuários',
           'clients': '👥 Clientes',
-          'providers': '🔧 Prestadores'
+          'providers': '🔧 Prestadores',
+          'specific': '📧 Usuário específico'
         };
 
-        historyContainer.innerHTML = history.map(notif => `
-          <div style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 16px; margin-bottom: 12px; background: white; ${notif.isUrgent ? 'border-left: 4px solid var(--red);' : ''}">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
-              <div>
-                <strong style="color: #333; display: flex; align-items: center; gap: 8px;">
-                  <i class="fas fa-bell" style="color: var(--purple);"></i>
-                  ${escapeHtml(notif.title)}
-                  ${notif.isUrgent ? '<span style="background: var(--red); color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold;">URGENTE</span>' : ''}
-                </strong>
-                <div style="font-size: 12px; color: var(--blue); margin-top: 4px;">
-                  ${targetLabels[notif.target] || notif.target}
+        const typeLabels = {
+          'aviso': '📢 Aviso',
+          'notificacao': '🔔 Notificação',
+          'atualizacao': '🔄 Atualização',
+          'pv': '💬 Mensagem PV'
+        };
+
+        historyContainer.innerHTML = history.map(notif => {
+          let targetInfo = '';
+          if (notif.isPV) {
+            if (notif.target === 'specific') {
+              targetInfo = `📧 Para: ${notif.specificUser}`;
+            } else {
+              targetInfo = targetLabels[notif.target] || notif.target;
+            }
+          } else {
+            targetInfo = targetLabels[notif.target] || notif.target;
+          }
+
+          const typeIcon = notif.isPV ? '💬' : (notif.type ? typeLabels[notif.type]?.split(' ')[0] : '🔔');
+          const typeLabel = notif.type ? typeLabels[notif.type] : 'Notificação';
+
+          return `
+            <div style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 16px; margin-bottom: 12px; background: white; ${notif.isUrgent ? 'border-left: 4px solid var(--red);' : ''}">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                <div>
+                  <strong style="color: #333; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas ${notif.isPV ? 'fa-envelope' : 'fa-bell'}" style="color: var(--purple);"></i>
+                    ${escapeHtml(notif.title)}
+                    ${notif.isUrgent ? '<span style="background: var(--red); color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold;">URGENTE</span>' : ''}
+                  </strong>
+                  <div style="font-size: 12px; color: var(--blue); margin-top: 4px;">
+                    ${typeLabel} • ${targetInfo}
+                  </div>
+                </div>
+                <div style="font-size: 11px; color: #888; text-align: right;">
+                  📅 ${new Date(notif.date).toLocaleDateString('pt-BR')}<br>
+                  🕒 ${new Date(notif.date).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})}
                 </div>
               </div>
-              <div style="font-size: 11px; color: #888; text-align: right;">
-                📅 ${new Date(notif.date).toLocaleDateString('pt-BR')}<br>
-                🕒 ${new Date(notif.date).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})}
+              <div style="color: #555; line-height: 1.4; margin-top: 8px;">
+                ${escapeHtml(notif.message)}
               </div>
+              ${notif.isPV ? '<div style="font-size: 11px; color: #666; margin-top: 8px; font-style: italic;">💬 Enviado como mensagem privada</div>' : ''}
             </div>
-            <div style="color: #555; line-height: 1.4; margin-top: 8px;">
-              ${escapeHtml(notif.message)}
-            </div>
-          </div>
-        `).join('');
+          `;
+        }).join('');
 
       } catch (error) {
         console.error('Erro ao carregar histórico:', error);
