@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import pool from '../db';
+import { dbManager } from '../db-enhanced';
 import { User, SignUpData } from '../types';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -13,7 +13,7 @@ export const signUp = async (req: Request, res: Response) => {
   }
 
   try {
-    const userExists = await pool.query('SELECT 1 FROM users WHERE email = $1', [email.toLowerCase()]);
+    const userExists = await dbManager.query('SELECT 1 FROM users WHERE email = $1', [email.toLowerCase()]);
 
     if (userExists.rowCount && userExists.rowCount > 0) {
       return res.status(409).json({ message: 'Este e-mail já está cadastrado.' });
@@ -24,7 +24,7 @@ export const signUp = async (req: Request, res: Response) => {
     
     // Por segurança, impedir criação de admin via signUp público
     const safeRole = role === 'admin' ? 'client' : role;
-    const result = await pool.query(
+    const result = await dbManager.query(
       'INSERT INTO users (name, email, phone, role, cep, password, services) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
       [name, email.toLowerCase(), phone, safeRole, cep, hashedPassword, services]
     );
@@ -40,7 +40,7 @@ export const signUp = async (req: Request, res: Response) => {
   
   // Log event for admin notifications (try to insert into admin_events table if exists)
   try {
-    await pool.query(
+    await dbManager.query(
       'INSERT INTO admin_events (event_type, data, created_at) VALUES ($1, $2, NOW())',
       ['user_signup', JSON.stringify({ name: newUser.name, email: newUser.email, role: newUser.role })]
     );
@@ -71,7 +71,7 @@ export const login = async (req: Request, res: Response) => {
   // Log the attempting email (do not log the password)
   console.debug('Attempting login for:', normalizedEmail);
 
-  const result = await pool.query(
+  const result = await dbManager.query(
     'SELECT * FROM users WHERE email = $1',
     [normalizedEmail]
   );
@@ -96,7 +96,7 @@ export const login = async (req: Request, res: Response) => {
     console.log('User logged in:', user.email);
     try {
       // Atualiza última data de login
-      await pool.query('UPDATE users SET last_login_at = NOW() WHERE email = $1', [user.email.toLowerCase()]);
+      await dbManager.query('UPDATE users SET last_login_at = NOW() WHERE email = $1', [user.email.toLowerCase()]);
     } catch (e) {
       console.warn('Falha ao atualizar last_login_at:', (e as any)?.message || e);
     }

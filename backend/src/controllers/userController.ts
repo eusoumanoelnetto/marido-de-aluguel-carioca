@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import pool from '../db';
+import { dbManager } from '../db-enhanced';
 import { User } from '../types';
 import bcrypt from 'bcryptjs';
 
@@ -15,7 +15,7 @@ export const updateUser = async (req: Request, res: Response) => {
     }
   
     try {
-        const result = await pool.query(
+        const result = await dbManager.query(
             'UPDATE users SET name = $1, phone = $2, cep = $3, services = $4, "profilePictureBase64" = $5 WHERE email = $6 RETURNING *',
             [name, phone, cep, services, profilePictureBase64, email.toLowerCase()]
         );
@@ -43,7 +43,7 @@ export const listUsers = async (req: Request, res: Response) => {
     }
 
     try {
-        const result = await pool.query('SELECT name, email, phone, role, cep, "profilePictureBase64" AS "profilePictureBase64", services FROM users');
+        const result = await dbManager.query('SELECT name, email, phone, role, cep, "profilePictureBase64" AS "profilePictureBase64", services FROM users');
         res.status(200).json({ users: result.rows });
     } catch (error) {
         console.error('List users error:', error);
@@ -61,12 +61,12 @@ export const deleteUser = async (req: Request, res: Response) => {
 
         try {
                 // Buscar dados do usuário antes de deletar
-                const userRes = await pool.query('SELECT name, email FROM users WHERE email = $1', [email.toLowerCase()]);
+                const userRes = await dbManager.query('SELECT name, email FROM users WHERE email = $1', [email.toLowerCase()]);
                 if ((userRes.rowCount ?? 0) === 0) {
                         return res.status(404).json({ message: 'Usuário não encontrado.' });
                 }
                 const user = userRes.rows[0];
-                                const result = await pool.query('DELETE FROM users WHERE email = $1 RETURNING email', [email.toLowerCase()]);
+                                const result = await dbManager.query('DELETE FROM users WHERE email = $1 RETURNING email', [email.toLowerCase()]);
                                 // Enviar email de notificação de exclusão
                                 try {
                                         const { sendUserDeletedEmail } = await import('../utils/mailer');
@@ -90,7 +90,7 @@ export const getAdminEvents = async (req: Request, res: Response) => {
 
     try {
         console.log('📋 Buscando eventos admin...');
-        const result = await pool.query(
+        const result = await dbManager.query(
             'SELECT * FROM admin_events ORDER BY created_at DESC LIMIT 20'
         );
         console.log(`📋 Encontrados ${result.rows.length} eventos:`, result.rows.map(r => r.event_type));
@@ -117,7 +117,7 @@ export const resetPassword = async (req: Request, res: Response) => {
     try {
         const salt = await bcrypt.genSalt(10);
         const hashed = await bcrypt.hash(String(password), salt);
-        const result = await pool.query('UPDATE users SET password = $1 WHERE email = $2 RETURNING email', [hashed, email.toLowerCase()]);
+        const result = await dbManager.query('UPDATE users SET password = $1 WHERE email = $2 RETURNING email', [hashed, email.toLowerCase()]);
         if ((result.rowCount ?? 0) === 0) {
             return res.status(404).json({ message: 'Usuário não encontrado.' });
         }

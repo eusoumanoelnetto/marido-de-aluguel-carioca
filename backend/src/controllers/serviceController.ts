@@ -1,16 +1,16 @@
 import { Request, Response } from 'express';
-import pool, { isDbConnected } from '../db';
+import { dbManager } from '../db-enhanced';
 import { ServiceRequest } from '../types';
 
 export const getServiceRequests = async (req: Request, res: Response) => {
   // Smoke test: retornar lista vazia se não há conexão com o DB em desenvolvimento
-  if (!isDbConnected && process.env.NODE_ENV !== 'production') {
+  if (!dbManager.isConnected && process.env.NODE_ENV !== 'production') {
     return res.status(200).json([]);
   }
   try {
     const userEmail = (req as any).userEmail as string | undefined;
     const userRole = (req as any).userRole as string | undefined;
-    const result = await pool.query('SELECT * FROM service_requests ORDER BY "requestDate" DESC');
+    const result = await dbManager.query('SELECT * FROM service_requests ORDER BY "requestDate" DESC');
     let rows = result.rows as ServiceRequest[];
 
     if (userRole === 'provider') {
@@ -32,7 +32,7 @@ export const createServiceRequest = async (req: Request, res: Response) => {
   const { id, clientName, clientEmail, address, contact, category, description, photoBase64, status, isEmergency, requestDate } = newRequest;
 
   try {
-    const result = await pool.query(
+    const result = await dbManager.query(
       `INSERT INTO service_requests (id, "clientName", "clientEmail", address, contact, category, description, "photoBase64", status, "isEmergency", "requestDate")
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        RETURNING *`,
@@ -43,7 +43,7 @@ export const createServiceRequest = async (req: Request, res: Response) => {
     // Log event for admin notifications
     try {
       console.log('📝 Tentando registrar evento de solicitação de serviço...');
-      await pool.query(
+      await dbManager.query(
         'INSERT INTO admin_events (event_type, data, created_at) VALUES ($1, $2, NOW())',
         ['service_request', JSON.stringify({ 
           id, 
@@ -75,7 +75,7 @@ export const updateServiceRequestStatus = async (req: Request, res: Response) =>
 
   try {
     // Buscar registro atual para regras
-    const current = await pool.query('SELECT * FROM service_requests WHERE id = $1', [id]);
+    const current = await dbManager.query('SELECT * FROM service_requests WHERE id = $1', [id]);
     if (current.rowCount === 0) {
       return res.status(404).json({ message: 'Solicitação não encontrada.' });
     }
@@ -116,7 +116,7 @@ export const updateServiceRequestStatus = async (req: Request, res: Response) =>
     const nextProviderEmail = status === 'Orçamento Enviado' ? userEmail : existing.providerEmail;
     const nextQuote = status === 'Orçamento Enviado' ? quote : existing.quote;
 
-    const result = await pool.query(
+    const result = await dbManager.query(
       'UPDATE service_requests SET status = $1, quote = $2, "providerEmail" = $3 WHERE id = $4 RETURNING *',
       [status, nextQuote, nextProviderEmail, id]
     );

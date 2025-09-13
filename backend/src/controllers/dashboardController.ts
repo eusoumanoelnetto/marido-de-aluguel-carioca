@@ -1,5 +1,5 @@
 // Tipos amplos para compatibilidade com diferentes ambientes de checagem
-import pool from '../db';
+import { dbManager } from '../db-enhanced';
 
 // Retorna estatísticas para o dashboard admin
 export const getDashboardStats = async (req: any, res: any) => {
@@ -10,13 +10,13 @@ export const getDashboardStats = async (req: any, res: any) => {
 
   try {
     // Total de clientes
-    const clientes = await pool.query('SELECT COUNT(*) FROM users WHERE role = $1', ['client']);
+    const clientes = await dbManager.query('SELECT COUNT(*) FROM users WHERE role = $1', ['client']);
     // Total de prestadores
-    const prestadores = await pool.query('SELECT COUNT(*) FROM users WHERE role = $1', ['provider']);
+    const prestadores = await dbManager.query('SELECT COUNT(*) FROM users WHERE role = $1', ['provider']);
     
     // Debug completo: ver todos os dados
-    const allServices = await pool.query('SELECT id, status, "clientEmail", "providerEmail", "requestDate" FROM service_requests ORDER BY "requestDate" DESC LIMIT 20');
-    const statusDebug = await pool.query(`
+    const allServices = await dbManager.query('SELECT id, status, "clientEmail", "providerEmail", "requestDate" FROM service_requests ORDER BY "requestDate" DESC LIMIT 20');
+    const statusDebug = await dbManager.query(`
       SELECT status, COUNT(*) as count 
       FROM service_requests 
       GROUP BY status 
@@ -26,7 +26,7 @@ export const getDashboardStats = async (req: any, res: any) => {
   // Logs suprimidos para evitar ruído em produção
     
     // Serviços ativos: considerar também 'Pendente' e 'Orçamento Enviado'
-    const servicosAtivos = await pool.query(`
+    const servicosAtivos = await dbManager.query(`
       SELECT COUNT(*) FROM service_requests 
       WHERE status IN ('Em andamento', 'Aceito', 'Pendente', 'Orçamento Enviado')
       AND "providerEmail" IS NOT NULL
@@ -34,12 +34,12 @@ export const getDashboardStats = async (req: any, res: any) => {
     
     // Serviços concluídos hoje
     const hoje = new Date().toISOString().split('T')[0];
-    const servicosConcluidosHoje = await pool.query(
+    const servicosConcluidosHoje = await dbManager.query(
       `SELECT COUNT(*) FROM service_requests WHERE status = $1 AND "requestDate"::date = $2`,
       ['Concluído', hoje]
     );
     // Novos clientes cadastrados hoje (ajustado para fuso America/Sao_Paulo)
-    const newSignupsTodayRes = await pool.query(
+    const newSignupsTodayRes = await dbManager.query(
       `SELECT COUNT(*) FROM users 
        WHERE role = $1 
          AND (created_at AT TIME ZONE 'America/Sao_Paulo')::date = (NOW() AT TIME ZONE 'America/Sao_Paulo')::date`,
@@ -53,7 +53,7 @@ export const getDashboardStats = async (req: any, res: any) => {
     const todayStr = today.toISOString().split('T')[0]; // YYYY-MM-DD
     
     // Primeiro buscar todos os prestadores cadastrados hoje para diagnóstico
-    const providersToday = await pool.query(
+    const providersToday = await dbManager.query(
       `SELECT email, name, created_at, 
               (created_at AT TIME ZONE 'America/Sao_Paulo')::date as created_date,
               (NOW() AT TIME ZONE 'America/Sao_Paulo')::date as today_date
@@ -75,7 +75,7 @@ export const getDashboardStats = async (req: any, res: any) => {
                 })));
     
     // Manter contagem original mas com logging extra
-    const newProvidersTodayRes = await pool.query(
+    const newProvidersTodayRes = await dbManager.query(
       `SELECT COUNT(*) FROM users 
        WHERE role = $1 
          AND (created_at AT TIME ZONE 'America/Sao_Paulo')::date = (NOW() AT TIME ZONE 'America/Sao_Paulo')::date`,
@@ -90,23 +90,23 @@ export const getDashboardStats = async (req: any, res: any) => {
     const firstDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1))
       .toISOString()
       .split('T')[0];
-    const activeThisMonthRes = await pool.query(
+    const activeThisMonthRes = await dbManager.query(
       `SELECT COUNT(*) FROM users WHERE role = $1 AND last_login_at >= $2::date`,
       ['client', firstDay]
     );
     const activeClientsThisMonth = Number(activeThisMonthRes.rows?.[0]?.count || 0);
     // Prestadores ativos no mês (fizeram login neste mês)
-    const activeProvidersRes = await pool.query(
+    const activeProvidersRes = await dbManager.query(
       `SELECT COUNT(*) FROM users WHERE role = $1 AND last_login_at >= $2::date`,
       ['provider', firstDay]
     );
     const activeProvidersThisMonth = Number(activeProvidersRes.rows?.[0]?.count || 0);
     // Erros recentes (últimas 24h)
-    const errosRecentes = await pool.query(
+    const errosRecentes = await dbManager.query(
       `SELECT COUNT(*) FROM admin_events WHERE event_type = 'error' AND created_at >= NOW() - INTERVAL '1 day'`
     );
     // Erros críticos (últimas 24h)
-    const errosCriticos = await pool.query(
+    const errosCriticos = await dbManager.query(
       `SELECT COUNT(*) FROM admin_events WHERE event_type = 'error' AND data->>'level' = 'critical' AND created_at >= NOW() - INTERVAL '1 day'`
     );
 
@@ -172,7 +172,7 @@ export const cleanTestData = async (req: any, res: any) => {
 
   try {
     // Remover serviços sem providerEmail ou com emails de teste
-    const deletedServices = await pool.query(`
+    const deletedServices = await dbManager.query(`
       DELETE FROM service_requests 
       WHERE "clientEmail" LIKE '%test%' 
       OR "clientEmail" LIKE '%exemplo%'
@@ -183,7 +183,7 @@ export const cleanTestData = async (req: any, res: any) => {
     `);
     
     // Verificar possíveis duplicatas por email (caso tenha mais de um registro com mesmo email)
-    const duplicateCheck = await pool.query(`
+    const duplicateCheck = await dbManager.query(`
       SELECT email, COUNT(*) 
       FROM users 
       GROUP BY email 
@@ -196,7 +196,7 @@ export const cleanTestData = async (req: any, res: any) => {
       
       // Remover duplicatas mantendo apenas o registro mais recente
       for (const dup of duplicateCheck.rows) {
-        await pool.query(`
+        await dbManager.query(`
           DELETE FROM users 
           WHERE email = $1 
           AND created_at < (
@@ -207,7 +207,7 @@ export const cleanTestData = async (req: any, res: any) => {
     }
     
     // Remover usuários de teste - com critérios adicionais para cobrir mais casos
-    const deletedUsers = await pool.query(`
+    const deletedUsers = await dbManager.query(`
       DELETE FROM users 
       WHERE email LIKE '%test%' 
       OR email LIKE '%exemplo%'
