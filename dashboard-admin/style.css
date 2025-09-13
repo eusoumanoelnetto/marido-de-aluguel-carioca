@@ -32,6 +32,8 @@
             --blue: #3498db;
             --orange: #f39c12;
             --red: #e74c3c;
+            --purple: #8e44ad;
+            --gray: #6c757d;
             --nav-btn-bg: rgba(255, 255, 255, 0.1);
             --nav-btn-hover: rgba(255, 255, 255, 0.2);
             --nav-btn-active: #ffffff;
@@ -112,16 +114,87 @@
             flex-grow: 1;
             padding: 40px;
             overflow-y: auto;
+            min-height: 0; /* Permite que o flex funcione corretamente */
         }
 
-        .page { display: none; }
-        .page.active { display: block; }
+        .page { 
+            display: none; 
+            min-height: 100%;
+        }
+        .page.active { 
+            display: block; 
+        }
         
         .card {
             background: var(--card-bg);
             border-radius: 12px;
             padding: 24px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px; /* Espaçamento entre cards */
+        }
+
+        /* Estilos específicos para botões */
+        button {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 1;
+            position: relative;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        /* Garantir que os formulários tenham espaçamento adequado */
+        form {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Estilos específicos para a página de notificações */
+        #notificacoes {
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+        }
+
+        #notificacoes .card {
+            flex-shrink: 0;
+        }
+
+        /* Estilos para campos de formulário */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group select,
+        .form-group input,
+        .form-group textarea {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 14px;
+            width: 100%;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group select:focus,
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--blue);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        /* Garantir que os botões de ação sempre fiquem visíveis */
+        .form-group:last-child {
+            margin-bottom: 0;
+            padding-bottom: 20px;
         }
 
         /* =================================
@@ -249,7 +322,38 @@
         /* --- Gerenciar --- */
         .manage-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
         .search-filter input { width: 100%; padding: 12px 16px; border: 1px solid #bdc3c7; border-radius: 8px; }
-        .user-list { display: flex; flex-direction: column; gap: 12px; max-height: 400px; overflow-y: auto; }
+        .user-list { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 12px; 
+            max-height: 400px; 
+            overflow-y: auto; 
+        }
+
+        /* Estilos para área de histórico de notificações */
+        #notifications-history {
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+
+        #notifications-history::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #notifications-history::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        #notifications-history::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+        }
+
+        #notifications-history::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
         .user-item { display: flex; align-items: center; gap: 16px; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; }
         .user-tag { font-size: 0.75rem; font-weight: 600; padding: 4px 10px; border-radius: 12px; color: #fff; }
         .tag-cliente { background-color: var(--blue); } .tag-prestador { background-color: var(--green); }
