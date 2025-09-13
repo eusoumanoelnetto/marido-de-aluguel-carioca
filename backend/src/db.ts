@@ -230,6 +230,19 @@ export const initDb = async () => {
       );
     `);
 
+    await pgPool.query(`
+      CREATE TABLE IF NOT EXISTS messages (
+        id VARCHAR(255) PRIMARY KEY,
+        from_admin BOOLEAN DEFAULT TRUE,
+        to_user_email VARCHAR(255) NOT NULL,
+        title VARCHAR(255) NOT NULL,
+        message TEXT NOT NULL,
+        is_urgent BOOLEAN DEFAULT FALSE,
+        is_read BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+
   // Garantir colunas novas em bases já existentes
   await pgPool.query('ALTER TABLE service_requests ADD COLUMN IF NOT EXISTS "clientEmail" VARCHAR(255)');
   await pgPool.query('ALTER TABLE service_requests ADD COLUMN IF NOT EXISTS "providerEmail" VARCHAR(255)');

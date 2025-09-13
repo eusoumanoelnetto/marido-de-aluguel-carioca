@@ -1506,11 +1506,74 @@
           return;
         }
 
-        // Aqui você pode implementar a lógica para salvar mensagens PV
-        // Por exemplo, enviando para o backend via API
-        console.log('Mensagem PV enviada:', notification);
+        // Preparar dados para envio
+        const messageData = {
+          toUserEmail: notification.specificUser || null,
+          title: notification.title,
+          message: notification.message,
+          isUrgent: notification.isUrgent || false
+        };
+
+        // Se for para grupo, enviar para múltiplos usuários
+        if (notification.target === 'clients' || notification.target === 'providers') {
+          // Buscar lista de usuários do tipo especificado
+          const userType = notification.target === 'clients' ? 'client' : 'provider';
+          try {
+            const usersRes = await fetch(`${API}/api/users`, { 
+              headers: { 'X-Admin-Key': ADMIN_KEY }
+            });
+            
+            if (usersRes.ok) {
+              const usersData = await usersRes.json();
+              const targetUsers = usersData.users.filter(user => user.role === userType);
+              
+              // Enviar mensagem para cada usuário do grupo
+              const sendPromises = targetUsers.map(user => 
+                fetch(`${API}/api/messages/send`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'X-Admin-Key': ADMIN_KEY
+                  },
+                  body: JSON.stringify({
+                    ...messageData,
+                    toUserEmail: user.email
+                  })
+                })
+              );
+              
+              await Promise.all(sendPromises);
+              console.log(`Mensagem PV enviada para ${targetUsers.length} ${userType}s`);
+            }
+          } catch (error) {
+            console.error('Erro ao buscar usuários para grupo:', error);
+            throw error;
+          }
+        } else if (notification.specificUser) {
+          // Enviar para usuário específico
+          const response = await fetch(`${API}/api/messages/send`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Admin-Key': ADMIN_KEY
+            },
+            body: JSON.stringify(messageData)
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Erro ao enviar mensagem');
+          }
+
+          const result = await response.json();
+          console.log('Mensagem PV enviada com sucesso:', result);
+        } else {
+          throw new Error('Destinatário não especificado para mensagem PV');
+        }
+
       } catch (error) {
         console.error('Erro ao salvar mensagem PV:', error);
+        throw error; // Re-lançar para que o UI possa mostrar o erro
       }
     }
 

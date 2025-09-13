@@ -46,3 +46,14 @@ export interface SignUpData {
   password?: string;
   services?: string[];
 }
+
+export interface Message {
+  id: string;
+  from_admin: boolean;
+  to_user_email: string;
+  title: string;
+  message: string;
+  is_urgent: boolean;
+  is_read: boolean;
+  created_at: string;
+}

@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { ServiceRequest, ServiceCategory, User } from '../types';
+import * as React from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { ServiceRequest, ServiceCategory, User, Message } from '../types';
 import { HammerIcon, WrenchIcon, ZapIcon, DropletsIcon, PaintBucketIcon, HouseIcon, MonitorIcon, CctvIcon } from '../components/Icons';
 import InlineAnnouncements from '../components/InlineAnnouncements';
 
@@ -236,21 +237,140 @@ const ProfileView: React.FC<{ setView: (view: ClientView) => void; onLogout: () 
     );
 };
 
-const MessagesView: React.FC<{ setView: (view: ClientView) => void }> = ({ setView }) => (
-    <main className="max-w-[1200px] mx-auto p-5">
-        <PageHeader onBack={() => setView('dashboard')}>
-            <h1 className="text-xl font-semibold text-brand-navy">Mensagens</h1>
-        </PageHeader>
-        <div className="max-w-3xl mx-auto bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-            <h2 className="text-2xl font-semibold mb-5 text-brand-navy">Suas Conversas</h2>
-            <div className="space-y-3">
-                 <div className="text-center py-10 text-gray-500">
-                    <p>Nenhuma conversa encontrada.</p>
-                </div>
+const MessagesView = ({ setView }) => {
+    const [messages, setMessages] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        const fetchMessages = async () => {
+            try {
+                setLoading(true);
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    setError('Usuário não autenticado');
+                    return;
+                }
+
+                const response = await fetch('/api/messages/user', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Erro ao buscar mensagens');
+                }
+
+                const data = await response.json();
+                setMessages(data.messages || []);
+            } catch (err: any) {
+                setError(err.message || 'Erro ao carregar mensagens');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchMessages();
+    }, []);
+
+    const markAsRead = async (messageId: string) => {
+        try {
+            const token = localStorage.getItem('token');
+            await fetch(`/api/messages/${messageId}/read`, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            
+            // Atualizar localmente
+            setMessages(prev => prev.map(msg => 
+                msg.id === messageId ? { ...msg, is_read: true } : msg
+            ));
+        } catch (err) {
+            console.error('Erro ao marcar mensagem como lida:', err);
+        }
+    };
+
+    const formatDate = (dateString: string) => {
+        return new Date(dateString).toLocaleDateString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    };
+
+    return (
+        <main className="max-w-[1200px] mx-auto p-5">
+            <PageHeader onBack={() => setView('dashboard')}>
+                <h1 className="text-xl font-semibold text-brand-navy">Mensagens</h1>
+            </PageHeader>
+            <div className="max-w-3xl mx-auto bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+                <h2 className="text-2xl font-semibold mb-5 text-brand-navy">Suas Conversas</h2>
+                
+                {loading && (
+                    <div className="text-center py-10">
+                        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-brand-red"></div>
+                        <p className="mt-2 text-gray-500">Carregando mensagens...</p>
+                    </div>
+                )}
+
+                {error && (
+                    <div className="text-center py-10 text-red-500">
+                        <p>Erro: {error}</p>
+                    </div>
+                )}
+
+                {!loading && !error && messages.length === 0 && (
+                    <div className="text-center py-10 text-gray-500">
+                        <div className="text-4xl mb-4">💬</div>
+                        <p>Nenhuma mensagem encontrada.</p>
+                    </div>
+                )}
+
+                {!loading && !error && messages.length > 0 && (
+                    <div className="space-y-3">
+                        {messages.map((message) => (
+                            <div 
+                                key={message.id}
+                                className={`p-4 rounded-lg border cursor-pointer transition-all ${
+                                    message.is_read 
+                                        ? 'bg-gray-50 border-gray-200' 
+                                        : 'bg-blue-50 border-blue-200 shadow-sm'
+                                }`}
+                                onClick={() => markAsRead(message.id)}
+                            >
+                                <div className="flex justify-between items-start mb-2">
+                                    <h3 className={`font-semibold text-lg ${
+                                        message.is_urgent ? 'text-red-600' : 'text-brand-navy'
+                                    }`}>
+                                        {message.is_urgent && '🚨 '}
+                                        {message.title}
+                                        {!message.is_read && <span className="ml-2 text-blue-600 text-sm">● Novo</span>}
+                                    </h3>
+                                    <span className="text-sm text-gray-500">
+                                        {formatDate(message.created_at)}
+                                    </span>
+                                </div>
+                                <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">
+                                    {message.message}
+                                </p>
+                                {message.is_urgent && (
+                                    <div className="mt-2 text-sm text-red-600 font-medium">
+                                        ⚡ Mensagem urgente
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
-        </div>
-    </main>
-);
+        </main>
+    );
+};
 
 const RequestQuoteStep1View: React.FC<{ setView: (view: ClientView) => void }> = ({ setView }) => (
     <main className="max-w-[1200px] mx-auto p-5">

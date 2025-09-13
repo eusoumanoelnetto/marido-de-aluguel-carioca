@@ -6,7 +6,8 @@ import authRoutes from './routes/authRoutes';
 import serviceRoutes from './routes/serviceRoutes';
 import userRoutes from './routes/userRoutes';
 import dashboardRoutes from './routes/dashboardRoutes';
-import { initDb, isDbConnected } from './db';
+import messageRoutes from './routes/messageRoutes';
+import { dbManager } from './db-enhanced';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -55,7 +56,7 @@ app.use(express.json({ limit: '10mb' })); // To parse JSON bodies (and increase 
 // Middleware to check for DB connection before handling API requests
 const checkDbConnection = (req: Request, res: Response, next: NextFunction) => {
   const isProd = process.env.NODE_ENV === 'production';
-  if (!isDbConnected && isProd) {
+  if (!dbManager.isConnected && isProd && dbManager.dbType === 'memory') {
     return res.status(503).json({
       message: 'Serviço indisponível. O servidor não conseguiu se conectar ao banco de dados.'
     });
@@ -70,6 +71,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/requests', serviceRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', dashboardRoutes); // Nova rota para dashboard admin
+app.use('/api/messages', messageRoutes); // Rotas para sistema de mensagens
 
 
 // Sempre que existir build em ../../dist servimos o front; se não existir, mostra health simples
@@ -113,23 +115,40 @@ app.use('/api/admin', dashboardRoutes); // Nova rota para dashboard admin
 
 // Function to start the Express server
 export const startServer = () => {
-  return app.listen(PORT, () => {
-        if (isDbConnected) {
-            console.log(`🚀 Server is running on http://localhost:${PORT}`);
-        } else {
-            console.warn(`⚠️  Server started without DB connection on http://localhost:${PORT}`);
-        }
-    });
+  console.log(`🔧 Tentando iniciar servidor na porta ${PORT}...`);
+  const port = typeof PORT === 'string' ? parseInt(PORT) : PORT;
+  
+  const server = app.listen(port, () => {
+    if (dbManager.isConnected) {
+      console.log(`🚀 Server is running on http://localhost:${port} (${dbManager.dbType})`);
+    } else {
+      console.warn(`⚠️  Server started without DB connection on http://localhost:${port}`);
+    }
+  });
+
+  server.on('error', (error: any) => {
+    console.error('❌ Erro ao iniciar servidor:', error);
+    if (error.code === 'EADDRINUSE') {
+      console.error(`Porta ${port} já está em uso`);
+    }
+  });
+
+  return server;
 }
 
 // Initialize the database and then start the server
+console.log('🔍 Verificando inicialização...', process.env.JEST_WORKER_ID);
 if (process.env.JEST_WORKER_ID === undefined) {
-  initDb()
+  console.log('🔄 Iniciando conexão com banco...');
+  dbManager.connect()
     .catch(error => {
       console.error('Failed to initialize database:', error.message);
-      console.warn('Continuando sem conexão com o banco. Algumas rotas podem falhar até que DATABASE_URL seja corrigida.');
+      console.warn('Continuando sem conexão com o banco. Usando armazenamento em memória.');
     })
     .finally(() => {
+      console.log('🚀 Chamando startServer...');
       startServer();
     });
+} else {
+  console.log('🧪 Ambiente de teste detectado, não iniciando servidor');
 }
