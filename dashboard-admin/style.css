@@ -175,8 +175,7 @@
         /* Garantir que os elementos de notificação só apareçam na página correta */
         .page:not(.active) #notification-form,
         .page:not(.active) #auto-notification-settings,
-        .page:not(.active) #notifications-history,
-        .page:not(.active) .card {
+        .page:not(.active) #notifications-history {
             display: none !important;
             visibility: hidden !important;
         }

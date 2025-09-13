@@ -167,19 +167,23 @@
 
   // Função para limpar visibilidade de elementos de notificação
   function hideNotificationElements() {
-    const notificationElements = [
-      'notification-form',
-      'auto-notification-settings', 
-      'notifications-history'
-    ];
-    
-    notificationElements.forEach(id => {
-      const element = document.getElementById(id);
-      if (element) {
-        element.style.display = 'none';
-        element.style.visibility = 'hidden';
-      }
-    });
+    try {
+      const notificationElements = [
+        'notification-form',
+        'auto-notification-settings', 
+        'notifications-history'
+      ];
+      
+      notificationElements.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+          element.style.display = 'none';
+          element.style.visibility = 'hidden';
+        }
+      });
+    } catch (error) {
+      console.warn('Erro ao ocultar elementos de notificação:', error);
+    }
   }
 
   // Função para mostrar elementos de notificação apenas na página correta
