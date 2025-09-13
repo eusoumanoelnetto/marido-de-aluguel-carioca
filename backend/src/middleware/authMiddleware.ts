@@ -79,3 +79,50 @@ export const adminAccess = (req: Request, res: Response, next: NextFunction) => 
   }
   return res.status(403).json({ message: 'Acesso admin negado.' });
 };
+
+// Middleware para verificar se o usuário é um provider (prestador)
+export const providerAccess = async (req: Request, res: Response, next: NextFunction) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ message: 'Token ausente ou inválido.' });
+  }
+
+  const token = authHeader.split(' ')[1];
+  try {
+    const secret = process.env.JWT_SECRET || 'dev_secret';
+    const payload = jwt.verify(token, secret) as JwtPayload;
+    
+    const userEmail = payload.userEmail || payload.email;
+    const userRole = payload.userRole || payload.role;
+    
+    // Verificar se é provider
+    if (userRole !== 'provider') {
+      return res.status(403).json({ message: 'Acesso restrito a prestadores de serviço.' });
+    }
+    
+    if (dbManager.isConnected) {
+      // Verificar se provider existe e está ativo
+      const providerResult = await dbManager.query(
+        'SELECT 1 FROM users WHERE email = ? AND role = ?', 
+        [userEmail, 'provider']
+      );
+      
+      if (!providerResult.rowCount) {
+        return res.status(403).json({ message: 'Provider não encontrado ou inativo.' });
+      }
+    } else {
+      // Modo teste - permitir provider@teste.com
+      if (userEmail !== 'provider@teste.com') {
+        return res.status(403).json({ message: 'Provider não autorizado no modo teste.' });
+      }
+    }
+    
+    (req as any).userEmail = userEmail;
+    (req as any).userRole = userRole;
+    (req as any).user = { email: userEmail, role: userRole };
+    next();
+    
+  } catch (err) {
+    return res.status(401).json({ message: 'Token inválido.' });
+  }
+};

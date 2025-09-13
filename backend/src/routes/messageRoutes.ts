@@ -1,5 +1,5 @@
 import express from 'express';
-import { authenticate, adminAccess } from '../middleware/authMiddleware';
+import { authenticate, adminAccess, providerAccess } from '../middleware/authMiddleware';
 import { 
   sendMessage, 
   sendMessageToAdmin,
@@ -7,7 +7,10 @@ import {
   getMessagesForAdmin,
   markMessageAsRead, 
   getMessageStats,
-  getTestToken
+  getTestToken,
+  sendProviderMessage,
+  getProviderMessages,
+  replyToClient
 } from '../controllers/messageController';
 
 const router = express.Router();
@@ -33,5 +36,16 @@ router.get('/stats', adminAccess, getMessageStats);
 
 // Rota de teste para obter token (apenas desenvolvimento)
 router.get('/test-token', getTestToken);
+
+// === ROTAS ESPECÍFICAS PARA PROVIDERS ===
+
+// Provider envia mensagem para cliente
+router.post('/provider/send', providerAccess, sendProviderMessage);
+
+// Provider busca suas mensagens (enviadas e recebidas)
+router.get('/provider', providerAccess, getProviderMessages);
+
+// Provider responde mensagem de cliente
+router.post('/provider/reply', providerAccess, replyToClient);
 
 export default router;

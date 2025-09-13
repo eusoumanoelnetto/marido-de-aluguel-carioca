@@ -2,17 +2,27 @@ import express, { Express, Request, Response, NextFunction } from 'express';
 import path from 'path';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { createServer } from 'http';
 import authRoutes from './routes/authRoutes';
 import serviceRoutes from './routes/serviceRoutes';
 import userRoutes from './routes/userRoutes';
 import dashboardRoutes from './routes/dashboardRoutes';
 import messageRoutes from './routes/messageRoutes';
+import adminRoutes from './routes/adminRoutes';
 import { dbManager } from './db-enhanced';
+import { WebSocketService } from './services/websocketService';
+import { setWebSocketService } from './controllers/messageController';
 
 // Load environment variables from .env file
 dotenv.config();
 
 export const app: Express = express();
+const httpServer = createServer(app);
+export const webSocketService = new WebSocketService(httpServer);
+
+// Configurar referência do WebSocket service no controller
+setWebSocketService(webSocketService);
+
 const PORT = process.env.PORT || 3001;
 const IS_PROD = process.env.NODE_ENV === 'production';
 if (IS_PROD && (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'dev_secret')) {
@@ -72,6 +82,7 @@ app.use('/api/requests', serviceRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', dashboardRoutes); // Nova rota para dashboard admin
 app.use('/api/messages', messageRoutes); // Rotas para sistema de mensagens
+app.use('/api/admin-panel', adminRoutes); // Rotas para painel administrativo
 
 
 // Sempre que existir build em ../../dist servimos o front; se não existir, mostra health simples
@@ -118,11 +129,13 @@ export const startServer = () => {
   console.log(`🔧 Tentando iniciar servidor na porta ${PORT}...`);
   const port = typeof PORT === 'string' ? parseInt(PORT) : PORT;
   
-  const server = app.listen(port, () => {
+  const server = httpServer.listen(port, () => {
     if (dbManager.isConnected) {
       console.log(`🚀 Server is running on http://localhost:${port} (${dbManager.dbType})`);
+      console.log(`🔌 WebSocket server ready for connections`);
     } else {
       console.warn(`⚠️  Server started without DB connection on http://localhost:${port}`);
+      console.log(`🔌 WebSocket server ready for connections`);
     }
   });
 
