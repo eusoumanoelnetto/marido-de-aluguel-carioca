@@ -165,6 +165,45 @@
     });
   }
 
+  // Função para limpar visibilidade de elementos de notificação
+  function hideNotificationElements() {
+    const notificationElements = [
+      'notification-form',
+      'auto-notification-settings', 
+      'notifications-history'
+    ];
+    
+    notificationElements.forEach(id => {
+      const element = document.getElementById(id);
+      if (element) {
+        element.style.display = 'none';
+        element.style.visibility = 'hidden';
+      }
+    });
+  }
+
+  // Função para mostrar elementos de notificação apenas na página correta
+  function showNotificationElements() {
+    const notificationForm = document.getElementById('notification-form');
+    const autoSettings = document.getElementById('auto-notification-settings');
+    const history = document.getElementById('notifications-history');
+    
+    if (notificationForm) {
+      notificationForm.style.display = 'flex';
+      notificationForm.style.visibility = 'visible';
+    }
+    if (autoSettings) {
+      // Manter estado anterior se estava visível
+      const wasVisible = autoSettings.style.display === 'block';
+      autoSettings.style.display = wasVisible ? 'block' : 'none';
+      autoSettings.style.visibility = 'visible';
+    }
+    if (history) {
+      history.style.display = 'block';
+      history.style.visibility = 'visible';
+    }
+  }
+
   // Função para exibir modal de usuário (view/edit)
   function showUserModal(user, editMode) {
     // Fechar todos os modais antes de abrir o novo
@@ -869,9 +908,25 @@
           navLinks.forEach(nav => nav.classList.remove('active'));
           link.classList.add('active');
           const targetPageId = link.getAttribute('data-target');
+          
+          // Primeiro, ocultar elementos de notificação em todas as páginas
+          hideNotificationElements();
+          
+          // Remover classe active de todas as páginas
           pages.forEach(page => {
-            page.classList.toggle('active', page.id === targetPageId);
+            page.classList.remove('active');
           });
+          
+          // Adicionar classe active apenas à página alvo
+          const targetPage = document.getElementById(targetPageId);
+          if (targetPage) {
+            targetPage.classList.add('active');
+            
+            // Se for a página de notificações, mostrar os elementos
+            if (targetPageId === 'notificacoes') {
+              showNotificationElements();
+            }
+          }
           
           // Carregar dados específicos da página
           if (targetPageId === 'erros') {
@@ -1026,6 +1081,9 @@
       });
 
       // inicialização do dashboard (logs reduzidos)
+      
+      // Ocultar elementos de notificação por padrão
+      hideNotificationElements();
       
       fetchUsers();
       fetchAdminEvents(); // Also fetch recent events

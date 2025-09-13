@@ -118,11 +118,16 @@
         }
 
         .page { 
-            display: none; 
+            display: none !important; 
             min-height: 100%;
+            opacity: 0;
+            visibility: hidden;
+            position: relative;
         }
         .page.active { 
-            display: block; 
+            display: block !important; 
+            opacity: 1;
+            visibility: visible;
         }
         
         .card {
@@ -165,6 +170,29 @@
 
         #notificacoes .card {
             flex-shrink: 0;
+        }
+
+        /* Garantir que os elementos de notificação só apareçam na página correta */
+        .page:not(.active) #notification-form,
+        .page:not(.active) #auto-notification-settings,
+        .page:not(.active) #notifications-history,
+        .page:not(.active) .card {
+            display: none !important;
+            visibility: hidden !important;
+        }
+
+        #notificacoes.active #notification-form {
+            display: flex !important;
+            flex-direction: column;
+        }
+
+        #notificacoes.active #auto-notification-settings,
+        #notificacoes.active #notifications-history {
+            display: block !important;
+        }
+
+        #notificacoes.active .card {
+            display: block !important;
         }
 
         /* Estilos para campos de formulário */
