@@ -175,36 +175,43 @@
       ];
       
       notificationElements.forEach(id => {
-        const element = document.getElementById(id);
-        if (element) {
-          element.style.display = 'none';
-          element.style.visibility = 'hidden';
+        try {
+          const element = document.getElementById(id);
+          if (element && element.style) {
+            element.style.display = 'none';
+            element.style.visibility = 'hidden';
+          }
+        } catch (elementError) {
+          // Silenciar erro individual do elemento
         }
       });
     } catch (error) {
-      console.warn('Erro ao ocultar elementos de notificação:', error);
+      // Silenciar erro geral - função defensiva
     }
   }
 
   // Função para mostrar elementos de notificação apenas na página correta
   function showNotificationElements() {
-    const notificationForm = document.getElementById('notification-form');
-    const autoSettings = document.getElementById('auto-notification-settings');
-    const history = document.getElementById('notifications-history');
-    
-    if (notificationForm) {
-      notificationForm.style.display = 'flex';
-      notificationForm.style.visibility = 'visible';
-    }
-    if (autoSettings) {
-      // Manter estado anterior se estava visível
-      const wasVisible = autoSettings.style.display === 'block';
-      autoSettings.style.display = wasVisible ? 'block' : 'none';
-      autoSettings.style.visibility = 'visible';
-    }
-    if (history) {
-      history.style.display = 'block';
-      history.style.visibility = 'visible';
+    try {
+      const elements = [
+        { id: 'notification-form', display: 'flex' },
+        { id: 'auto-notification-settings', display: 'block' },
+        { id: 'notifications-history', display: 'block' }
+      ];
+      
+      elements.forEach(({ id, display }) => {
+        try {
+          const element = document.getElementById(id);
+          if (element && element.style) {
+            element.style.display = display;
+            element.style.visibility = 'visible';
+          }
+        } catch (elementError) {
+          // Silenciar erro individual do elemento
+        }
+      });
+    } catch (error) {
+      // Silenciar erro geral - função defensiva
     }
   }
 
