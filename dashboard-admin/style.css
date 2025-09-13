@@ -197,6 +197,85 @@
             padding-bottom: 20px;
         }
 
+        /* Estilos para notificações automáticas */
+        .auto-rule-card {
+            transition: all 0.3s ease;
+        }
+
+        .auto-rule-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .auto-rule-card input[type="checkbox"]:checked + div h5 {
+            color: var(--green) !important;
+        }
+
+        .rule-config {
+            animation: slideDown 0.3s ease-out;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(0,0,0,0.1);
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .rule-config textarea {
+            resize: vertical;
+            font-family: inherit;
+            transition: border-color 0.3s ease;
+        }
+
+        .rule-config textarea:focus {
+            border-color: var(--blue);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+
+        /* Indicadores de status das regras */
+        .auto-rule-card input[type="checkbox"]:checked::before {
+            content: "✓";
+            position: absolute;
+            color: var(--green);
+            font-weight: bold;
+        }
+
+        /* Configurações globais */
+        #auto-notification-settings {
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsividade para cards de regras */
+        @media (max-width: 768px) {
+            #auto-notification-settings .grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .auto-rule-card {
+                margin-bottom: 16px;
+            }
+        }
+
         /* =================================
            3. ESTILOS DAS PÁGINAS E COMPONENTES
            ================================= */

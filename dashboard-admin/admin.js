@@ -1150,6 +1150,9 @@
       // Modal de preview
       setupNotificationPreviewModal();
       
+      // Inicializar notificações automáticas
+      initializeAutoNotifications();
+      
       // Carregar histórico inicial
       loadNotificationsHistory();
     }
@@ -1587,6 +1590,291 @@
           </div>
         `;
       }
+    }
+
+    // SISTEMA DE NOTIFICAÇÕES AUTOMÁTICAS
+    // ========================================
+    
+    function initializeAutoNotifications() {
+      const toggleBtn = document.getElementById('toggle-auto-notifications');
+      const settingsDiv = document.getElementById('auto-notification-settings');
+      const cancelBtn = document.getElementById('cancel-auto-config');
+      const saveBtn = document.getElementById('save-auto-config');
+      
+      // Toggle da configuração
+      if (toggleBtn) {
+        addTouchFriendlyEvent(toggleBtn, () => {
+          const isVisible = settingsDiv.style.display !== 'none';
+          settingsDiv.style.display = isVisible ? 'none' : 'block';
+          toggleBtn.innerHTML = isVisible ? '<i class="fas fa-cog"></i> Configurar' : '<i class="fas fa-times"></i> Fechar';
+          
+          if (!isVisible) {
+            loadAutoNotificationSettings();
+          }
+        });
+      }
+
+      // Controle dos checkboxes das regras
+      const ruleCards = document.querySelectorAll('.auto-rule-card');
+      ruleCards.forEach(card => {
+        const checkbox = card.querySelector('input[type="checkbox"]');
+        const config = card.querySelector('.rule-config');
+        
+        if (checkbox && config) {
+          checkbox.addEventListener('change', () => {
+            config.style.display = checkbox.checked ? 'block' : 'none';
+          });
+        }
+      });
+
+      // Botão cancelar
+      if (cancelBtn) {
+        addTouchFriendlyEvent(cancelBtn, () => {
+          settingsDiv.style.display = 'none';
+          toggleBtn.innerHTML = '<i class="fas fa-cog"></i> Configurar';
+        });
+      }
+
+      // Botão salvar
+      if (saveBtn) {
+        addTouchFriendlyEvent(saveBtn, () => {
+          saveAutoNotificationSettings();
+        });
+      }
+    }
+
+    function loadAutoNotificationSettings() {
+      try {
+        const settings = JSON.parse(localStorage.getItem('auto_notification_settings') || '{}');
+        
+        // Carregar configurações de cada regra
+        const rules = ['bugfix', 'visual', 'internal', 'feature', 'layout', 'service'];
+        rules.forEach(rule => {
+          const checkbox = document.getElementById(`rule-${rule}`);
+          const textarea = document.querySelector(`#rule-${rule}`).closest('.auto-rule-card').querySelector('textarea');
+          const urgentCheckbox = document.getElementById(`${rule}-urgent`);
+          
+          if (settings[rule]) {
+            if (checkbox) checkbox.checked = settings[rule].enabled || false;
+            if (textarea) textarea.value = settings[rule].template || '';
+            if (urgentCheckbox) urgentCheckbox.checked = settings[rule].urgent || false;
+            
+            // Mostrar configuração se habilitado
+            const config = checkbox?.closest('.auto-rule-card').querySelector('.rule-config');
+            if (config && checkbox?.checked) {
+              config.style.display = 'block';
+            }
+          }
+        });
+
+        // Carregar configurações globais
+        const frequencySelect = document.getElementById('auto-frequency');
+        const targetSelect = document.getElementById('auto-target');
+        const enabledCheckbox = document.getElementById('auto-enabled');
+        
+        if (frequencySelect) frequencySelect.value = settings.frequency || 'daily';
+        if (targetSelect) targetSelect.value = settings.target || 'all';
+        if (enabledCheckbox) enabledCheckbox.checked = settings.enabled || false;
+
+      } catch (error) {
+        console.error('Erro ao carregar configurações automáticas:', error);
+      }
+    }
+
+    function saveAutoNotificationSettings() {
+      try {
+        const settings = {
+          enabled: document.getElementById('auto-enabled')?.checked || false,
+          frequency: document.getElementById('auto-frequency')?.value || 'daily',
+          target: document.getElementById('auto-target')?.value || 'all'
+        };
+
+        // Salvar configurações de cada regra
+        const rules = ['bugfix', 'visual', 'internal', 'feature', 'layout', 'service'];
+        rules.forEach(rule => {
+          const checkbox = document.getElementById(`rule-${rule}`);
+          const textarea = document.querySelector(`#rule-${rule}`).closest('.auto-rule-card').querySelector('textarea');
+          const urgentCheckbox = document.getElementById(`${rule}-urgent`);
+          
+          settings[rule] = {
+            enabled: checkbox?.checked || false,
+            template: textarea?.value || '',
+            urgent: urgentCheckbox?.checked || false
+          };
+        });
+
+        localStorage.setItem('auto_notification_settings', JSON.stringify(settings));
+        
+        // Fechar configurações
+        document.getElementById('auto-notification-settings').style.display = 'none';
+        document.getElementById('toggle-auto-notifications').innerHTML = '<i class="fas fa-cog"></i> Configurar';
+        
+        alert('✅ Configurações de notificações automáticas salvas com sucesso!');
+        
+        // Inicializar monitoramento se habilitado
+        if (settings.enabled) {
+          initializeAutoNotificationMonitoring();
+        }
+
+      } catch (error) {
+        console.error('Erro ao salvar configurações automáticas:', error);
+        alert('❌ Erro ao salvar configurações. Tente novamente.');
+      }
+    }
+
+    // SISTEMA DE MONITORAMENTO E DISPARO AUTOMÁTICO
+    // ========================================
+    
+    function initializeAutoNotificationMonitoring() {
+      // Verificar se já existe um intervalo ativo
+      if (window.autoNotificationInterval) {
+        clearInterval(window.autoNotificationInterval);
+      }
+
+      const settings = JSON.parse(localStorage.getItem('auto_notification_settings') || '{}');
+      if (!settings.enabled) return;
+
+      // Verificar atualizações a cada 5 minutos
+      window.autoNotificationInterval = setInterval(() => {
+        checkForUpdatesAndNotify();
+      }, 5 * 60 * 1000);
+
+      console.log('🤖 Sistema de notificações automáticas ativado');
+    }
+
+    async function checkForUpdatesAndNotify() {
+      try {
+        const settings = JSON.parse(localStorage.getItem('auto_notification_settings') || '{}');
+        if (!settings.enabled) return;
+
+        // Simular verificação de atualizações (na implementação real, isso viria de uma API)
+        const updates = await detectSystemUpdates();
+        
+        for (const update of updates) {
+          if (shouldSendNotification(update, settings)) {
+            await sendAutoNotification(update, settings);
+          }
+        }
+
+      } catch (error) {
+        console.error('Erro no monitoramento automático:', error);
+      }
+    }
+
+    async function detectSystemUpdates() {
+      // Esta função seria substituída por uma integração real com o sistema
+      // Por agora, simula detecção de atualizações
+      
+      const lastCheck = localStorage.getItem('last_update_check') || '0';
+      const now = Date.now();
+      
+      // Simular atualizações apenas para demonstração
+      const simulatedUpdates = [];
+      
+      // Verificar se passou tempo suficiente desde a última verificação
+      if (now - parseInt(lastCheck) > 24 * 60 * 60 * 1000) { // 24 horas
+        // Aqui você implementaria a lógica real de detecção
+        // Por exemplo, verificar logs, commits, mudanças na base de dados, etc.
+        
+        localStorage.setItem('last_update_check', now.toString());
+      }
+      
+      return simulatedUpdates;
+    }
+
+    function shouldSendNotification(update, settings) {
+      const rule = settings[update.type];
+      if (!rule || !rule.enabled) return false;
+
+      // Verificar frequência
+      const lastSent = localStorage.getItem(`last_auto_notification_${update.type}`) || '0';
+      const now = Date.now();
+      const timeDiff = now - parseInt(lastSent);
+
+      switch (settings.frequency) {
+        case 'immediate':
+          return true;
+        case 'daily':
+          return timeDiff > 24 * 60 * 60 * 1000;
+        case 'weekly':
+          return timeDiff > 7 * 24 * 60 * 60 * 1000;
+        default:
+          return false;
+      }
+    }
+
+    async function sendAutoNotification(update, settings) {
+      try {
+        const rule = settings[update.type];
+        const template = rule.template || getDefaultTemplate(update.type);
+        
+        const notification = {
+          id: Date.now().toString(),
+          type: 'atualizacao',
+          title: 'Atualização',
+          message: template.replace('[descrição]', update.description)
+                          .replace('[área]', update.area)
+                          .replace('[nome da função]', update.feature)
+                          .replace('[nome do serviço]', update.service),
+          target: settings.target,
+          isUrgent: rule.urgent || false,
+          date: new Date().toISOString(),
+          sent: true,
+          isAutomatic: true,
+          updateType: update.type
+        };
+
+        // Salvar como notificação normal
+        await saveNotificationToAnnouncements(notification);
+        saveNotificationToHistory(notification);
+
+        // Marcar como enviado
+        localStorage.setItem(`last_auto_notification_${update.type}`, Date.now().toString());
+        
+        console.log(`🤖 Notificação automática enviada: ${update.type}`);
+
+      } catch (error) {
+        console.error('Erro ao enviar notificação automática:', error);
+      }
+    }
+
+    function getDefaultTemplate(type) {
+      const templates = {
+        bugfix: 'Corrigimos um problema que estava afetando o sistema. Agora tudo está funcionando perfeitamente!',
+        visual: 'Atualizamos o visual do sistema para uma experiência mais moderna e intuitiva!',
+        internal: 'Melhoramos a velocidade e estabilidade do sistema para uma experiência ainda melhor!',
+        feature: 'Nova funcionalidade disponível! Confira as novidades no seu painel.',
+        layout: 'Reorganizamos o layout para facilitar o uso e melhorar sua navegação!',
+        service: 'Novo serviço disponível! Solicite agora mesmo através do seu painel.'
+      };
+      
+      return templates[type] || 'Sistema atualizado com melhorias!';
+    }
+
+    // FUNÇÃO PÚBLICA PARA DISPARAR NOTIFICAÇÕES AUTOMÁTICAS
+    // ========================================
+    
+    function triggerAutoNotification(type, details = {}) {
+      const settings = JSON.parse(localStorage.getItem('auto_notification_settings') || '{}');
+      if (!settings.enabled || !settings[type]?.enabled) return;
+
+      const update = {
+        type: type,
+        description: details.description || '',
+        area: details.area || '',
+        feature: details.feature || '',
+        service: details.service || '',
+        timestamp: Date.now()
+      };
+
+      if (shouldSendNotification(update, settings)) {
+        sendAutoNotification(update, settings);
+      }
+    }
+
+    // Expor função globalmente para uso externo
+    if (typeof window !== 'undefined') {
+      window.triggerAutoNotification = triggerAutoNotification;
     }
   }
 })();
