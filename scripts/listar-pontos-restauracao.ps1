@@ -1,27 +1,4 @@
 #!/usr/bin/env pwsh
-<#
-.SYNOPSIS
-    Lista todos os pontos de restauração disponíveis
-
-.DESCRIPTION
-    Este script lista todas as tags de restauração criadas, ordenadas por data,
-    mostrando informações detalhadas sobre cada ponto.
-
-.PARAMETER Tipo
-    Filtrar por tipo de ponto: estavel, funcional, experimental (opcional)
-
-.PARAMETER Ultimos
-    Mostrar apenas os N pontos mais recentes (padrão: todos)
-
-.EXAMPLE
-    .\listar-pontos-restauracao.ps1
-    .\listar-pontos-restauracao.ps1 -Tipo estavel
-    .\listar-pontos-restauracao.ps1 -Ultimos 5
-
-.NOTES
-    Mostra apenas tags que seguem o padrão: restore-YYYYMMDD-HHMMSS-tipo
-#>
-
 param(
     [Parameter(Mandatory=$false)]
     [ValidateSet("estavel", "funcional", "experimental")]
@@ -31,16 +8,16 @@ param(
     [int]$Ultimos
 )
 
-# Verificar se estamos em um repositório Git
+# Verificar se estamos em um repositorio Git
 if (-not (Test-Path ".git")) {
-    Write-Error "❌ Erro: Este diretório não é um repositório Git."
+    Write-Error "Erro: Este diretorio nao e um repositorio Git."
     exit 1
 }
 
-Write-Host "📋 PONTOS DE RESTAURAÇÃO DISPONÍVEIS" -ForegroundColor Cyan
+Write-Host "PONTOS DE RESTAURACAO DISPONIVEIS" -ForegroundColor Cyan
 Write-Host "=" * 50 -ForegroundColor Gray
 
-# Buscar todas as tags de restauração
+# Buscar todas as tags de restauracao
 $padrao = "restore-*"
 if ($Tipo) {
     $padrao = "restore-*-$Tipo"
@@ -49,10 +26,10 @@ if ($Tipo) {
 $tags = git tag -l $padrao --sort=-version:refname
 
 if (-not $tags) {
-    Write-Host "❌ Nenhum ponto de restauração encontrado." -ForegroundColor Yellow
+    Write-Host "Nenhum ponto de restauracao encontrado." -ForegroundColor Yellow
     Write-Host ""
-    Write-Host "💡 Para criar um ponto de restauração:" -ForegroundColor Cyan
-    Write-Host "   .\criar-ponto-restauracao.ps1 -Descricao 'Sua descrição aqui'" -ForegroundColor White
+    Write-Host "Para criar um ponto de restauracao:" -ForegroundColor Cyan
+    Write-Host "   .\criar-ponto-restauracao.ps1 -Descricao 'Sua descricao aqui'" -ForegroundColor White
     exit 0
 }
 
@@ -65,7 +42,7 @@ $contador = 0
 foreach ($tag in $tags) {
     $contador++
     
-    # Extrair informações da tag
+    # Extrair informacoes da tag
     $partes = $tag -split "-"
     if ($partes.Length -ge 4) {
         $data = $partes[1]
@@ -83,46 +60,43 @@ foreach ($tag in $tags) {
         $commit = git rev-list -n 1 $tag
         $commitCurto = $commit.Substring(0,7)
         
-        # Verificar se é o commit atual
+        # Verificar se e o commit atual
         $commitAtual = git rev-parse HEAD
         $isCurrent = $commit -eq $commitAtual
         
-        # Determinar ícone e cor do tipo
+        # Determinar tipo
         $icone = switch ($tipoTag) {
-            "estavel" { "🟢" }
-            "funcional" { "🟡" }
-            "experimental" { "🔴" }
-            default { "📌" }
+            "estavel" { "[ESTAVEL]" }
+            "funcional" { "[FUNCIONAL]" }
+            "experimental" { "[EXPERIMENTAL]" }
+            default { "[PONTO]" }
         }
         
-        # Mostrar informações
+        # Mostrar informacoes
         Write-Host ""
         Write-Host "$contador. $icone $tag" -ForegroundColor White
         if ($isCurrent) {
-            Write-Host "   👆 POSIÇÃO ATUAL" -ForegroundColor Green
+            Write-Host "   >>> POSICAO ATUAL <<<" -ForegroundColor Green
         }
-        Write-Host "   📅 Data: $dataFormatada às $horaFormatada" -ForegroundColor Gray
-        Write-Host "   🏷️  Tipo: $tipoTag" -ForegroundColor Gray
-        Write-Host "   🔗 Commit: $commitCurto" -ForegroundColor Gray
+        Write-Host "   Data: $dataFormatada as $horaFormatada" -ForegroundColor Gray
+        Write-Host "   Tipo: $tipoTag" -ForegroundColor Gray
+        Write-Host "   Commit: $commitCurto" -ForegroundColor Gray
         
         if ($mensagem) {
-            # Extrair apenas a descrição (remover o prefixo padrão)
-            $descricao = $mensagem -replace "^PONTO DE RESTAURAÇÃO \[.*?\]: ", ""
-            $descricao = $descricao -replace " \(criado em .*?\)$", ""
-            Write-Host "   📝 $descricao" -ForegroundColor Yellow
+            Write-Host "   Descricao: $mensagem" -ForegroundColor Yellow
         }
     }
 }
 
 Write-Host ""
 Write-Host "=" * 50 -ForegroundColor Gray
-Write-Host "📊 Total: $contador pontos encontrados" -ForegroundColor Cyan
+Write-Host "Total: $contador pontos encontrados" -ForegroundColor Cyan
 
 if ($tags.Count -gt 0) {
     Write-Host ""
-    Write-Host "💡 Para restaurar um ponto:" -ForegroundColor Cyan
+    Write-Host "Para restaurar um ponto:" -ForegroundColor Cyan
     Write-Host "   .\restaurar-ponto.ps1 -Tag [nome-da-tag]" -ForegroundColor White
     Write-Host ""
-    Write-Host "💡 Para criar um novo ponto:" -ForegroundColor Cyan
-    Write-Host "   .\criar-ponto-restauracao.ps1 -Descricao 'Sua descrição'" -ForegroundColor White
+    Write-Host "Para criar um novo ponto:" -ForegroundColor Cyan
+    Write-Host "   .\criar-ponto-restauracao.ps1 -Descricao 'Sua descricao'" -ForegroundColor White
 }
