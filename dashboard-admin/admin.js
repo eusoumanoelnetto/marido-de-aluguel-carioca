@@ -277,9 +277,10 @@
         novasMensagensEl.style.color = 'var(--green)';
         novasMensagensEl.style.display = 'block';
       }
-    let data = {};
+      let data = {}; // Inicializa a variável data
 
     // Só atualiza os cards após data ser definido
+    // Atualização dos cards só após data ser definida
   // reduzir verbosidade ao buscar estatísticas
     
     if (OFF) {
@@ -313,6 +314,7 @@
       
       const res = await fetch(`${API}/api/admin/stats`, { 
         headers: { 'X-Admin-Key': ADMIN_KEY },
+
         mode: 'cors',
         signal: controller.signal
       });
