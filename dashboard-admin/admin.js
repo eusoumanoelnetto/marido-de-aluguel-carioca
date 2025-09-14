@@ -285,8 +285,13 @@
         errosRecentes: document.getElementById('erros-recentes'),
         errosCriticos: document.getElementById('erros-criticos')
       };
-      Object.values(elMap).forEach(el => { if (el) el.textContent = 'Offline'; });
-      return;
+  Object.values(elMap).forEach(el => { if (el) el.textContent = '0'; });
+  // Também garantir que o card de mensagens seja zerado
+  const msgEl = document.getElementById('total-mensagens');
+  if (msgEl) msgEl.textContent = '0';
+  const novasMsgEl = document.getElementById('novas-mensagens');
+  if (novasMsgEl) novasMsgEl.textContent = '+0 novas hoje';
+  return;
     }
 
   // requisição silenciosa a menos que em dev
@@ -309,6 +314,16 @@
         console.error('❌ Response não OK:', res.status, res.statusText);
         // Mostrar dados de exemplo se o backend não responder
         showFallbackData();
+        // Garantir que todos os cards mostrem zero se a API falhar
+        const ids = [
+          'total-clientes', 'novos-clientes', 'total-prestadores', 'novos-prestadores',
+          'servicos-ativos', 'servicos-concluidos', 'erros-recentes', 'erros-criticos',
+          'total-mensagens', 'novas-mensagens'
+        ];
+        ids.forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.textContent = id === 'novas-mensagens' ? '+0 novas hoje' : '0';
+        });
         return;
       }
       
