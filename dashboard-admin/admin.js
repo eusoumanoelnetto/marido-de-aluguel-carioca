@@ -873,6 +873,26 @@
             page.classList.toggle('active', page.id === targetPageId);
           });
           
+          // **CORREÇÃO: Fechar todos os modais quando trocar de aba**
+          const modals = document.querySelectorAll('.modal');
+          modals.forEach(modal => {
+            modal.style.display = 'none';
+          });
+          
+          // **CORREÇÃO: Limpar estados de formulários de notificação**
+          const notificationForm = document.getElementById('notification-form');
+          if (notificationForm && targetPageId !== 'notificacoes') {
+            // Reset form apenas se não estiver indo para a aba de notificações
+            notificationForm.reset();
+            // Esconder campos condicionais
+            const customTitleGroup = document.getElementById('custom-title-group');
+            const pvOptions = document.getElementById('pv-options');
+            const autoSettings = document.getElementById('auto-notification-settings');
+            if (customTitleGroup) customTitleGroup.style.display = 'none';
+            if (pvOptions) pvOptions.style.display = 'none';
+            if (autoSettings) autoSettings.style.display = 'none';
+          }
+          
           // Carregar dados específicos da página
           if (targetPageId === 'erros') {
             renderSystemLogs();
