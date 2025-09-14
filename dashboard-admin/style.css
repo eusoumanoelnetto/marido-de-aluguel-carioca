@@ -157,7 +157,7 @@
         }
 
         /* Estilos específicos para a página de notificações */
-        #notificacoes {
+        #notificacoes.active {
             display: flex;
             flex-direction: column;
             gap: 32px;
