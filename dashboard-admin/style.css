@@ -433,19 +433,33 @@
         #notifications-history::-webkit-scrollbar-thumb:hover {
             background: #a8a8a8;
         }
-        .user-item { display: flex; align-items: center; gap: 16px; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; }
+        .user-item { display: flex; align-items: center; gap: 16px; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; flex-wrap: wrap; }
         .user-tag { font-size: 0.75rem; font-weight: 600; padding: 4px 10px; border-radius: 12px; color: #fff; }
         .tag-cliente { background-color: var(--blue); } .tag-prestador { background-color: var(--green); }
         .user-info { flex-grow: 1; } .user-info .name { font-weight: 600; } .user-info .contact { font-size: 0.85rem; color: var(--text-muted); }
-        .user-actions .btn { 
-            border: none; 
-            padding: 8px 12px; 
-            border-radius: 6px; 
-            cursor: pointer; 
+        .user-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: nowrap;
+            align-items: center;
+        }
+        .user-actions .btn {
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
             color: white;
             touch-action: manipulation;
             min-height: 36px;
             font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        @media (max-width: 600px) {
+            .user-item { flex-direction: column; align-items: flex-start; gap: 8px; }
+            .user-actions { flex-wrap: wrap; width: 100%; }
+            .user-actions .btn { flex: 1 1 45%; min-width: 70px; margin-bottom: 4px; }
         }
 
         /* --- Erros e Logs --- */
