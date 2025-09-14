@@ -213,6 +213,7 @@
     // Submissão do form de edição
     editForm.onsubmit = async function(e) {
       e.preventDefault();
+      const originalRole = user.role; // Capturar role original
       const body = {
         name: editForm.name.value,
         phone: editForm.phone.value,
@@ -226,6 +227,28 @@
       });
       if (up.ok) {
         modal.classList.remove('show');
+        
+        // Verificar se houve mudança de perfil
+        const newRole = body.role;
+        if (originalRole && newRole && originalRole !== newRole) {
+          const roleNames = { client: 'Cliente', provider: 'Prestador', admin: 'Admin' };
+          const oldRoleName = roleNames[originalRole] || originalRole;
+          const newRoleName = roleNames[newRole] || newRole;
+          showAdminToast({ 
+            title: 'Perfil alterado', 
+            message: `Usuário ${escapeHtml(editForm.email.value)} alterado de ${oldRoleName} para ${newRoleName}.`, 
+            type: 'success',
+            timeout: 4000 
+          });
+        } else {
+          // Mudança geral sem alteração de perfil
+          showAdminToast({ 
+            title: 'Usuário atualizado', 
+            message: 'As alterações foram salvas com sucesso.', 
+            type: 'success' 
+          });
+        }
+        
         fetchUsers();
       } else {
         showAdminToast({ title: 'Falha ao atualizar usuário', type: 'error' });

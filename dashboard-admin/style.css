@@ -572,6 +572,18 @@
             max-width: 420px;
             box-shadow: 0 4px 24px rgba(0,0,0,0.15);
         }
+        
+        /* Modal de usuário: tamanho menor no desktop */
+        #user-modal .modal-content {
+            max-width: 480px;
+        }
+        
+        @media (min-width: 768px) {
+            #user-modal .modal-content {
+                max-width: 420px;
+                width: 420px;
+            }
+        }
         .modal .modal-title {
             font-weight: 700;
             font-size: 1.1rem;
