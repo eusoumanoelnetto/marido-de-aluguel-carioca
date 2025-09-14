@@ -267,6 +267,7 @@
 
   // Fetch overall dashboard statistics and update overview cards
   async function fetchDashboardStats() {
+    // Removido uso prematuro de 'data'. O card de mensagens será atualizado após o fetch e definição de 'data'.
       // Atualizar total de mensagens (garante zero se não houver)
       const totalMensagens = Number(data.totalMensagens ?? 0);
       setText('total-mensagens', totalMensagens.toString());
