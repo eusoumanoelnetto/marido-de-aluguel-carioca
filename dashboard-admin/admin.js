@@ -260,9 +260,13 @@
 
   // Fetch overall dashboard statistics and update overview cards
   async function fetchDashboardStats() {
-      // Atualizar total de mensagens
-      setText('total-mensagens', data.totalMensagens ?? '0');
-      // Atualizar novas mensagens hoje
+      // Atualizar total de mensagens (se existir na API)
+      if ('totalMensagens' in data) {
+        setText('total-mensagens', data.totalMensagens ?? '0');
+      } else {
+        setText('total-mensagens', '0');
+      }
+      // Atualizar novas mensagens hoje (se existir na API)
       const novasMensagensEl = document.getElementById('novas-mensagens');
       if (novasMensagensEl) {
         const n = Number(data.novasMensagensHoje ?? 0);
