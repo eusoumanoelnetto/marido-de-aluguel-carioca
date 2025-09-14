@@ -440,7 +440,7 @@
         .user-actions {
             display: flex;
             gap: 8px;
-            flex-wrap: nowrap;
+            flex-wrap: wrap;
             align-items: center;
         }
         .user-actions .btn {
@@ -456,7 +456,7 @@
             align-items: center;
             justify-content: center;
         }
-        @media (max-width: 600px) {
+        @media (max-width: 768px) {
             .user-item { 
                 flex-direction: column; 
                 align-items: flex-start; 
@@ -478,15 +478,16 @@
             .user-actions { 
                 display: grid;
                 grid-template-columns: 1fr 1fr 1fr 1fr;
-                gap: 6px;
+                gap: 4px;
                 width: 100%;
-                margin-top: 4px;
+                margin-top: 8px;
             }
             .user-actions .btn { 
-                padding: 10px 6px;
-                font-size: 0.8rem;
-                min-height: 40px;
-                border-radius: 6px;
+                padding: 8px 4px;
+                font-size: 0.7rem;
+                min-height: 36px;
+                border-radius: 4px;
+                white-space: nowrap;
             }
             .user-actions .btn i {
                 font-size: 0.9rem;
