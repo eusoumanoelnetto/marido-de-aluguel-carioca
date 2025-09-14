@@ -115,7 +115,7 @@
       btn.setAttribute('data-touch-handled', 'true');
       addTouchFriendlyEvent(btn, async () => {
         const email = decodeURIComponent(btn.getAttribute('data-email'));
-        if (!confirm('Deletar usuário ' + email + '?')) return;
+        if (!confirm('Tem certeza que deseja excluir o usuário ' + email + '? Esta ação não pode ser desfeita.')) return;
         if (OFF) {
           const arr = JSON.parse(localStorage.getItem('admin_users') || '[]');
           const filtered = arr.filter(u => (u.email || '').toLowerCase() !== email.toLowerCase());
@@ -181,6 +181,9 @@
       editForm.email.value = user.email || '';
       editForm.phone.value = user.phone || '';
       editForm.cep.value = user.cep || '';
+      if (editForm.role) {
+        editForm.role.value = user.role || 'client';
+      }
     } else {
       viewDiv.style.display = 'block';
       editForm.style.display = 'none';
@@ -200,7 +203,8 @@
       const body = {
         name: editForm.name.value,
         phone: editForm.phone.value,
-        cep: editForm.cep.value
+        cep: editForm.cep.value,
+        role: editForm.role ? editForm.role.value : undefined
       };
       const up = await fetch(`${API}/api/users/` + encodeURIComponent(editForm.email.value), {
         method: 'PUT',
@@ -221,11 +225,8 @@
       btn.setAttribute('data-touch-handled', 'true');
       addTouchFriendlyEvent(btn, async () => {
         const email = decodeURIComponent(btn.getAttribute('data-email'));
-        const password = prompt('Nova senha (mínimo 6 caracteres)');
-        if (!password || password.length < 6) {
-          alert('Senha inválida. Informe ao menos 6 caracteres.');
-          return;
-        }
+        if (!confirm('Redefinir a senha do usuário ' + email + ' para "123456"?')) return;
+        const password = '123456';
         if (OFF) {
           alert('Redefinição de senha disponível apenas online.');
           return;
@@ -235,7 +236,7 @@
           headers: { 'Content-Type': 'application/json', 'X-Admin-Key': ADMIN_KEY },
           body: JSON.stringify({ password })
         });
-        if (res.ok) alert('Senha redefinida com sucesso.'); else alert('Falha ao redefinir senha');
+        if (res.ok) alert('Senha redefinida para 123456 com sucesso.'); else alert('Falha ao redefinir senha');
       });
     });
   }
