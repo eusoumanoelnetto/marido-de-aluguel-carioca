@@ -260,6 +260,16 @@
 
   // Fetch overall dashboard statistics and update overview cards
   async function fetchDashboardStats() {
+      // Atualizar total de mensagens
+      setText('total-mensagens', data.totalMensagens ?? '0');
+      // Atualizar novas mensagens hoje
+      const novasMensagensEl = document.getElementById('novas-mensagens');
+      if (novasMensagensEl) {
+        const n = Number(data.novasMensagensHoje ?? 0);
+        novasMensagensEl.textContent = `+${n} novas hoje`;
+        novasMensagensEl.style.color = 'var(--green)';
+        novasMensagensEl.style.display = 'block';
+      }
   // reduzir verbosidade ao buscar estatísticas
     
     if (OFF) {
