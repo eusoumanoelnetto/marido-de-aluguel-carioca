@@ -562,6 +562,43 @@
         .modal.show {
             display: flex !important;
         }
+
+        /* Modal genérico: conteúdo e ações */
+        .modal .modal-content {
+            background: #fff;
+            border-radius: 12px;
+            padding: 24px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+        }
+        .modal .modal-title {
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .modal .modal-message {
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+        .modal .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        #confirm-modal .btn {
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            color: #fff;
+        }
+        #confirm-modal .btn.cancel { background: var(--gray); }
+        #confirm-modal .btn.ok { background: var(--blue); }
+        #confirm-modal .btn.ok.danger { background: var(--red); }
+        #confirm-modal .btn.ok.warn { background: var(--orange); }
         
         .diagnostic-section {
             margin-bottom: 20px;

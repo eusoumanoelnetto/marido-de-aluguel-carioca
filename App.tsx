@@ -12,6 +12,7 @@ import Toast from './components/Toast';
 import PWAInstall from './components/PWAInstall';
 import LoadingOverlay from './components/LoadingOverlay';
 import NewRequestAlert from './components/NewRequestAlert';
+import { ConfirmProvider } from './components/ConfirmDialog';
 
 type Page = 'role-selection' | 'login' | 'signup' | 'client' | 'provider';
 
@@ -328,6 +329,7 @@ const App: React.FC = () => {
   }, []);
 
   return (
+    <ConfirmProvider>
     <div className="min-h-screen bg-slate-50 text-slate-800">
       <Toast />
       <PWAInstall />
@@ -364,6 +366,7 @@ const App: React.FC = () => {
   {/* Vercel Web Analytics: rastreamento de page views */}
   <Analytics />
   </div>
+    </ConfirmProvider>
   );
 };
 

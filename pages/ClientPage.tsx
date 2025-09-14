@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useConfirm } from '../components/ConfirmDialog';
 import { ServiceRequest, ServiceCategory, User } from '../types';
 import { HammerIcon, WrenchIcon, ZapIcon, DropletsIcon, PaintBucketIcon, HouseIcon, MonitorIcon, CctvIcon } from '../components/Icons';
 import InlineAnnouncements from '../components/InlineAnnouncements';
@@ -628,6 +629,7 @@ const HelpView: React.FC<{ setView: (view: ClientView) => void }> = ({ setView }
 );
 
 const ClientPage: React.FC<ClientPageProps> = ({ currentUser, addServiceRequest, onLogout, updateUser, requests, updateRequestStatus }) => {
+    const confirm = useConfirm();
   const [view, setView] = useState<ClientView>('dashboard');
   const [selectedCategory, setSelectedCategory] = useState<ServiceCategory>('Montagem de Móveis');
   const [isEmergencyRequest, setIsEmergencyRequest] = useState(false);
@@ -716,8 +718,15 @@ const ClientPage: React.FC<ClientPageProps> = ({ currentUser, addServiceRequest,
                         window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: 'Orçamento aceito e serviço confirmado!', type: 'success' } }));
                         setView('dashboard');
                     }}
-                    onCancel={(id) => {
-                        if (!window.confirm('Tem certeza que deseja cancelar esta solicitação? Esta ação não pode ser desfeita.')) return;
+                    onCancel={async (id) => {
+                        const ok = await confirm({
+                          title: 'Cancelar solicitação',
+                          message: 'Tem certeza que deseja cancelar esta solicitação? Esta ação não pode ser desfeita.',
+                          confirmText: 'Cancelar solicitação',
+                          cancelText: 'Voltar',
+                          type: 'danger'
+                        });
+                        if (!ok) return;
                         updateRequestStatus(id, 'Cancelado');
                         window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: 'Solicitação cancelada.', type: 'success' } }));
                     }}

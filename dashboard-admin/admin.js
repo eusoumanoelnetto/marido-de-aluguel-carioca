@@ -115,7 +115,14 @@
       btn.setAttribute('data-touch-handled', 'true');
       addTouchFriendlyEvent(btn, async () => {
         const email = decodeURIComponent(btn.getAttribute('data-email'));
-        if (!confirm('Tem certeza que deseja excluir o usuário ' + email + '? Esta ação não pode ser desfeita.')) return;
+        const ok = await confirmDialog({
+          title: 'Excluir usuário',
+          message: 'Tem certeza que deseja excluir o usuário ' + escapeHtml(email) + '? Esta ação não pode ser desfeita.',
+          confirmText: 'Excluir',
+          cancelText: 'Cancelar',
+          type: 'danger'
+        });
+        if (!ok) return;
         if (OFF) {
           const arr = JSON.parse(localStorage.getItem('admin_users') || '[]');
           const filtered = arr.filter(u => (u.email || '').toLowerCase() !== email.toLowerCase());
@@ -225,7 +232,14 @@
       btn.setAttribute('data-touch-handled', 'true');
       addTouchFriendlyEvent(btn, async () => {
         const email = decodeURIComponent(btn.getAttribute('data-email'));
-        if (!confirm('Redefinir a senha do usuário ' + email + ' para "123456"?')) return;
+        const ok = await confirmDialog({
+          title: 'Redefinir senha',
+          message: 'Redefinir a senha do usuário ' + escapeHtml(email) + ' para "123456"?',
+          confirmText: 'Redefinir',
+          cancelText: 'Cancelar',
+          type: 'warn'
+        });
+        if (!ok) return;
         const password = '123456';
         if (OFF) {
           alert('Redefinição de senha disponível apenas online.');
@@ -244,6 +258,56 @@
   function escapeHtml(str) {
     if (!str) return '';
     return String(str).replace(/[&<>"']/g, (s) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[s]);
+  }
+
+  // Modal de confirmação customizado (Promise-based)
+  function confirmDialog({ title = 'Confirmar', message = 'Tem certeza?', confirmText = 'Confirmar', cancelText = 'Cancelar', type = 'info' } = {}) {
+    return new Promise((resolve) => {
+      const modal = document.getElementById('confirm-modal');
+      const titleEl = document.getElementById('confirm-title');
+      const msgEl = document.getElementById('confirm-message');
+      const btnOk = document.getElementById('confirm-ok');
+      const btnCancel = document.getElementById('confirm-cancel');
+      if (!modal || !titleEl || !msgEl || !btnOk || !btnCancel) {
+        // fallback: se não existir o modal por algum motivo
+        const res = window.confirm(message);
+        return resolve(!!res);
+      }
+
+      titleEl.textContent = title;
+      msgEl.textContent = message;
+      btnOk.textContent = confirmText;
+      btnCancel.textContent = cancelText;
+
+      // Classes visuais
+      btnOk.classList.remove('ok', 'danger', 'warn');
+      btnCancel.classList.remove('cancel');
+      btnOk.classList.add('ok');
+      btnCancel.classList.add('cancel');
+      if (type === 'danger') btnOk.classList.add('danger');
+      else if (type === 'warn') btnOk.classList.add('warn');
+
+      // Exibir modal
+      modal.classList.add('show');
+
+      const onCancel = () => { cleanup(); resolve(false); };
+      const onOk = () => { cleanup(); resolve(true); };
+      const onBackdrop = (e) => { if (e.target === modal) { cleanup(); resolve(false); } };
+      const onEsc = (e) => { if (e.key === 'Escape') { cleanup(); resolve(false); } };
+
+      btnCancel.addEventListener('click', onCancel);
+      btnOk.addEventListener('click', onOk);
+      modal.addEventListener('click', onBackdrop);
+      document.addEventListener('keydown', onEsc);
+
+      function cleanup() {
+        modal.classList.remove('show');
+        btnCancel.removeEventListener('click', onCancel);
+        btnOk.removeEventListener('click', onOk);
+        modal.removeEventListener('click', onBackdrop);
+        document.removeEventListener('keydown', onEsc);
+      }
+    });
   }
 
   // Fetch recent admin events (new user signups, etc.)
