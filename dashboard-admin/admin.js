@@ -67,7 +67,7 @@
         showFallbackUsers();
         return;
       }
-      const data = await res.json();
+  const data = await res.json();
       const users = data.users || [];
       renderUsers(users);
 
@@ -268,17 +268,7 @@
   // Fetch overall dashboard statistics and update overview cards
   async function fetchDashboardStats() {
     // Removido uso prematuro de 'data'. O card de mensagens será atualizado após o fetch e definição de 'data'.
-      // Atualizar total de mensagens (garante zero se não houver)
-      const totalMensagens = Number(data.totalMensagens ?? 0);
-      setText('total-mensagens', totalMensagens.toString());
-      // Atualizar novas mensagens hoje (mantém compatibilidade)
-      const novasMensagensEl = document.getElementById('novas-mensagens');
-      if (novasMensagensEl) {
-        const n = Number(data.novasMensagensHoje ?? 0);
-        novasMensagensEl.textContent = `+${n} novas hoje`;
-        novasMensagensEl.style.color = 'var(--green)';
-        novasMensagensEl.style.display = 'block';
-      }
+      // O card de mensagens será atualizado após o fetch dos dados
       let data = {}; // Inicializa a variável data
 
     // Só atualiza os cards após data ser definido
@@ -349,7 +339,7 @@
         if (el) el.textContent = String(val != null ? val : '0');
       };
 
-      setText('total-clientes', data.totalClientes ?? '0');
+  setText('total-clientes', data.totalClientes ?? '0');
       console.log('totalClientes set to', data.totalClientes);
       
       // Atualizar novos clientes hoje
@@ -363,7 +353,7 @@
         console.log('novos-clientes set to', novosClientesEl.textContent);
       }
 
-      setText('total-prestadores', data.totalPrestadores ?? '0');
+  setText('total-prestadores', data.totalPrestadores ?? '0');
       console.log('totalPrestadores set to', data.totalPrestadores);
       
       // Atualizar novos prestadores hoje
@@ -387,6 +377,18 @@
   }
 
       setText('erros-recentes', data.errosRecentes ?? '0');
+
+      // Atualizar total de mensagens (somente aqui, após data definido)
+      const totalMensagens = Number(data.totalMensagens ?? 0);
+      setText('total-mensagens', totalMensagens.toString());
+      // Atualizar novas mensagens hoje
+      const novasMensagensEl = document.getElementById('novas-mensagens');
+      if (novasMensagensEl) {
+        const n = Number(data.novasMensagensHoje ?? 0);
+        novasMensagensEl.textContent = `+${n} novas hoje`;
+        novasMensagensEl.style.color = 'var(--green)';
+        novasMensagensEl.style.display = 'block';
+      }
       console.log('errosRecentes set to', data.errosRecentes);
       
       const critEl = document.getElementById('erros-criticos');
