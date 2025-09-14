@@ -127,11 +127,17 @@
           const arr = JSON.parse(localStorage.getItem('admin_users') || '[]');
           const filtered = arr.filter(u => (u.email || '').toLowerCase() !== email.toLowerCase());
           localStorage.setItem('admin_users', JSON.stringify(filtered));
+          showAdminToast({ title: 'Usuário excluído', message: `O usuário ${escapeHtml(email)} foi excluído com sucesso (offline).`, type: 'success' });
           fetchUsers();
           return;
         }
         const dres = await fetch(`${API}/api/users/` + encodeURIComponent(email), { method: 'DELETE', headers: { 'X-Admin-Key': ADMIN_KEY } });
-        if (dres.ok) fetchUsers(); else alert('Falha ao deletar usuário');
+        if (dres.ok) {
+          showAdminToast({ title: 'Usuário excluído', message: `O usuário ${escapeHtml(email)} foi excluído com sucesso.`, type: 'success' });
+          fetchUsers();
+        } else {
+          showAdminToast({ title: 'Falha ao deletar usuário', type: 'error' });
+        }
       });
     });
 
@@ -145,7 +151,7 @@
           const res = await fetch(`${API}/api/users/` + encodeURIComponent(email), { headers: { 'X-Admin-Key': ADMIN_KEY } });
           if (res.ok) user = await res.json();
         }
-        if (!user) return alert('Usuário não encontrado.');
+  if (!user) return alert('Usuário não encontrado.');
         showUserModal(user, false);
       });
     });
@@ -159,7 +165,7 @@
           const res = await fetch(`${API}/api/users/` + encodeURIComponent(email), { headers: { 'X-Admin-Key': ADMIN_KEY } });
           if (res.ok) user = await res.json();
         }
-        if (!user) return alert('Usuário não encontrado.');
+  if (!user) return alert('Usuário não encontrado.');
         showUserModal(user, true);
       });
     });
@@ -222,7 +228,7 @@
         modal.classList.remove('show');
         fetchUsers();
       } else {
-        alert('Falha ao atualizar usuário');
+        showAdminToast({ title: 'Falha ao atualizar usuário', type: 'error' });
       }
     };
   }
@@ -242,7 +248,7 @@
         if (!ok) return;
         const password = '123456';
         if (OFF) {
-          alert('Redefinição de senha disponível apenas online.');
+          showAdminToast({ title: 'Indisponível offline', message: 'Redefinição de senha disponível apenas online.', type: 'warn' });
           return;
         }
         const res = await fetch(`${API}/api/users/` + encodeURIComponent(email) + '/password', {
@@ -250,7 +256,11 @@
           headers: { 'Content-Type': 'application/json', 'X-Admin-Key': ADMIN_KEY },
           body: JSON.stringify({ password })
         });
-        if (res.ok) alert('Senha redefinida para 123456 com sucesso.'); else alert('Falha ao redefinir senha');
+        if (res.ok) {
+          showAdminToast({ title: 'Senha redefinida', message: 'Senha redefinida para 123456 com sucesso.', type: 'success' });
+        } else {
+          showAdminToast({ title: 'Falha ao redefinir senha', type: 'error' });
+        }
       });
     });
   }
@@ -258,6 +268,29 @@
   function escapeHtml(str) {
     if (!str) return '';
     return String(str).replace(/[&<>"']/g, (s) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[s]);
+  }
+
+  // Toast simples do painel admin
+  function showAdminToast({ title, message, type = 'success', timeout = 3000 } = {}) {
+    try {
+      const container = document.getElementById('admin-toast-container');
+      if (!container) return;
+      const div = document.createElement('div');
+      div.className = `admin-toast ${type}`;
+      const icon = type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-times-circle' : 'fa-exclamation-triangle';
+      div.innerHTML = `
+        <i class="fas ${icon} icon"></i>
+        <div>
+          ${title ? `<div class="content">${escapeHtml(title)}</div>` : ''}
+          ${message ? `<div class="message">${escapeHtml(message)}</div>` : ''}
+        </div>
+        <button class="close" aria-label="Fechar">&times;</button>
+      `;
+      container.appendChild(div);
+      const close = () => { try { div.remove(); } catch(_){} };
+      div.querySelector('.close')?.addEventListener('click', close);
+      setTimeout(close, timeout);
+    } catch (_) { /* noop */ }
   }
 
   // Modal de confirmação customizado (Promise-based)

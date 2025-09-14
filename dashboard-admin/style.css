@@ -834,6 +834,44 @@
 
             /* Modal ajustes para telas pequenas */
             #user-modal .modal-content { width: 92vw !important; max-width: 92vw !important; }
+
+        /* Toasts do painel admin */
+        #admin-toast-container {
+            position: fixed;
+            right: 24px;
+            bottom: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 1100;
+        }
+        .admin-toast {
+            min-width: 260px;
+            max-width: 420px;
+            background: #fff;
+            border-left: 4px solid var(--blue);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            padding: 12px 14px;
+            border-radius: 8px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            animation: slideIn .25s ease-out;
+        }
+        .admin-toast.success { border-left-color: var(--green); }
+        .admin-toast.error { border-left-color: var(--red); }
+        .admin-toast.warn { border-left-color: var(--orange); }
+        .admin-toast .icon { font-size: 1.1rem; margin-top: 2px; }
+        .admin-toast.success .icon { color: var(--green); }
+        .admin-toast.error .icon { color: var(--red); }
+        .admin-toast.warn .icon { color: var(--orange); }
+        .admin-toast .content { color: var(--text-dark); font-weight: 600; }
+        .admin-toast .message { color: var(--text-muted); font-weight: 500; }
+        .admin-toast .close { margin-left: auto; background: none; border: none; color: #888; cursor: pointer; }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
             
             /* Melhorar navegação mobile */
             .main-nav ul::-webkit-scrollbar { height: 4px; }
