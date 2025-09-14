@@ -260,6 +260,17 @@
 
   // Fetch overall dashboard statistics and update overview cards
   async function fetchDashboardStats() {
+      // Atualizar total de mensagens (garante zero se não houver)
+      const totalMensagens = Number(data.totalMensagens ?? 0);
+      setText('total-mensagens', totalMensagens.toString());
+      // Atualizar novas mensagens hoje (mantém compatibilidade)
+      const novasMensagensEl = document.getElementById('novas-mensagens');
+      if (novasMensagensEl) {
+        const n = Number(data.novasMensagensHoje ?? 0);
+        novasMensagensEl.textContent = `+${n} novas hoje`;
+        novasMensagensEl.style.color = 'var(--green)';
+        novasMensagensEl.style.display = 'block';
+      }
     let data = {};
 
     // Só atualiza os cards após data ser definido
