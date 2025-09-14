@@ -184,7 +184,13 @@
     } else {
       viewDiv.style.display = 'block';
       editForm.style.display = 'none';
-      viewDiv.innerHTML = `<h3 style="margin-bottom:8px;">${escapeHtml(user.name)}</h3><div style="color:var(--text-muted);margin-bottom:8px;">${escapeHtml(user.email)} • ${escapeHtml(user.phone || '')}</div><div><b>CEP:</b> ${escapeHtml(user.cep || '-')}</div><div><b>Tipo:</b> ${escapeHtml(user.role)}</div>`;
+      viewDiv.innerHTML = `
+        <h3 style="margin-bottom:8px;">${escapeHtml(user.name)}</h3>
+        <div style="color:var(--text-muted);margin-bottom:4px;"><b>E-mail:</b> ${escapeHtml(user.email)}</div>
+        <div style="color:var(--text-muted);margin-bottom:4px;"><b>Whatsapp:</b> ${escapeHtml(user.phone || '-')}</div>
+        <div><b>CEP:</b> ${escapeHtml(user.cep || '-')}</div>
+        <div><b>Tipo:</b> ${escapeHtml(user.role)}</div>
+      `;
     }
     modal.classList.add('show');
     // O event listener para fechar já foi configurado globalmente
