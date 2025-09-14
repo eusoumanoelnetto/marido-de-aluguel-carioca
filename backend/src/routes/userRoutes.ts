@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { updateUser, listUsers, deleteUser, resetPassword, getAdminEvents } from '../controllers/userController';
-import { authenticate, adminAccess } from '../middleware/authMiddleware';
+import { authenticate, adminAccess, authenticateOrAdmin } from '../middleware/authMiddleware';
 
 const router = Router();
 
@@ -11,7 +11,7 @@ router.get('/events', adminAccess, getAdminEvents);
 router.get('/', adminAccess, listUsers);
 
 // Route to update a user by their email (protected - user can update own profile)
-router.put('/:email', authenticate, updateUser);
+router.put('/:email', authenticateOrAdmin, updateUser);
 
 // Delete user (admin only)
 router.delete('/:email', adminAccess, deleteUser);

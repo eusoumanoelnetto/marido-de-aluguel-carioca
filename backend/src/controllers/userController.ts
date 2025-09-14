@@ -6,19 +6,38 @@ import bcrypt from 'bcryptjs';
 
 export const updateUser = async (req: Request, res: Response) => {
     const { email } = req.params;
-    const { name, phone, cep, services, profilePictureBase64 }: User = req.body;
+    const { name, phone, cep, services, profilePictureBase64, role }: User = req.body as any;
     const requesterEmail = (req as any).userEmail;
-
     const requesterRole = (req as any).userRole;
+
+    // Permite: admin atualizar qualquer usuário; usuário comum apenas o próprio
     if (!(requesterRole === 'admin') && (!requesterEmail || requesterEmail.toLowerCase() !== email.toLowerCase())) {
         return res.status(403).json({ message: 'Não autorizado a atualizar este usuário.' });
     }
+
+    // Se houver tentativa de alterar role, somente admin pode
+    let newRole: string | undefined = undefined;
+    if (typeof role === 'string' && role.length > 0) {
+        if (requesterRole !== 'admin') {
+            return res.status(403).json({ message: 'Somente administradores podem alterar o perfil do usuário.' });
+        }
+        if (!['client', 'provider', 'admin'].includes(role)) {
+            return res.status(400).json({ message: 'Perfil inválido.' });
+        }
+        newRole = role;
+    }
   
     try {
-        const result = await pool.query(
-            'UPDATE users SET name = $1, phone = $2, cep = $3, services = $4, "profilePictureBase64" = $5 WHERE email = $6 RETURNING *',
-            [name, phone, cep, services, profilePictureBase64, email.toLowerCase()]
-        );
+        const params: any[] = [name, phone, cep, services, profilePictureBase64];
+        let query = 'UPDATE users SET name = $1, phone = $2, cep = $3, services = $4, "profilePictureBase64" = $5';
+        if (newRole) {
+            params.push(newRole);
+            query += `, role = $${params.length}`;
+        }
+        params.push(email.toLowerCase());
+        query += ` WHERE email = $${params.length} RETURNING *`;
+
+        const result = await pool.query(query, params);
         
         if ((result.rowCount ?? 0) === 0) {
             res.status(404).json({ message: 'Usuário não encontrado.' });

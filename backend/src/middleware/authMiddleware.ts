@@ -62,3 +62,14 @@ export const adminAccess = (req: Request, res: Response, next: NextFunction) => 
   }
   return res.status(403).json({ message: 'Acesso admin negado.' });
 };
+
+// Middleware que aceita OU Bearer token válido (usuário autenticado) OU X-Admin-Key (admin do painel)
+export const authenticateOrAdmin = (req: Request, res: Response, next: NextFunction) => {
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    // Tenta autenticar via JWT
+    return authenticate(req, res, next);
+  }
+  // Caso não haja Bearer, tenta via admin key
+  return adminAccess(req, res, next);
+};

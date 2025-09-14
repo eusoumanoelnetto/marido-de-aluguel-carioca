@@ -268,8 +268,7 @@
   // Fetch overall dashboard statistics and update overview cards
   async function fetchDashboardStats() {
     // Removido uso prematuro de 'data'. O card de mensagens será atualizado após o fetch e definição de 'data'.
-      // O card de mensagens será atualizado após o fetch dos dados
-      let data = {}; // Inicializa a variável data
+  // O card de mensagens será atualizado após o fetch dos dados
 
     // Só atualiza os cards após data ser definido
     // Atualização dos cards só após data ser definida
