@@ -17,4 +17,13 @@
     "message": "As notificações agora têm controle mais inteligente de exibição. O botão 'Recolher' permite visualizar apenas um resumo das novidades mais importantes, enquanto 'Detalhes' mostra todas as atualizações disponíveis.",
     "date": "2025-09-10"
   }
+  ,
+  {
+    "id": "2025-09-15-aviso-prestadores",
+    "title": "Aviso para Prestadores",
+    "message": "Teste de notificação apenas para prestadores.",
+    "date": "2025-09-15",
+    "isUrgent": false,
+    "target": "providers"
+  }
 ]
