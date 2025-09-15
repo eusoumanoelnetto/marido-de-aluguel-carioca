@@ -575,7 +575,7 @@ const DashboardView: React.FC<{
     
     return (
         <main className="max-w-7xl mx-auto p-6">
-            <InlineAnnouncements limit={3} />
+            <InlineAnnouncements limit={3} userRole="provider" />
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mt-5">
                 <StatCard icon="fas fa-calendar-check" title="Serviços para Hoje" color="text-brand-blue" onClick={() => setView('today-services')}>

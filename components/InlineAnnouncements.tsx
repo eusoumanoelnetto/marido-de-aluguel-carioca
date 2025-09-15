@@ -5,14 +5,16 @@ interface Announcement {
   title: string;
   message: string;
   date?: string;
+  target?: 'all' | 'providers' | 'clients';
 }
 
 interface Props {
   limit?: number; // opcional: limitar quantidade exibida
+  userRole?: 'provider' | 'client';
 }
 
 // Versão compacta de anúncios para dentro do dashboard do cliente.
-const InlineAnnouncements: React.FC<Props> = ({ limit }) => {
+const InlineAnnouncements: React.FC<Props> = ({ limit, userRole }) => {
   const [items, setItems] = useState<Announcement[]>([]);
   const [expanded, setExpanded] = useState(false);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
@@ -56,13 +58,21 @@ const InlineAnnouncements: React.FC<Props> = ({ limit }) => {
         
         // Filtrar notificações que expiraram (7 dias após a data de criação)
         const now = new Date();
-        const validItems = data.filter(item => {
+        let validItems = data.filter(item => {
           if (!item.date) return true; // Se não tem data, mantém
           const itemDate = new Date(item.date);
           const expirationDate = new Date(itemDate.getTime() + (7 * 24 * 60 * 60 * 1000)); // +7 dias
           return now <= expirationDate;
         });
-        
+
+        // Filtrar por target (destinatário)
+        validItems = validItems.filter(item => {
+          if (!item.target || item.target === 'all') return true;
+          if (item.target === 'providers' && userRole === 'provider') return true;
+          if (item.target === 'clients' && userRole === 'client') return true;
+          return false;
+        });
+
         setItems(validItems);
       } catch (e: any) {
         if (!cancelled) setError('Não foi possível carregar atualizações.');
