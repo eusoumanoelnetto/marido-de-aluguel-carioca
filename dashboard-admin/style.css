@@ -404,9 +404,28 @@
         .user-list { 
             display: flex; 
             flex-direction: column; 
-            gap: 12px; 
-            max-height: 400px; 
+            gap: 16px; 
+            max-height: 500px; 
             overflow-y: auto; 
+            padding: 4px;
+        }
+        
+        .user-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .user-list::-webkit-scrollbar-track {
+            background: #f1f3f4;
+            border-radius: 3px;
+        }
+        
+        .user-list::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+        }
+        
+        .user-list::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
         }
 
         /* Estilos para área de histórico de notificações */
@@ -433,67 +452,179 @@
         #notifications-history::-webkit-scrollbar-thumb:hover {
             background: #a8a8a8;
         }
-        .user-item { display: flex; align-items: center; gap: 16px; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; flex-wrap: wrap; }
-        .user-tag { font-size: 0.75rem; font-weight: 600; padding: 4px 10px; border-radius: 12px; color: #fff; }
+        .user-item { 
+            display: flex; 
+            align-items: center; 
+            gap: 16px; 
+            padding: 16px; 
+            border: 1px solid #e0e6ed; 
+            border-radius: 12px; 
+            flex-wrap: wrap; 
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            transition: all 0.2s ease;
+            margin-bottom: 12px;
+        }
+        
+        .user-item:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-color: #d0d9e0;
+        }
+        .user-tag { 
+            font-size: 0.75rem; 
+            font-weight: 600; 
+            padding: 6px 12px; 
+            border-radius: 16px; 
+            color: #fff; 
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
         .tag-cliente { background-color: var(--blue); } .tag-prestador { background-color: var(--green); }
-        .user-info { flex-grow: 1; } .user-info .name { font-weight: 600; } .user-info .contact { font-size: 0.85rem; color: var(--text-muted); }
+        .user-info { flex-grow: 1; } 
+        .user-info .name { 
+            font-weight: 600; 
+            font-size: 1rem;
+            color: #2c3e50;
+            margin-bottom: 4px;
+            line-height: 1.3;
+        } 
+        .user-info .contact { 
+            font-size: 0.85rem; 
+            color: #64748b; 
+            line-height: 1.4;
+        }
         .user-actions {
             display: flex;
-            gap: 8px;
+            gap: 10px;
             flex-wrap: wrap;
             align-items: center;
         }
         .user-actions .btn {
             border: none;
-            padding: 8px 12px;
-            border-radius: 6px;
+            padding: 10px 14px;
+            border-radius: 8px;
             cursor: pointer;
             color: white;
             touch-action: manipulation;
-            min-height: 36px;
+            min-height: 40px;
             font-size: 0.85rem;
+            font-weight: 500;
             display: flex;
             align-items: center;
             justify-content: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .user-actions .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        
+        .user-actions .btn:active {
+            transform: translateY(0);
         }
         @media (max-width: 768px) {
             .user-item { 
                 flex-direction: column; 
-                align-items: flex-start; 
-                gap: 12px; 
-                padding: 16px 12px;
-                border: 1px dashed #ccc; /* Como mostrado no DevTools */
+                align-items: stretch; 
+                gap: 16px; 
+                padding: 20px 16px;
+                border: 1px solid #e0e6ed;
+                border-radius: 12px;
+                background: #fff;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+                margin-bottom: 16px;
+                transition: all 0.2s ease;
             }
+            
+            .user-item:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+                border-color: #d0d9e0;
+            }
+            
             .user-info {
                 width: 100%;
-                margin-bottom: 8px;
+                margin-bottom: 12px;
+                padding-bottom: 12px;
+                border-bottom: 1px solid #f0f3f6;
             }
+            
             .user-info .name {
-                font-size: 0.95rem;
-                margin-bottom: 2px;
-            }
-            .user-info .contact {
-                font-size: 0.8rem;
+                font-size: 1.1rem;
+                font-weight: 600;
+                margin-bottom: 6px;
+                color: #2c3e50;
                 line-height: 1.3;
             }
-            .user-actions { 
+            
+            .user-info .contact {
+                font-size: 0.85rem;
+                line-height: 1.4;
+                color: #64748b;
                 display: flex;
-                flex-wrap: wrap;
-                gap: 8px;
+                flex-direction: column;
+                gap: 2px;
+            }
+            
+            .user-actions { 
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 10px;
                 width: 100%;
-                margin-top: 4px;
+                margin-top: 0;
             }
+            
             .user-actions .btn { 
-                flex: 1;
-                min-width: 60px;
-                padding: 8px 6px;
-                font-size: 0.75rem;
-                min-height: 36px;
-                border-radius: 4px;
+                padding: 12px 8px;
+                font-size: 0.8rem;
+                min-height: 44px;
+                border-radius: 8px;
                 white-space: nowrap;
+                font-weight: 500;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 4px;
+                transition: all 0.2s ease;
+                text-align: center;
+                line-height: 1.2;
             }
+            
             .user-actions .btn i {
-                font-size: 0.9rem;
+                font-size: 1.1rem;
+                margin-bottom: 2px;
+            }
+            
+            .user-actions .btn:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            }
+            
+            .user-actions .btn:active {
+                transform: translateY(0);
+            }
+            
+            /* Cores específicas dos botões */
+            .user-actions .btn[style*="var(--blue)"] {
+                background: var(--blue) !important;
+            }
+            
+            .user-actions .btn[style*="var(--green)"] {
+                background: var(--green) !important;
+            }
+            
+            .user-actions .btn[style*="var(--orange)"] {
+                background: var(--orange) !important;
+            }
+            
+            .user-actions .btn[style*="var(--red)"] {
+                background: var(--red) !important;
             }
         }
 
