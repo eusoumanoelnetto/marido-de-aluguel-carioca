@@ -460,8 +460,9 @@
             .user-item { 
                 flex-direction: column; 
                 align-items: flex-start; 
-                gap: 8px; 
+                gap: 12px; 
                 padding: 16px 12px;
+                border: 1px dashed #ccc; /* Como mostrado no DevTools */
             }
             .user-info {
                 width: 100%;
@@ -476,15 +477,17 @@
                 line-height: 1.3;
             }
             .user-actions { 
-                display: grid;
-                grid-template-columns: 1fr 1fr 1fr 1fr;
-                gap: 4px;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
                 width: 100%;
-                margin-top: 8px;
+                margin-top: 4px;
             }
             .user-actions .btn { 
-                padding: 8px 4px;
-                font-size: 0.7rem;
+                flex: 1;
+                min-width: 60px;
+                padding: 8px 6px;
+                font-size: 0.75rem;
                 min-height: 36px;
                 border-radius: 4px;
                 white-space: nowrap;
