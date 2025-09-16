@@ -21,6 +21,7 @@ export let isDbConnected = false;
 // In-memory fallback stores (used when DB is not reachable)
 const memUsers: any[] = [];
 const memServiceRequests: any[] = [];
+const memMessages: any[] = [];
 
 // Helper to shape a query result similar to `pg`
 const makeResult = (rows: any[]) => ({ rowCount: rows.length, rows });
@@ -139,6 +140,27 @@ const inMemoryQuery = async (text: string, params?: any[]) => {
     return makeResult(rows);
   }
 
+  // messages: select by service id or by participants
+  if (/SELECT\s+\*\s+FROM\s+messages/i.test(q)) {
+    // select by serviceId
+    if (/WHERE\s+"serviceId"\s*=\s*\$1/i.test(q)) {
+      const serviceId = params && params[0];
+      const rows = memMessages.filter(m => m.serviceId === serviceId).sort((a,b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+      return makeResult(rows);
+    }
+    // select messages between two participants (by service and participant email)
+    return makeResult(memMessages.slice().sort((a,b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()));
+  }
+
+  // insert message
+  if (/INSERT\s+INTO\s+messages/i.test(q)) {
+    // params: id, serviceId, senderEmail, recipientEmail, content, createdAt
+    const [id, serviceId, senderEmail, recipientEmail, content, createdAt] = params || [];
+    const newMsg = { id, serviceId, senderEmail, recipientEmail, content, createdAt };
+    memMessages.push(newMsg);
+    return makeResult([ { ...newMsg } ]);
+  }
+
   // insert service request
   if (/INSERT\s+INTO\s+service_requests/i.test(q)) {
     // params: id, clientName, clientEmail, address, contact, category, description, photoBase64, status, isEmergency, requestDate
@@ -230,9 +252,25 @@ export const initDb = async () => {
       );
     `);
 
+    await pgPool.query(`
+      CREATE TABLE IF NOT EXISTS messages (
+        id VARCHAR(255) PRIMARY KEY,
+        "serviceId" VARCHAR(255),
+        "senderEmail" VARCHAR(255),
+        "recipientEmail" VARCHAR(255),
+        content TEXT,
+        "createdAt" TIMESTAMPTZ
+      );
+    `);
+
   // Garantir colunas novas em bases já existentes
   await pgPool.query('ALTER TABLE service_requests ADD COLUMN IF NOT EXISTS "clientEmail" VARCHAR(255)');
   await pgPool.query('ALTER TABLE service_requests ADD COLUMN IF NOT EXISTS "providerEmail" VARCHAR(255)');
+  await pgPool.query('ALTER TABLE messages ADD COLUMN IF NOT EXISTS "serviceId" VARCHAR(255)');
+  await pgPool.query('ALTER TABLE messages ADD COLUMN IF NOT EXISTS "senderEmail" VARCHAR(255)');
+  await pgPool.query('ALTER TABLE messages ADD COLUMN IF NOT EXISTS "recipientEmail" VARCHAR(255)');
+  await pgPool.query('ALTER TABLE messages ADD COLUMN IF NOT EXISTS content TEXT');
+  await pgPool.query('ALTER TABLE messages ADD COLUMN IF NOT EXISTS "createdAt" TIMESTAMPTZ');
   await pgPool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW()');
   await pgPool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMPTZ');
 

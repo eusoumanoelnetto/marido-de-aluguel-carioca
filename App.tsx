@@ -196,9 +196,9 @@ const App: React.FC = () => {
     }
   };
 
-  const updateRequestStatus = async (id: string, status: ServiceRequest['status'], quote?: number) => {
+  const updateRequestStatus = async (id: string, status: ServiceRequest['status'], quote?: number, initialMessage?: string) => {
     try {
-      const updatedRequest = await api.updateServiceRequestStatus(id, status, quote, currentUser?.role === 'provider' ? currentUser.email : undefined);
+      const updatedRequest = await api.updateServiceRequestStatus(id, status, quote, currentUser?.role === 'provider' ? currentUser.email : undefined, initialMessage);
       setServiceRequests(prev => 
         prev.map(req => req.id === id ? updatedRequest : req)
       );

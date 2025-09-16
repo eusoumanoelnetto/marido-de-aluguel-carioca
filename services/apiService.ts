@@ -225,12 +225,32 @@ export const updateServiceRequestStatus = async (
   id: string,
   status: ServiceRequest['status'],
   quote?: number,
-  providerEmail?: string
+  providerEmail?: string,
+  initialMessage?: string
 ): Promise<ServiceRequest> => {
   const response = await authFetch(`${API_BASE_URL}/requests/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ status, quote, providerEmail }),
+    body: JSON.stringify({ status, quote, providerEmail, initialMessage }),
   });
+  return handleResponse(response);
+};
+
+export const getMessagesForService = async (serviceId: string) => {
+  const response = await authFetch(`${API_BASE_URL}/messages/service/${serviceId}`);
+  return handleResponse(response);
+};
+
+export const sendMessage = async (serviceId: string, recipientEmail: string, content: string) => {
+  const response = await authFetch(`${API_BASE_URL}/messages`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ serviceId, recipientEmail, content }),
+  });
+  return handleResponse(response);
+};
+
+export const getRecentMessagesForMe = async () => {
+  const response = await authFetch(`${API_BASE_URL}/messages/me/recent`);
   return handleResponse(response);
 };

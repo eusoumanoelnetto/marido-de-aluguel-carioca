@@ -7,7 +7,7 @@ interface ProviderPageProps {
   currentUser: User;
   requests: ServiceRequest[];
   onLogout: () => void;
-    updateRequestStatus: (id: string, status: ServiceRequest['status'], quote?: number, providerEmail?: string) => void;
+    updateRequestStatus: (id: string, status: ServiceRequest['status'], quote?: number, providerEmail?: string, initialMessage?: string) => void;
   updateUser: (user: User) => void;
 }
 
@@ -680,19 +680,59 @@ const QuotesView: React.FC<{ requests: ServiceRequest[]; setView: (view: Provide
     </div>
 );
 
-const MessagesView: React.FC<{ setView: (view: ProviderView) => void; }> = ({ setView }) => (
-    <div className="max-w-7xl mx-auto p-6">
-        <div className="flex items-center mb-6">
-            <button onClick={() => setView('dashboard')} className="font-semibold text-brand-navy hover:text-black flex items-center mr-4">
-                <i className="fa-solid fa-arrow-left mr-2"></i> Voltar
-            </button>
-            <h1 className="text-2xl font-semibold text-brand-navy">Mensagens</h1>
+const MessagesView: React.FC<{ setView: (view: ProviderView) => void; onOpenConversation?: (serviceId: string) => void; }> = ({ setView, onOpenConversation }) => {
+    const [conversations, setConversations] = React.useState<any[]>([]);
+
+    React.useEffect(() => {
+        let mounted = true;
+        (async () => {
+            try {
+                const data = await (await import('../services/apiService')).getRecentMessagesForMe();
+                if (!mounted) return;
+                // group by serviceId
+                const grouped: Record<string, any[]> = {};
+                (data || []).forEach((m: any) => {
+                    const sid = m.serviceId || '__none__';
+                    grouped[sid] = grouped[sid] || [];
+                    grouped[sid].push(m);
+                });
+                const conv = Object.keys(grouped).map(k => ({ serviceId: k, last: grouped[k].sort((a,b)=> new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0], count: grouped[k].length }));
+                setConversations(conv);
+            } catch (err) {
+                // ignore
+            }
+        })();
+        return () => { mounted = false; };
+    }, []);
+
+    return (
+        <div className="max-w-7xl mx-auto p-6">
+            <div className="flex items-center mb-6">
+                <button onClick={() => setView('dashboard')} className="font-semibold text-brand-navy hover:text-black flex items-center mr-4">
+                    <i className="fa-solid fa-arrow-left mr-2"></i> Voltar
+                </button>
+                <h1 className="text-2xl font-semibold text-brand-navy">Mensagens</h1>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {conversations.length === 0 && (
+                    <div className="text-center py-20 bg-gray-50 rounded-lg border border-gray-200">Nenhuma conversa encontrada.</div>
+                )}
+                {conversations.map(c => (
+                    <div key={c.serviceId} className="bg-white rounded-lg border p-4 cursor-pointer" onClick={() => {
+                        if (c.serviceId && c.serviceId !== '__none__') {
+                            try { window.dispatchEvent(new CustomEvent('mdac:viewRequest', { detail: { id: c.serviceId } })); } catch {}
+                        }
+                        if (onOpenConversation) onOpenConversation(c.serviceId);
+                    }}>
+                        <div className="font-semibold">Conversa: {c.serviceId}</div>
+                        <div className="text-sm text-gray-500">Última: {c.last?.content}</div>
+                        <div className="text-xs text-gray-400 mt-2">Mensagens: {c.count}</div>
+                    </div>
+                ))}
+            </div>
         </div>
-        <div className="text-center py-20 bg-gray-50 rounded-lg border border-gray-200">
-            <p className="text-gray-500">Nenhuma conversa encontrada.</p>
-        </div>
-    </div>
-);
+    );
+};
 
 const allServices = [
     { name: 'Montagem de Móveis', iconClass: 'fas fa-couch' },

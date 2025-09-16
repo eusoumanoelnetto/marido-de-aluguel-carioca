@@ -22,11 +22,6 @@ Você pode instalar o Marido de Aluguel Carioca como aplicativo no seu celular A
 **Android:**
 1. Abra o site no Chrome
 2. Toque no menu (⋮)
-3. Selecione **Instalar app** ou **Adicionar à tela inicial**
-
-**iPhone (Safari):**
-1. Abra o site no Safari
-2. Toque no botão de compartilhamento (quadrado com seta para cima)
 3. Toque em **Adicionar à Tela de Início**
 
 O ícone do app será igual ao favicon do site.
@@ -37,14 +32,8 @@ O ícone do app será igual ao favicon do site.
 
 Este projeto é uma plataforma completa para conectar clientes e prestadores de serviços domésticos no Rio de Janeiro. O frontend foi desenvolvido em React + Vite, com integração Gemini 2.5 Pro (Google Studio AI) e backend Node.js rodando no Render.
 
----
-
 ## Ferramentas Utilizadas
-
-- **Frontend:** React, Vite, Gemini 2.5 Pro (Google Studio AI)
-- **Backend:** Node.js, Express, GPT-5 Mini (GitHub Copilot)
 - **Correção de bugs:** Cloud Sonnet 4 (GitHub Copilot)
-- **Hospedagem Backend:** Render
 - **Deploy Frontend:** Vercel (GitHub Pages descontinuado)
 
 ---

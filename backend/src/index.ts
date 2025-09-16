@@ -6,6 +6,7 @@ import authRoutes from './routes/authRoutes';
 import serviceRoutes from './routes/serviceRoutes';
 import userRoutes from './routes/userRoutes';
 import dashboardRoutes from './routes/dashboardRoutes';
+import messageRoutes from './routes/messageRoutes';
 import { initDb, isDbConnected } from './db';
 
 // Load environment variables from .env file
@@ -70,6 +71,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/requests', serviceRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', dashboardRoutes); // Nova rota para dashboard admin
+app.use('/api/messages', messageRoutes); // Mensagens entre cliente e prestador
 
 
 // Sempre que existir build em ../../dist servimos o front; se não existir, mostra health simples

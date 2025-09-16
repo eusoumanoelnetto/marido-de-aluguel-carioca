@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { ServiceRequest, User } from '../types';
+import * as api from '../services/apiService';
 // Removidos imports circulares desnecessários para evitar bundles maiores / warnings
 
 interface Props {
   request: ServiceRequest | null;
   onBack: () => void;
-  updateRequestStatus: (id: string, status: ServiceRequest['status'], quote?: number, providerEmail?: string) => void;
+  updateRequestStatus: (id: string, status: ServiceRequest['status'], quote?: number, providerEmail?: string, initialMessage?: string) => void;
   currentUser: User;
   getStatusDetails: (status: ServiceRequest['status']) => { text: string; className: string };
 }
@@ -14,6 +15,9 @@ const ServiceDetailView: React.FC<Props> = ({ request, onBack, updateRequestStat
   const [draftQuote, setDraftQuote] = useState('');
   const [editing, setEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [messages, setMessages] = useState<Array<any>>([]);
+  const [newMessage, setNewMessage] = useState('');
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const lastRequestIdRef = useRef<string | null>(null);
 
@@ -31,6 +35,24 @@ const ServiceDetailView: React.FC<Props> = ({ request, onBack, updateRequestStat
       setDraftQuote(initial);
     }
   }, [request?.id, request?.quote, editing]);
+
+  // Load messages when request is Aceito or provider/client views the service detail
+  useEffect(() => {
+    if (!request) return;
+    let mounted = true;
+    const load = async () => {
+      try {
+        const data = await api.getMessagesForService(request.id);
+        if (!mounted) return;
+        setMessages(data || []);
+        setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
+      } catch (err) {
+        // ignore
+      }
+    };
+    load();
+    return () => { mounted = false; };
+  }, [request?.id, request?.status]);
 
   // Se status mudou para algo diferente de 'Pendente' enquanto a tela está aberta, cancelar edição e garantir polling retomado
   useEffect(() => {
@@ -153,6 +175,37 @@ const ServiceDetailView: React.FC<Props> = ({ request, onBack, updateRequestStat
                   className={`px-5 py-3 rounded-lg font-semibold text-white w-full sm:w-auto ${isSubmitting ? 'bg-brand-red/60 cursor-not-allowed' : 'bg-brand-red hover:opacity-90'}`}
                 >Recusar</button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {request.status === 'Aceito' && (
+          <div className="mt-8 border-t pt-8">
+            <h2 className="text-lg font-semibold mb-3 text-brand-navy">Mensagens</h2>
+            <div className="bg-gray-50 rounded-lg p-4 max-h-80 overflow-auto">
+              {messages.length === 0 && <div className="text-gray-500">Nenhuma mensagem ainda.</div>}
+              {messages.map((m, idx) => (
+                <div key={m.id || idx} className={`py-2 ${m.senderEmail === currentUser.email ? 'text-right' : 'text-left'}`}>
+                  <div className={`inline-block px-3 py-2 rounded-lg ${m.senderEmail === currentUser.email ? 'bg-brand-blue text-white' : 'bg-white text-gray-800'} shadow-sm`}>{m.content}</div>
+                  <div className="text-xs text-gray-400 mt-1">{new Date(m.createdAt).toLocaleString()}</div>
+                </div>
+              ))}
+              <div ref={messagesEndRef} />
+            </div>
+            <div className="mt-3 flex gap-3">
+              <input value={newMessage} onChange={(e) => setNewMessage(e.target.value)} placeholder="Escreva uma mensagem..." className="flex-1 p-3 border rounded-lg" />
+              <button onClick={async () => {
+                if (!newMessage.trim()) return;
+                try {
+                  const recipient = request.providerEmail || '';
+                  const saved = await api.sendMessage(request.id, recipient, newMessage.trim());
+                  setMessages(prev => [...prev, saved]);
+                  setNewMessage('');
+                  setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
+                } catch (err: any) {
+                  window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: err?.message || 'Erro ao enviar mensagem', type: 'error' } }));
+                }
+              }} className="px-4 py-2 bg-brand-blue text-white rounded-lg">Enviar</button>
             </div>
           </div>
         )}

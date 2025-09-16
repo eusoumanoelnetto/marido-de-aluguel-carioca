@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import MessagePrompt from '../components/MessagePrompt';
 import { useConfirm } from '../components/ConfirmDialog';
 import { ServiceRequest, ServiceCategory, User } from '../types';
 import { HammerIcon, WrenchIcon, ZapIcon, DropletsIcon, PaintBucketIcon, HouseIcon, MonitorIcon, CctvIcon } from '../components/Icons';
@@ -11,6 +12,7 @@ interface ClientPageProps {
     updateUser: (user: User) => void;
     requests: ServiceRequest[];
     updateRequestStatus: (id: string, status: ServiceRequest['status'], quote?: number) => void;
+
 }
 
 type ClientView = 'dashboard' | 'profile' | 'edit-profile' | 'messages' | 'quote-step1' | 'quote-step2' | 'quotes-received' | 'service-category' | 'emergency' | 'help';
@@ -629,10 +631,12 @@ const HelpView: React.FC<{ setView: (view: ClientView) => void }> = ({ setView }
 );
 
 const ClientPage: React.FC<ClientPageProps> = ({ currentUser, addServiceRequest, onLogout, updateUser, requests, updateRequestStatus }) => {
-    const confirm = useConfirm();
+        const confirm = useConfirm();
   const [view, setView] = useState<ClientView>('dashboard');
   const [selectedCategory, setSelectedCategory] = useState<ServiceCategory>('Montagem de Móveis');
   const [isEmergencyRequest, setIsEmergencyRequest] = useState(false);
+        const [showMessagePrompt, setShowMessagePrompt] = useState(false);
+        const [pendingAcceptId, setPendingAcceptId] = useState<string | null>(null);
     // ids de orçamentos recebidos ainda não visualizados na aba 'Meus Orçamentos'
     const [unseenQuoteIds, setUnseenQuoteIds] = useState<Set<string>>(() => {
         try {
@@ -714,9 +718,9 @@ const ClientPage: React.FC<ClientPageProps> = ({ currentUser, addServiceRequest,
                     requests={requests} 
                     user={currentUser}
                     onAccept={(id) => {
-                        updateRequestStatus(id, 'Aceito');
-                        window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: 'Orçamento aceito e serviço confirmado!', type: 'success' } }));
-                        setView('dashboard');
+                        // open modal to collect initial message
+                        setPendingAcceptId(id);
+                        setShowMessagePrompt(true);
                     }}
                     onCancel={async (id) => {
                         const ok = await confirm({
@@ -744,7 +748,16 @@ const ClientPage: React.FC<ClientPageProps> = ({ currentUser, addServiceRequest,
 
   return (
     <div className="bg-slate-50 text-[#344054] min-h-screen">
-      {renderContent()}
+            {renderContent()}
+            <MessagePrompt open={showMessagePrompt} onCancel={() => { setShowMessagePrompt(false); setPendingAcceptId(null); }} onConfirm={async (msg) => {
+                    const id = pendingAcceptId;
+                    setShowMessagePrompt(false);
+                    setPendingAcceptId(null);
+                    if (!id) return;
+                    await updateRequestStatus(id, 'Aceito', undefined, msg);
+                    window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: 'Orçamento aceito e serviço confirmado!', type: 'success' } }));
+                    setView('dashboard');
+            }} />
     </div>
   );
 };

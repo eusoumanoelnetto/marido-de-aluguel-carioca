@@ -70,6 +70,7 @@ export const createServiceRequest = async (req: Request, res: Response) => {
 export const updateServiceRequestStatus = async (req: Request, res: Response) => {
   const { id } = req.params;
   const { status, quote, providerEmail } = req.body;
+  const { initialMessage } = req.body as { initialMessage?: string };
   const userEmail = (req as any).userEmail as string | undefined;
   const userRole = (req as any).userRole as string | undefined;
 
@@ -125,7 +126,18 @@ export const updateServiceRequestStatus = async (req: Request, res: Response) =>
       res.status(404).json({ message: 'Solicitação não encontrada.' });
       return;
     }
-    
+    // If client accepted the quote and sent an initialMessage, persist it to messages
+    if (status === 'Aceito' && initialMessage && initialMessage.trim().length > 0) {
+      try {
+        const msgId = require('uuid').v4();
+        const createdAt = new Date().toISOString();
+        const provider = result.rows[0].providerEmail;
+        await pool.query('INSERT INTO messages (id, "serviceId", "senderEmail", "recipientEmail", content, "createdAt") VALUES ($1,$2,$3,$4,$5,$6)', [msgId, id, userEmail, provider, initialMessage, createdAt]);
+      } catch (err) {
+        console.error('Erro ao inserir mensagem inicial:', err);
+      }
+    }
+
   console.log(`Service request ${id} updated to status: ${status}`);
     res.status(200).json(result.rows[0]);
   } catch (error) {
