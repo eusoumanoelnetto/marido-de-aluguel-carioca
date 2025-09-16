@@ -32,36 +32,23 @@ const InlineAnnouncements = ({ limit, userRole }: Props) => {
     let cancelled = false;
     (async () => {
       try {
-        // Limpar cache antigo se necessário
         if (typeof window !== 'undefined') {
           console.log('🔍 InlineAnnouncements carregando...');
         }
-        
-        const candidates = [
-          '/announcements.json',
-          `${import.meta.env.BASE_URL}announcements.json`,
-          `${import.meta.env.BASE_URL.replace(/\/$/, '')}/announcements.json`,
-        ];
-        let data: Announcement[] | null = null;
-        for (const url of candidates) {
-          try {
-            const res = await fetch(url, { cache: 'no-store' });
-            if (!res.ok) continue;
-            const json = await res.json();
-            if (Array.isArray(json)) { data = json as Announcement[]; break; }
-          } catch (err) {
-            // tentar próximo
-          }
-        }
-        if (!data) throw new Error('Falha ao carregar');
+        // Sempre usar o caminho relativo ao BASE_URL
+        const url = `${import.meta.env.BASE_URL}announcements.json`;
+        const res = await fetch(url, { cache: 'no-store' });
+        if (!res.ok) throw new Error('Falha ao carregar');
+        const data = await res.json();
+        if (!Array.isArray(data)) throw new Error('Formato inválido');
         if (cancelled) return;
-        
+
         // Filtrar notificações que expiraram (7 dias após a data de criação)
         const now = new Date();
         let validItems = data.filter(item => {
-          if (!item.date) return true; // Se não tem data, mantém
+          if (!item.date) return true;
           const itemDate = new Date(item.date);
-          const expirationDate = new Date(itemDate.getTime() + (7 * 24 * 60 * 60 * 1000)); // +7 dias
+          const expirationDate = new Date(itemDate.getTime() + (7 * 24 * 60 * 60 * 1000));
           return now <= expirationDate;
         });
 
