@@ -22,9 +22,9 @@ const services = [
     { name: 'CFTV', icon: <CctvIcon /> },
 ];
 
-const SignUpPage = ({ initialRole, onSignUpSuccess, onNavigateToLogin, onBack, loading = false }: any) => {
-  const [userType, setUserType] = useState(initialRole);
-  const [selectedServices, setSelectedServices] = useState(new Set());
+const SignUpPage: React.FC<SignUpPageProps> = ({ initialRole, onSignUpSuccess, onNavigateToLogin, onBack, loading = false }) => {
+  const [userType, setUserType] = useState<'client' | 'provider'>(initialRole);
+  const [selectedServices, setSelectedServices] = useState<Set<string>>(new Set());
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -47,7 +47,7 @@ const SignUpPage = ({ initialRole, onSignUpSuccess, onNavigateToLogin, onBack, l
     });
   };
 
-  const handleSubmit = (e: any) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const servicesArray = userType === 'provider' ? Array.from(selectedServices) : [];
     onSignUpSuccess({ name, email, phone, role: userType, cep, password, services: servicesArray });

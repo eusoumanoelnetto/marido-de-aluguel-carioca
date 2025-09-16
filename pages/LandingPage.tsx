@@ -7,14 +7,14 @@ interface LandingPageProps {
   onNavigateToSignUp: () => void;
 }
 
-const ServiceItem = ({ icon, name }: any) => (
+const ServiceItem: React.FC<{ icon: React.ReactNode; name: string }> = ({ icon, name }) => (
   <div className="flex flex-col items-center justify-center text-center">
     <div className="flex items-center justify-center h-8 w-8 mb-2 text-white/80">{icon}</div>
     <span className="text-xs font-medium">{name}</span>
   </div>
 );
 
-const LandingPage = ({ onNavigateToLogin, onNavigateToSignUp }: any) => {
+const LandingPage: React.FC<LandingPageProps> = ({ onNavigateToLogin, onNavigateToSignUp }) => {
     
   const services = [
     { icon: <HammerIcon width="30" height="30" />, name: 'Montagem de Móveis' },

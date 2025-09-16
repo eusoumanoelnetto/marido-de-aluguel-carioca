@@ -6,7 +6,7 @@ interface HeaderProps {
   userName?: string | null;
 }
 
-const Header = ({ onHomeClick, onLogout, userName }: any) => {
+const Header: React.FC<HeaderProps> = ({ onHomeClick, onLogout, userName }) => {
   return (
     <header className="bg-brand-navy shadow-md">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">

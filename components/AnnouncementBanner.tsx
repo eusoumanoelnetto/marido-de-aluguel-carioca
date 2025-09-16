@@ -14,9 +14,9 @@ interface Props {
 
 // Banner de anúncios/atualizações: busca /announcements.json (gerado e versionado) e exibe itens não vistos.
 // Persistência: localStorage chave mdac_seenAnnouncements (array de ids)
-const AnnouncementBanner = ({ role }: any) => {
-  const [announcements, setAnnouncements] = useState([] as Announcement[]);
-  const [visibleIds, setVisibleIds] = useState([] as string[]);
+const AnnouncementBanner: React.FC<Props> = ({ role }) => {
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [visibleIds, setVisibleIds] = useState<string[]>([]);
   const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {

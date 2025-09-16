@@ -10,12 +10,12 @@ interface Props {
   getStatusDetails: (status: ServiceRequest['status']) => { text: string; className: string };
 }
 
-const ServiceDetailView = ({ request, onBack, updateRequestStatus, currentUser, getStatusDetails }: any) => {
+const ServiceDetailView: React.FC<Props> = ({ request, onBack, updateRequestStatus, currentUser, getStatusDetails }) => {
   const [draftQuote, setDraftQuote] = useState('');
   const [editing, setEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const inputRef = useRef(null as any);
-  const lastRequestIdRef = useRef(null as any);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const lastRequestIdRef = useRef<string | null>(null);
 
   // Initialize / sync from external quote only when not editing
   useEffect(() => {

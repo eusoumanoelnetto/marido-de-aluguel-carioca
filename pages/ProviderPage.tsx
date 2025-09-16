@@ -164,7 +164,7 @@ const ProviderHeader = ({ setView }: { setView: (view: ProviderView) => void }) 
 };
 
 // Card de estatísticas usado no dashboard do prestador
-const StatCard = ({ icon, title, color = 'text-brand-navy', onClick, children }: { icon: string; title: string; color?: string; onClick?: () => void; children?: any }) => (
+const StatCard: React.FC<{ icon: string; title: string; color?: string; onClick?: () => void; children?: React.ReactNode; }> = ({ icon, title, color = 'text-brand-navy', onClick, children }) => (
     <div
         onClick={onClick}
         className={`bg-white border border-gray-200 rounded-xl p-5 cursor-pointer transition-shadow hover:shadow-lg flex flex-col justify-between min-h-[120px]`}
@@ -178,7 +178,11 @@ const StatCard = ({ icon, title, color = 'text-brand-navy', onClick, children }:
 );
 
 
-const ProviderPublicProfile = ({ onBack, currentUser, requests }: { onBack: () => void; currentUser: User; requests: ServiceRequest[] }) => {
+const ProviderPublicProfile: React.FC<{
+    onBack: () => void;
+    currentUser: User;
+    requests: ServiceRequest[];
+}> = ({ onBack, currentUser, requests }) => {
     interface Review {
       id: number;
       name: string;
@@ -200,7 +204,7 @@ const ProviderPublicProfile = ({ onBack, currentUser, requests }: { onBack: () =
       { id: 5, name: 'Carla Mendes', initials: 'CM', color: '#fb923c', date: '2024-03-20T16:00:00Z', rating: 3, text: "O serviço de pintura ficou bom, mas o pintor sujou um pouco o chão. Poderia ter tido mais cuidado com a forração.", service: 'Pintura de Parede', timeAgo: 'Há 4 meses' },
     ];
     
-    const [reviewFilter, setReviewFilter] = useState('recent');
+    const [reviewFilter, setReviewFilter] = useState<'recent' | 'rating'>('recent');
     const [visibleReviewsCount, setVisibleReviewsCount] = useState(3);
 
     const sortedReviews = useMemo(() => {
@@ -407,8 +411,7 @@ const ProviderPublicProfile = ({ onBack, currentUser, requests }: { onBack: () =
 };
 
 // ---- Componentes auxiliares (fora de qualquer retorno JSX para evitar erros de parse) ----
-const AppointmentCard = (props: any) => {
-    const { request, time, onViewDetails } = props;
+const AppointmentCard: React.FC<{ request: ServiceRequest; time?: string; onViewDetails: () => void; }> = ({ request, time, onViewDetails }) => {
     const status = getStatusDetails(request.status);
     return (
         <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-shadow hover:shadow-md">
@@ -427,7 +430,7 @@ const AppointmentCard = (props: any) => {
     );
 };
 
-const ActionCard = ({ icon, title, description, onClick }: { icon: string; title: string; description: string; onClick: () => void; }) => (
+const ActionCard: React.FC<{ icon: string; title: string; description: string; onClick: () => void; }> = ({ icon, title, description, onClick }) => (
     <div onClick={onClick} className="bg-white border border-gray-200 rounded-xl p-6 text-center cursor-pointer transition-transform transform hover:-translate-y-1 hover:shadow-xl h-full flex flex-col items-center justify-center">
         <i className={`${icon} text-4xl mb-4 text-brand-navy`}></i>
         <h3 className="text-lg font-semibold mb-2 text-brand-navy">{title}</h3>
@@ -435,7 +438,7 @@ const ActionCard = ({ icon, title, description, onClick }: { icon: string; title
     </div>
 );
 
-const AgendaView = ({ requests, onBack, onViewDetails }: { requests: ServiceRequest[]; onBack: () => void; onViewDetails: (request: ServiceRequest) => void; }) => {
+const AgendaView: React.FC<{ requests: ServiceRequest[]; onBack: () => void; onViewDetails: (request: ServiceRequest) => void; }> = ({ requests, onBack, onViewDetails }) => {
     const [currentDate, setCurrentDate] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState(new Date());
     const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
@@ -530,7 +533,12 @@ const AgendaView = ({ requests, onBack, onViewDetails }: { requests: ServiceRequ
     );
 };
 
-const DashboardView = ({ requests, setView, onViewDetails, updateRequestStatus }: { requests: ServiceRequest[]; setView: (view: ProviderView) => void; onViewDetails: (request: ServiceRequest) => void; updateRequestStatus: (id: string, status: ServiceRequest['status'], quote?: number, providerEmail?: string) => void; }) => {
+const DashboardView: React.FC<{
+    requests: ServiceRequest[];
+    setView: (view: ProviderView) => void;
+    onViewDetails: (request: ServiceRequest) => void;
+    updateRequestStatus: (id: string, status: ServiceRequest['status'], quote?: number, providerEmail?: string) => void;
+}> = ({ requests, setView, onViewDetails, updateRequestStatus }) => {
     
     // --- Calculations for Stat Cards ---
     const isSameDay = (d1: Date, d2: Date) => d1.toDateString() === d2.toDateString();
@@ -650,7 +658,7 @@ const DashboardView = ({ requests, setView, onViewDetails, updateRequestStatus }
     );
 };
 
-const QuotesView = ({ requests, setView, onViewDetails, isFilteredView = false }: { requests: ServiceRequest[]; setView: (view: ProviderView) => void; onViewDetails: (request: ServiceRequest) => void; isFilteredView?: boolean; }) => (
+const QuotesView: React.FC<{ requests: ServiceRequest[]; setView: (view: ProviderView) => void; onViewDetails: (request: ServiceRequest) => void; isFilteredView?: boolean; }> = ({ requests, setView, onViewDetails, isFilteredView = false }) => (
     <div className="max-w-7xl mx-auto p-6">
         <div className="flex items-center mb-6">
             <button onClick={() => setView('dashboard')} className="font-semibold text-brand-navy hover:text-black flex items-center mr-4">
@@ -672,7 +680,7 @@ const QuotesView = ({ requests, setView, onViewDetails, isFilteredView = false }
     </div>
 );
 
-const MessagesView = ({ setView }: { setView: (view: ProviderView) => void; }) => (
+const MessagesView: React.FC<{ setView: (view: ProviderView) => void; }> = ({ setView }) => (
     <div className="max-w-7xl mx-auto p-6">
         <div className="flex items-center mb-6">
             <button onClick={() => setView('dashboard')} className="font-semibold text-brand-navy hover:text-black flex items-center mr-4">
@@ -697,7 +705,12 @@ const allServices = [
     { name: 'CFTV', iconClass: 'fas fa-video' },
 ];
 
-const ProviderProfileView = ({ currentUser, setView, onLogout, requests }: { currentUser: User; setView: (view: ProviderView) => void; onLogout: () => void; requests: ServiceRequest[]; }) => {
+const ProviderProfileView: React.FC<{
+    currentUser: User;
+    setView: (view: ProviderView) => void;
+    onLogout: () => void;
+    requests: ServiceRequest[];
+}> = ({ currentUser, setView, onLogout, requests }) => {
     
     const completedServices = requests.filter(r => r.status === 'Finalizado').length;
     const totalRevenue = requests
@@ -765,14 +778,19 @@ const ProviderProfileView = ({ currentUser, setView, onLogout, requests }: { cur
     );
 };
 
-const EditProfileView = ({ currentUser, onSave, onCancel, setView }: { currentUser: User; onSave: (updatedUser: User) => void; onCancel: () => void; setView: (view: ProviderView) => void; }) => {
-    const [formData, setFormData] = useState(currentUser);
-    const [selectedServices, setSelectedServices] = useState(new Set(currentUser.services || []));
-    const [avatarPreview, setAvatarPreview] = useState(
+const EditProfileView: React.FC<{
+    currentUser: User;
+    onSave: (updatedUser: User) => void;
+    onCancel: () => void;
+    setView: (view: ProviderView) => void;
+}> = ({ currentUser, onSave, onCancel, setView }) => {
+    const [formData, setFormData] = useState<User>(currentUser);
+    const [selectedServices, setSelectedServices] = useState<Set<string>>(new Set(currentUser.services || []));
+    const [avatarPreview, setAvatarPreview] = useState<string | null>(
         currentUser.profilePictureBase64 ? `data:image/jpeg;base64,${currentUser.profilePictureBase64}` : null
     );
 
-    const handleInputChange = (e: any) => {
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { id, value } = e.target;
         // Map id to formData key
         const keyMap: { [key: string]: keyof User } = {
@@ -796,7 +814,7 @@ const EditProfileView = ({ currentUser, onSave, onCancel, setView }: { currentUs
         setSelectedServices(newSelected);
     };
 
-    const handlePhotoChange = (e: any) => {
+    const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
             const reader = new FileReader();
@@ -881,7 +899,7 @@ const EditProfileView = ({ currentUser, onSave, onCancel, setView }: { currentUs
     );
 };
 
-const HelpView = ({ onBack }: { onBack: () => void }) => (
+const HelpView: React.FC<{ onBack: () => void }> = ({ onBack }) => (
     <div className="max-w-7xl mx-auto p-6">
         <PageHeader onBack={onBack} title="Voltar para Editar Perfil" />
         <div className="max-w-3xl mx-auto bg-white rounded-xl border border-gray-200 p-8 shadow-sm">
@@ -915,11 +933,11 @@ const HelpView = ({ onBack }: { onBack: () => void }) => (
 );
 
 
-const ProviderPage = ({ currentUser, requests, onLogout, updateRequestStatus, updateUser }: ProviderPageProps) => {
-        const [view, setView] = useState('dashboard' as ProviderView);
-        const [previousView, setPreviousView] = useState('dashboard' as ProviderView);
-        const [selectedRequest, setSelectedRequest] = useState(null as ServiceRequest | null);
-        // (ServiceDetailView agora é importado de components/ServiceDetailView.tsx)
+const ProviderPage: React.FC<ProviderPageProps> = ({ currentUser, requests, onLogout, updateRequestStatus, updateUser }) => {
+  const [view, setView] = useState<ProviderView>('dashboard');
+  const [previousView, setPreviousView] = useState<ProviderView>('dashboard');
+  const [selectedRequest, setSelectedRequest] = useState<ServiceRequest | null>(null);
+    // (ServiceDetailView agora é importado de components/ServiceDetailView.tsx)
   
 
   const handleViewDetails = (request: ServiceRequest) => {
@@ -929,7 +947,7 @@ const ProviderPage = ({ currentUser, requests, onLogout, updateRequestStatus, up
   };
 
     // Abrir detalhe quando receber evento global (ex: popup manda para ver pedido específico)
-    useEffect(() => {
+    React.useEffect(() => {
         const handler = (e: any) => {
             const id = e?.detail?.id as string | undefined;
             if (!id) return;

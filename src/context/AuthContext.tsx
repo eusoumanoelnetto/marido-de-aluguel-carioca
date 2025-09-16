@@ -13,10 +13,10 @@ interface AuthContextType {
   updateUser: (u: User) => Promise<User | null>;
 }
 
-export const AuthContext = createContext(null as any);
+export const AuthContext = createContext<AuthContextType | null>(null);
 
-export const AuthProvider = ({ children }: { children: any }) => {
-  const [user, setUser] = useState(() => {
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(() => {
     try {
       const raw = localStorage.getItem('mdac_user');
       return raw ? JSON.parse(raw) as User : null;
@@ -25,7 +25,7 @@ export const AuthProvider = ({ children }: { children: any }) => {
     }
   });
 
-  const [authError, setAuthError] = useState(null as string | null);
+  const [authError, setAuthError] = useState<string | null>(null);
   const isAuthenticated = !!user;
   const navigate = useNavigate();
 

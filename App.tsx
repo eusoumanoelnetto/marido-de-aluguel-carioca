@@ -16,18 +16,18 @@ import { ConfirmProvider } from './components/ConfirmDialog';
 
 type Page = 'role-selection' | 'login' | 'signup' | 'client' | 'provider';
 
-const App = () => {
-  const [currentPage, setCurrentPage] = useState('role-selection');
-  const [selectedRoleForAuth, setSelectedRoleForAuth] = useState('client');
+const App: React.FC = () => {
+  const [currentPage, setCurrentPage] = useState<Page>('role-selection');
+  const [selectedRoleForAuth, setSelectedRoleForAuth] = useState<'client' | 'provider'>('client');
   const { user: currentUser, isAuthenticated, login, signUp, logout, updateUser: contextUpdateUser } = useContext(AuthContext);
-  const [serviceRequests, setServiceRequests] = useState([] as ServiceRequest[]);
+  const [serviceRequests, setServiceRequests] = useState<ServiceRequest[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [lastPendingIds, setLastPendingIds] = useState(new Set());
-  const [newPending, setNewPending] = useState([] as ServiceRequest[]);
+  const [lastPendingIds, setLastPendingIds] = useState<Set<string>>(new Set());
+  const [newPending, setNewPending] = useState<ServiceRequest[]>([]);
   const [showNewRequestsAlert, setShowNewRequestsAlert] = useState(false);
-  const [lastRequestsMap, setLastRequestsMap] = useState({} as Record<string, ServiceRequest['status']>);
+  const [lastRequestsMap, setLastRequestsMap] = useState<Record<string, ServiceRequest['status']>>({});
   // null = ainda checando, false = ok, true = misconfigured
-  const [apiMisconfigured, setApiMisconfigured] = useState(null as boolean | null);
+  const [apiMisconfigured, setApiMisconfigured] = useState<boolean | null>(null);
 
   // Buscar solicitações tanto para prestador quanto para cliente (cliente filtra localmente pelos seus pedidos)
   useEffect(() => {

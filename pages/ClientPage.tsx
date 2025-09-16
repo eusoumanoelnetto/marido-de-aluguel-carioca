@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, cloneElement } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useConfirm } from '../components/ConfirmDialog';
 import { ServiceRequest, ServiceCategory, User } from '../types';
 import { HammerIcon, WrenchIcon, ZapIcon, DropletsIcon, PaintBucketIcon, HouseIcon, MonitorIcon, CctvIcon } from '../components/Icons';
@@ -15,7 +15,7 @@ interface ClientPageProps {
 
 type ClientView = 'dashboard' | 'profile' | 'edit-profile' | 'messages' | 'quote-step1' | 'quote-step2' | 'quotes-received' | 'service-category' | 'emergency' | 'help';
 
-const services = [
+const services: { name: ServiceCategory; icon: React.FC<React.SVGProps<SVGSVGElement>> }[] = [
     { name: 'Montagem de Móveis' as ServiceCategory, icon: HammerIcon },
     { name: 'Reparos Gerais' as ServiceCategory, icon: WrenchIcon },
     { name: 'Elétrica' as ServiceCategory, icon: ZapIcon },
@@ -28,7 +28,7 @@ const services = [
 
 const providers: { name: string; rating: string; tags: string[]; price: string; }[] = [];
 
-const PageHeader = ({ onBack, title, children }: any) => (
+const PageHeader: React.FC<{ onBack: () => void, title?: string, children?: React.ReactNode }> = ({ onBack, title, children }) => (
     <header className="flex items-center p-4 border-b border-gray-200 mb-8 max-w-[1200px] mx-auto">
         <button onClick={onBack} className="font-semibold text-[#344054] hover:text-black">
             <i className="fa-solid fa-arrow-left mr-2"></i> {title ? title : 'Voltar'}
@@ -40,15 +40,15 @@ const PageHeader = ({ onBack, title, children }: any) => (
     </header>
 );
 
-const EditProfileView = ({ user, onSave, onCancel }: { user: User; onSave: (user: User) => void; onCancel: () => void; }) => {
+const EditProfileView: React.FC<{ user: User; onSave: (user: User) => void; onCancel: () => void; }> = ({ user, onSave, onCancel }) => {
     const [formData, setFormData] = useState(user);
 
-    const handleChange = (e: any) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = (e: any) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         onSave(formData);
     };
@@ -85,7 +85,7 @@ const EditProfileView = ({ user, onSave, onCancel }: { user: User; onSave: (user
     );
 };
 
-const DashboardView = ({ setView, handleServiceClick, unseenQuotes = 0 }: { setView: (view: ClientView) => void, handleServiceClick: (category: ServiceCategory) => void; unseenQuotes?: number; }) => (
+const DashboardView: React.FC<{ setView: (view: ClientView) => void, handleServiceClick: (category: ServiceCategory) => void; unseenQuotes: number; }> = ({ setView, handleServiceClick, unseenQuotes }) => (
     <div>
         <header className="bg-white shadow-sm sticky top-0 z-10">
             <div className="max-w-7xl mx-auto px-2 sm:px-6">
@@ -127,7 +127,7 @@ const DashboardView = ({ setView, handleServiceClick, unseenQuotes = 0 }: { setV
         </header>
         <main className="max-w-[1200px] mx-auto p-5">
             <input type="search" className="w-full p-3 bg-gray-100 border border-gray-200 rounded-lg my-8 text-base" placeholder="🔎 Buscar serviços (ex: eletricista, encanador, pintor...)" />
-            <InlineAnnouncements limit={3} userRole="client" />
+            <InlineAnnouncements limit={3} />
 
             <h2 className="text-3xl font-semibold mb-6 text-brand-navy">Serviços Disponíveis</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-5 mb-12">
@@ -169,9 +169,9 @@ const DashboardView = ({ setView, handleServiceClick, unseenQuotes = 0 }: { setV
     </div>
 );
 
-const ProfileView = ({ setView, onLogout, user, onEdit, updateUser }: { setView: (view: ClientView) => void; onLogout: () => void; user: User; onEdit: () => void; updateUser: (user: User) => void; }) => {
+const ProfileView: React.FC<{ setView: (view: ClientView) => void; onLogout: () => void; user: User; onEdit: () => void; updateUser: (user: User) => void; }> = ({ setView, onLogout, user, onEdit, updateUser }) => {
     
-    const handlePhotoChange = (e: any) => {
+    const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
             const reader = new FileReader();
@@ -237,7 +237,7 @@ const ProfileView = ({ setView, onLogout, user, onEdit, updateUser }: { setView:
     );
 };
 
-const MessagesView = ({ setView }: { setView: (view: ClientView) => void }) => (
+const MessagesView: React.FC<{ setView: (view: ClientView) => void }> = ({ setView }) => (
     <main className="max-w-[1200px] mx-auto p-5">
         <PageHeader onBack={() => setView('dashboard')}>
             <h1 className="text-xl font-semibold text-brand-navy">Mensagens</h1>
@@ -253,7 +253,7 @@ const MessagesView = ({ setView }: { setView: (view: ClientView) => void }) => (
     </main>
 );
 
-const RequestQuoteStep1View = ({ setView }: { setView: (view: ClientView) => void }) => (
+const RequestQuoteStep1View: React.FC<{ setView: (view: ClientView) => void }> = ({ setView }) => (
     <main className="max-w-[1200px] mx-auto p-5">
         <PageHeader onBack={() => setView('dashboard')} />
         <div className="max-w-3xl mx-auto bg-white rounded-xl border border-gray-200 p-8 shadow-sm text-center">
@@ -276,12 +276,18 @@ const RequestQuoteStep1View = ({ setView }: { setView: (view: ClientView) => voi
     </main>
 );
 
-const RequestQuoteStep2View = ({ setView, addServiceRequest, currentUser, category, isEmergency }: { setView: (view: ClientView) => void; addServiceRequest: (request: ServiceRequest) => void; currentUser: User; category: ServiceCategory; isEmergency: boolean; }) => {
+const RequestQuoteStep2View: React.FC<{ 
+    setView: (view: ClientView) => void;
+    addServiceRequest: (request: ServiceRequest) => void;
+    currentUser: User;
+    category: ServiceCategory;
+    isEmergency: boolean;
+}> = ({ setView, addServiceRequest, currentUser, category, isEmergency }) => {
     const [description, setDescription] = useState('');
     const [address, setAddress] = useState('');
-    const [photo, setPhoto] = useState({ preview: 'data:image/svg+xml;charset=UTF-8,%3csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80" fill="none"%3e%3cpath fill="%23F3F4F6" d="M0 0h80v80H0z"/%3e%3cpath fill-rule="evenodd" clip-rule="evenodd" d="M36.182 38.818a2 2 0 10-2.828-2.828 2 2 0 002.828 2.828zM34 38a2 2 0 11-4 0 2 2 0 014 0z" fill="%23D1D5DB"/%3e%3cpath d="M48 57.5L38.5 48l-15 15h34L48 57.5z" fill="%23D1D5DB"/%3e%3c/svg%3e', base64: null });
+    const [photo, setPhoto] = useState<{ preview: string; base64: string | null }>({ preview: 'data:image/svg+xml;charset=UTF-8,%3csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80" fill="none"%3e%3cpath fill="%23F3F4F6" d="M0 0h80v80H0z"/%3e%3cpath fill-rule="evenodd" clip-rule="evenodd" d="M36.182 38.818a2 2 0 10-2.828-2.828 2 2 0 002.828 2.828zM34 38a2 2 0 11-4 0 2 2 0 014 0z" fill="%23D1D5DB"/%3e%3cpath d="M48 57.5L38.5 48l-15 15h34L48 57.5z" fill="%23D1D5DB"/%3e%3c/svg%3e', base64: null });
 
-    const handlePhotoChange = (e: any) => {
+    const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
             const reader = new FileReader();
@@ -296,7 +302,7 @@ const RequestQuoteStep2View = ({ setView, addServiceRequest, currentUser, catego
         }
     };
     
-    const handleSubmit = (e: any) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         const newRequest: ServiceRequest = {
             id: new Date().toISOString(),
@@ -404,7 +410,7 @@ const RequestQuoteStep2View = ({ setView, addServiceRequest, currentUser, catego
     );
 };
 
-const QuotesReceivedView = ({ setView, requests, onAccept, onCancel, user }: { setView: (view: ClientView) => void; requests: ServiceRequest[]; onAccept: (id: string) => void; onCancel: (id: string) => void; user: User; }) => {
+const QuotesReceivedView: React.FC<{ setView: (view: ClientView) => void; requests: ServiceRequest[]; onAccept: (id: string) => void; onCancel: (id: string) => void; user: User; }> = ({ setView, requests, onAccept, onCancel, user }) => {
     const myRequests = requests.filter(r => r.clientEmail === user.email);
     const pending = myRequests.filter(r => r.status === 'Pendente');
     const withQuotes = myRequests.filter(r => r.status === 'Orçamento Enviado' && (typeof r.quote === 'number' ? r.quote >= 0 : true));
@@ -491,8 +497,8 @@ const QuotesReceivedView = ({ setView, requests, onAccept, onCancel, user }: { s
     );
 };
 
-const ServiceCategoryView = ({ setView, category }: { setView: (view: ClientView) => void, category: ServiceCategory }) => {
-    const subServicesData: Record<string, { name: string; icon: any }[]> = {
+const ServiceCategoryView: React.FC<{ setView: (view: ClientView) => void, category: ServiceCategory }> = ({ setView, category }) => {
+    const subServicesData: Record<string, { name: string; icon: React.ReactElement }[]> = {
         'Montagem de Móveis': [
             { name: 'Montagem de Guarda-roupa', icon: <HammerIcon /> },
             { name: 'Montagem de Cama', icon: <HammerIcon /> },
@@ -561,7 +567,7 @@ const ServiceCategoryView = ({ setView, category }: { setView: (view: ClientView
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {currentSubServices.map(item => (
                     <div key={item.name} onClick={() => setView('quote-step2')} className="bg-white rounded-xl border-2 border-gray-200 p-5 flex flex-col items-center justify-center gap-2 font-semibold text-center cursor-pointer hover:border-brand-red hover:text-brand-red transition-colors">
-                        <div className="text-brand-red h-8 w-8 flex items-center justify-center">{cloneElement(item.icon, { className: 'w-6 h-6' })}</div>
+                        <div className="text-brand-red h-8 w-8 flex items-center justify-center">{React.cloneElement(item.icon, { className: 'w-6 h-6' })}</div>
                         <span className="text-sm">{item.name}</span>
                     </div>
                 ))}
@@ -571,7 +577,7 @@ const ServiceCategoryView = ({ setView, category }: { setView: (view: ClientView
     );
 };
 
-const EmergencyView = ({ setView, onConfirm }: { setView: (view: ClientView) => void, onConfirm: () => void }) => (
+const EmergencyView: React.FC<{ setView: (view: ClientView) => void, onConfirm: () => void }> = ({ setView, onConfirm }) => (
     <main className="max-w-[1200px] mx-auto p-5">
         <PageHeader onBack={() => setView('dashboard')} />
         <div className="max-w-3xl mx-auto bg-white rounded-xl border border-gray-200 p-8 shadow-sm text-center">
@@ -592,7 +598,7 @@ const EmergencyView = ({ setView, onConfirm }: { setView: (view: ClientView) => 
     </main>
 );
 
-const HelpView = ({ setView }: { setView: (view: ClientView) => void }) => (
+const HelpView: React.FC<{ setView: (view: ClientView) => void }> = ({ setView }) => (
     <main className="max-w-[1200px] mx-auto p-5">
         <PageHeader onBack={() => setView('profile')} title="Voltar ao Perfil" />
         <div className="max-w-3xl mx-auto bg-white rounded-xl border border-gray-200 p-8 shadow-sm">
@@ -622,13 +628,13 @@ const HelpView = ({ setView }: { setView: (view: ClientView) => void }) => (
     </main>
 );
 
-const ClientPage = ({ currentUser, addServiceRequest, onLogout, updateUser, requests, updateRequestStatus }: ClientPageProps) => {
+const ClientPage: React.FC<ClientPageProps> = ({ currentUser, addServiceRequest, onLogout, updateUser, requests, updateRequestStatus }) => {
     const confirm = useConfirm();
-    const [view, setView] = useState('dashboard');
-    const [selectedCategory, setSelectedCategory] = useState('Montagem de Móveis');
-    const [isEmergencyRequest, setIsEmergencyRequest] = useState(false);
+  const [view, setView] = useState<ClientView>('dashboard');
+  const [selectedCategory, setSelectedCategory] = useState<ServiceCategory>('Montagem de Móveis');
+  const [isEmergencyRequest, setIsEmergencyRequest] = useState(false);
     // ids de orçamentos recebidos ainda não visualizados na aba 'Meus Orçamentos'
-    const [unseenQuoteIds, setUnseenQuoteIds] = useState(() => {
+    const [unseenQuoteIds, setUnseenQuoteIds] = useState<Set<string>>(() => {
         try {
             const raw = localStorage.getItem('mdac_unseenQuotes');
             if (raw) {

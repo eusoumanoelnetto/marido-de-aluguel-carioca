@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 
 type NotifyDetail = { message: string; type?: 'success' | 'error' | 'info'; quoteId?: string };
 
-const Toast = () => {
+const Toast: React.FC = () => {
   const [visible, setVisible] = useState(false);
   const [message, setMessage] = useState('');
-  const [type, setType] = useState('info' as 'success' | 'error' | 'info');
-  const [quoteId, setQuoteId] = useState(undefined as string | undefined);
+  const [type, setType] = useState<'success' | 'error' | 'info'>('info');
+  const [quoteId, setQuoteId] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     const handler = (e: any) => {

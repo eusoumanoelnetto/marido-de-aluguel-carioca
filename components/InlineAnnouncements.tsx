@@ -14,13 +14,13 @@ interface Props {
 }
 
 // Versão compacta de anúncios para dentro do dashboard do cliente.
-const InlineAnnouncements = ({ limit, userRole }: Props) => {
-  const [items, setItems] = useState([]);
+const InlineAnnouncements: React.FC<Props> = ({ limit, userRole }) => {
+  const [items, setItems] = useState<Announcement[]>([]);
   const [expanded, setExpanded] = useState(false);
-  const [expandedItems, setExpandedItems] = useState(new Set());
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null as string | null);
-  const [seen, setSeen] = useState(() => {
+  const [error, setError] = useState<string | null>(null);
+  const [seen, setSeen] = useState<Set<string>>(() => {
     try {
       const raw = localStorage.getItem('mdac_seenAnnouncements');
       if (raw) return new Set(JSON.parse(raw));
