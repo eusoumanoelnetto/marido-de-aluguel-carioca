@@ -8,7 +8,7 @@ interface NewRequestAlertProps {
   onView: (id?: string) => void;
 }
 
-const NewRequestAlert: React.FC<NewRequestAlertProps> = ({ requests, onClose, onView }) => {
+const NewRequestAlert = ({ requests, onClose, onView }: any) => {
   if (!requests.length) return null;
   const count = requests.length;
   const first = requests[0];

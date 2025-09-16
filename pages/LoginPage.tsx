@@ -7,11 +7,11 @@ interface LoginPageProps {
   loading?: boolean;
 }
 
-const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onNavigateToSignUp, onBack, loading = false }) => {
+const LoginPage = ({ onLoginSuccess, onNavigateToSignUp, onBack, loading = false }: any) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: any) => {
     e.preventDefault();
     onLoginSuccess(email, password);
   };

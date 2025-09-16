@@ -164,7 +164,7 @@ const ProviderHeader = ({ setView }: { setView: (view: ProviderView) => void }) 
 };
 
 // Card de estatísticas usado no dashboard do prestador
-const StatCard: React.FC<{ icon: string; title: string; color?: string; onClick?: () => void; children?: React.ReactNode; }> = ({ icon, title, color = 'text-brand-navy', onClick, children }) => (
+const StatCard = ({ icon, title, color = 'text-brand-navy', onClick, children }: { icon: string; title: string; color?: string; onClick?: () => void; children?: any }) => (
     <div
         onClick={onClick}
         className={`bg-white border border-gray-200 rounded-xl p-5 cursor-pointer transition-shadow hover:shadow-lg flex flex-col justify-between min-h-[120px]`}
@@ -178,11 +178,7 @@ const StatCard: React.FC<{ icon: string; title: string; color?: string; onClick?
 );
 
 
-const ProviderPublicProfile: React.FC<{
-    onBack: () => void;
-    currentUser: User;
-    requests: ServiceRequest[];
-}> = ({ onBack, currentUser, requests }) => {
+const ProviderPublicProfile = ({ onBack, currentUser, requests }: { onBack: () => void; currentUser: User; requests: ServiceRequest[] }) => {
     interface Review {
       id: number;
       name: string;
@@ -204,7 +200,7 @@ const ProviderPublicProfile: React.FC<{
       { id: 5, name: 'Carla Mendes', initials: 'CM', color: '#fb923c', date: '2024-03-20T16:00:00Z', rating: 3, text: "O serviço de pintura ficou bom, mas o pintor sujou um pouco o chão. Poderia ter tido mais cuidado com a forração.", service: 'Pintura de Parede', timeAgo: 'Há 4 meses' },
     ];
     
-    const [reviewFilter, setReviewFilter] = useState<'recent' | 'rating'>('recent');
+    const [reviewFilter, setReviewFilter] = useState('recent');
     const [visibleReviewsCount, setVisibleReviewsCount] = useState(3);
 
     const sortedReviews = useMemo(() => {
@@ -411,7 +407,8 @@ const ProviderPublicProfile: React.FC<{
 };
 
 // ---- Componentes auxiliares (fora de qualquer retorno JSX para evitar erros de parse) ----
-const AppointmentCard: React.FC<{ request: ServiceRequest; time?: string; onViewDetails: () => void; }> = ({ request, time, onViewDetails }) => {
+const AppointmentCard = (props: any) => {
+    const { request, time, onViewDetails } = props;
     const status = getStatusDetails(request.status);
     return (
         <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-shadow hover:shadow-md">
@@ -430,7 +427,7 @@ const AppointmentCard: React.FC<{ request: ServiceRequest; time?: string; onView
     );
 };
 
-const ActionCard: React.FC<{ icon: string; title: string; description: string; onClick: () => void; }> = ({ icon, title, description, onClick }) => (
+const ActionCard = ({ icon, title, description, onClick }: { icon: string; title: string; description: string; onClick: () => void; }) => (
     <div onClick={onClick} className="bg-white border border-gray-200 rounded-xl p-6 text-center cursor-pointer transition-transform transform hover:-translate-y-1 hover:shadow-xl h-full flex flex-col items-center justify-center">
         <i className={`${icon} text-4xl mb-4 text-brand-navy`}></i>
         <h3 className="text-lg font-semibold mb-2 text-brand-navy">{title}</h3>
@@ -438,7 +435,7 @@ const ActionCard: React.FC<{ icon: string; title: string; description: string; o
     </div>
 );
 
-const AgendaView: React.FC<{ requests: ServiceRequest[]; onBack: () => void; onViewDetails: (request: ServiceRequest) => void; }> = ({ requests, onBack, onViewDetails }) => {
+const AgendaView = ({ requests, onBack, onViewDetails }: { requests: ServiceRequest[]; onBack: () => void; onViewDetails: (request: ServiceRequest) => void; }) => {
     const [currentDate, setCurrentDate] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState(new Date());
     const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
@@ -533,12 +530,7 @@ const AgendaView: React.FC<{ requests: ServiceRequest[]; onBack: () => void; onV
     );
 };
 
-const DashboardView: React.FC<{
-    requests: ServiceRequest[];
-    setView: (view: ProviderView) => void;
-    onViewDetails: (request: ServiceRequest) => void;
-    updateRequestStatus: (id: string, status: ServiceRequest['status'], quote?: number, providerEmail?: string) => void;
-}> = ({ requests, setView, onViewDetails, updateRequestStatus }) => {
+const DashboardView = ({ requests, setView, onViewDetails, updateRequestStatus }: { requests: ServiceRequest[]; setView: (view: ProviderView) => void; onViewDetails: (request: ServiceRequest) => void; updateRequestStatus: (id: string, status: ServiceRequest['status'], quote?: number, providerEmail?: string) => void; }) => {
     
     // --- Calculations for Stat Cards ---
     const isSameDay = (d1: Date, d2: Date) => d1.toDateString() === d2.toDateString();
@@ -658,7 +650,7 @@ const DashboardView: React.FC<{
     );
 };
 
-const QuotesView: React.FC<{ requests: ServiceRequest[]; setView: (view: ProviderView) => void; onViewDetails: (request: ServiceRequest) => void; isFilteredView?: boolean; }> = ({ requests, setView, onViewDetails, isFilteredView = false }) => (
+const QuotesView = ({ requests, setView, onViewDetails, isFilteredView = false }: { requests: ServiceRequest[]; setView: (view: ProviderView) => void; onViewDetails: (request: ServiceRequest) => void; isFilteredView?: boolean; }) => (
     <div className="max-w-7xl mx-auto p-6">
         <div className="flex items-center mb-6">
             <button onClick={() => setView('dashboard')} className="font-semibold text-brand-navy hover:text-black flex items-center mr-4">
@@ -680,7 +672,7 @@ const QuotesView: React.FC<{ requests: ServiceRequest[]; setView: (view: Provide
     </div>
 );
 
-const MessagesView: React.FC<{ setView: (view: ProviderView) => void; }> = ({ setView }) => (
+const MessagesView = ({ setView }: { setView: (view: ProviderView) => void; }) => (
     <div className="max-w-7xl mx-auto p-6">
         <div className="flex items-center mb-6">
             <button onClick={() => setView('dashboard')} className="font-semibold text-brand-navy hover:text-black flex items-center mr-4">
@@ -705,12 +697,7 @@ const allServices = [
     { name: 'CFTV', iconClass: 'fas fa-video' },
 ];
 
-const ProviderProfileView: React.FC<{
-    currentUser: User;
-    setView: (view: ProviderView) => void;
-    onLogout: () => void;
-    requests: ServiceRequest[];
-}> = ({ currentUser, setView, onLogout, requests }) => {
+const ProviderProfileView = ({ currentUser, setView, onLogout, requests }: { currentUser: User; setView: (view: ProviderView) => void; onLogout: () => void; requests: ServiceRequest[]; }) => {
     
     const completedServices = requests.filter(r => r.status === 'Finalizado').length;
     const totalRevenue = requests
@@ -778,19 +765,14 @@ const ProviderProfileView: React.FC<{
     );
 };
 
-const EditProfileView: React.FC<{
-    currentUser: User;
-    onSave: (updatedUser: User) => void;
-    onCancel: () => void;
-    setView: (view: ProviderView) => void;
-}> = ({ currentUser, onSave, onCancel, setView }) => {
-    const [formData, setFormData] = useState<User>(currentUser);
-    const [selectedServices, setSelectedServices] = useState<Set<string>>(new Set(currentUser.services || []));
-    const [avatarPreview, setAvatarPreview] = useState<string | null>(
+const EditProfileView = ({ currentUser, onSave, onCancel, setView }: { currentUser: User; onSave: (updatedUser: User) => void; onCancel: () => void; setView: (view: ProviderView) => void; }) => {
+    const [formData, setFormData] = useState(currentUser);
+    const [selectedServices, setSelectedServices] = useState(new Set(currentUser.services || []));
+    const [avatarPreview, setAvatarPreview] = useState(
         currentUser.profilePictureBase64 ? `data:image/jpeg;base64,${currentUser.profilePictureBase64}` : null
     );
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleInputChange = (e: any) => {
         const { id, value } = e.target;
         // Map id to formData key
         const keyMap: { [key: string]: keyof User } = {
@@ -814,7 +796,7 @@ const EditProfileView: React.FC<{
         setSelectedServices(newSelected);
     };
 
-    const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handlePhotoChange = (e: any) => {
         const file = e.target.files?.[0];
         if (file) {
             const reader = new FileReader();
@@ -899,7 +881,7 @@ const EditProfileView: React.FC<{
     );
 };
 
-const HelpView: React.FC<{ onBack: () => void }> = ({ onBack }) => (
+const HelpView = ({ onBack }: { onBack: () => void }) => (
     <div className="max-w-7xl mx-auto p-6">
         <PageHeader onBack={onBack} title="Voltar para Editar Perfil" />
         <div className="max-w-3xl mx-auto bg-white rounded-xl border border-gray-200 p-8 shadow-sm">
@@ -933,11 +915,11 @@ const HelpView: React.FC<{ onBack: () => void }> = ({ onBack }) => (
 );
 
 
-const ProviderPage: React.FC<ProviderPageProps> = ({ currentUser, requests, onLogout, updateRequestStatus, updateUser }) => {
-  const [view, setView] = useState<ProviderView>('dashboard');
-  const [previousView, setPreviousView] = useState<ProviderView>('dashboard');
-  const [selectedRequest, setSelectedRequest] = useState<ServiceRequest | null>(null);
-    // (ServiceDetailView agora é importado de components/ServiceDetailView.tsx)
+const ProviderPage = ({ currentUser, requests, onLogout, updateRequestStatus, updateUser }: ProviderPageProps) => {
+        const [view, setView] = useState('dashboard' as ProviderView);
+        const [previousView, setPreviousView] = useState('dashboard' as ProviderView);
+        const [selectedRequest, setSelectedRequest] = useState(null as ServiceRequest | null);
+        // (ServiceDetailView agora é importado de components/ServiceDetailView.tsx)
   
 
   const handleViewDetails = (request: ServiceRequest) => {
@@ -947,7 +929,7 @@ const ProviderPage: React.FC<ProviderPageProps> = ({ currentUser, requests, onLo
   };
 
     // Abrir detalhe quando receber evento global (ex: popup manda para ver pedido específico)
-    React.useEffect(() => {
+    useEffect(() => {
         const handler = (e: any) => {
             const id = e?.detail?.id as string | undefined;
             if (!id) return;
