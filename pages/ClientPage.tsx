@@ -737,8 +737,8 @@ const ClientPage: React.FC<ClientPageProps> = ({ currentUser, addServiceRequest,
         return <EmergencyView setView={setView} onConfirm={handleStartEmergencyRequest} />;
       case 'help':
         return <HelpView setView={setView} />;
-      default:
-        return <DashboardView setView={setView} handleServiceClick={handleServiceClick} />;
+            default:
+                return <DashboardView setView={setView} handleServiceClick={handleServiceClick} unseenQuotes={unseenQuoteIds.size} />;
     }
   };
 
