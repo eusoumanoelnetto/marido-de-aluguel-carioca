@@ -51,6 +51,19 @@ const emitLogout = () => {
   }
 };
 
+const retryFetch = async (input: RequestInfo, init: RequestInit = {}, retries = 1) => {
+  let response;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    response = await fetch(input, init);
+    if (response.status !== 401 || attempt === retries) break;
+    // Retry logic for 401
+    console.warn('Retrying fetch due to 401 response');
+    clearToken();
+    emitLogout();
+  }
+  return response;
+};
+
 // authFetch: inject Authorization header, pre-check token expiry, and on 401 emit logout event
 const authFetch = async (input: RequestInfo, init: RequestInit = {}) => {
   const token = getToken();
@@ -77,7 +90,7 @@ const authFetch = async (input: RequestInfo, init: RequestInit = {}) => {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const response = await fetch(input, { ...init, headers });
+  const response = await retryFetch(input, { ...init, headers }, 2);
 
   if (response.status === 401) {
     // unauthorized — clear token and emit global logout so AuthProvider can react
