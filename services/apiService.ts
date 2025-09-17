@@ -4,13 +4,13 @@ import { ServiceRequest, User, SignUpData } from '../types';
 const BACKEND_URL = 'https://marido-de-aluguel-carioca.onrender.com';
 
 // The base URL for our backend API - sempre garante um valor válido
-let API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string) || (import.meta.env.VITE_API_BASE as string) || BACKEND_URL;
+let API_BASE_URL = (import.meta.env.VITE_API_BASE as string) || BACKEND_URL;
 
 // Log para debug
 // Debug logging removed for production; keep only DEV logs when necessary
 
 // Sempre garante um valor válido, priorizando variáveis de ambiente mas com fallback
-API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string) || (import.meta.env.VITE_API_BASE as string) || BACKEND_URL;
+API_BASE_URL = (import.meta.env.VITE_API_BASE as string) || BACKEND_URL;
 
 
 // Normaliza e garante que contenha /api como prefixo base das rotas do backend
@@ -103,13 +103,20 @@ const handleResponse = async (response: Response) => {
   }
   
   let data;
+  let text;
   try {
-    data = await response.json();
+    text = await response.text();
+    // Tenta parsear como JSON, mas só se não for HTML
+    if (text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html')) {
+      // Resposta HTML inesperada (ex: erro do servidor, página de erro)
+      throw new Error('Resposta inesperada do servidor. Tente novamente mais tarde.');
+    }
+    data = text ? JSON.parse(text) : {};
   } catch (jsonError) {
+    // Se falhou ao parsear JSON, provavelmente resposta não-JSON
     console.error('handleResponse: erro ao parsear JSON:', jsonError);
     throw new Error('Resposta do servidor inválida. Tente novamente.');
   }
-  
   if (!response.ok) {
     // Log sempre erros importantes (não apenas em DEV)
     console.error('handleResponse: erro:', response.status, data);
@@ -117,7 +124,6 @@ const handleResponse = async (response: Response) => {
     const errorMessage = data.message || data.error || `Erro do servidor (${response.status})`;
     throw new Error(errorMessage);
   }
-  
   if (import.meta.env.DEV) {
     // eslint-disable-next-line no-console
     console.log('handleResponse: sucesso');
