@@ -21,5 +21,23 @@ if (isConfigured) {
   const app = initializeApp(firebaseConfig as any);
   db = getFirestore(app);
 }
+// In dev, expose the loaded config so we can inspect in the browser console.
+try {
+  if (!isConfigured && typeof window !== 'undefined' && import.meta.env.MODE !== 'production') {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    window.__MDAC_FIREBASE_CONFIG__ = firebaseConfig;
+    // print masked config for convenience (avoid printing full apiKey in some contexts)
+    // eslint-disable-next-line no-console
+    console.debug('Firebase não configurado totalmente — vars carregadas (dev):', {
+      apiKey: firebaseConfig.apiKey ? "(present)" : "(missing)",
+      projectId: firebaseConfig.projectId || '(missing)',
+      authDomain: firebaseConfig.authDomain || '(missing)',
+      storageBucket: firebaseConfig.storageBucket || '(missing)'
+    });
+  }
+} catch (e) {
+  // ignore
+}
 
 export { db, isConfigured };
