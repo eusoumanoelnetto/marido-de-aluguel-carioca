@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import ServiceDetailView from '../components/ServiceDetailView';
 import MessagePrompt from '../components/MessagePrompt';
 import { useConfirm } from '../components/ConfirmDialog';
 import { ServiceRequest, ServiceCategory, User } from '../types';
@@ -15,7 +16,7 @@ interface ClientPageProps {
 
 }
 
-type ClientView = 'dashboard' | 'profile' | 'edit-profile' | 'messages' | 'quote-step1' | 'quote-step2' | 'quotes-received' | 'service-category' | 'emergency' | 'help';
+type ClientView = 'dashboard' | 'profile' | 'edit-profile' | 'messages' | 'quote-step1' | 'quote-step2' | 'quotes-received' | 'service-category' | 'service-detail' | 'emergency' | 'help';
 
 const services: { name: ServiceCategory; icon: React.FC<React.SVGProps<SVGSVGElement>> }[] = [
     { name: 'Montagem de Móveis' as ServiceCategory, icon: HammerIcon },
@@ -412,7 +413,7 @@ const RequestQuoteStep2View: React.FC<{
     );
 };
 
-const QuotesReceivedView: React.FC<{ setView: (view: ClientView) => void; requests: ServiceRequest[]; onAccept: (id: string) => void; onCancel: (id: string) => void; user: User; }> = ({ setView, requests, onAccept, onCancel, user }) => {
+const QuotesReceivedView: React.FC<{ setView: (view: ClientView) => void; requests: ServiceRequest[]; onAccept: (id: string) => void; onCancel: (id: string) => void; user: User; setSelectedCategory: (c: ServiceCategory) => void; setSelectedRequest?: (r: ServiceRequest|null) => void; }> = ({ setView, requests, onAccept, onCancel, user, setSelectedCategory, setSelectedRequest }) => {
     const myRequests = requests.filter(r => r.clientEmail === user.email);
     const pending = myRequests.filter(r => r.status === 'Pendente');
     // Considera orçamentos enviados e também os já aceitos (devem aparecer em Recebidos)
@@ -483,7 +484,7 @@ const QuotesReceivedView: React.FC<{ setView: (view: ClientView) => void; reques
                                     </>
                                 ) : (
                                     // Para itens já aceitos, mostrar botão para abrir chat/mensagens (abre ServiceDetailView)
-                                    <button
+                                        <button
                                         className="px-4 py-2 rounded-lg font-semibold bg-brand-blue text-white opacity-90 flex-1 md:flex-none hover:bg-brand-blue/80"
                                         onClick={() => {
                                             setSelectedCategory(req.category);
@@ -656,6 +657,7 @@ const ClientPage: React.FC<ClientPageProps> = ({ currentUser, addServiceRequest,
   const [isEmergencyRequest, setIsEmergencyRequest] = useState(false);
         const [showMessagePrompt, setShowMessagePrompt] = useState(false);
         const [pendingAcceptId, setPendingAcceptId] = useState<string | null>(null);
+        const [selectedRequest, setSelectedRequest] = useState<ServiceRequest | null>(null);
     // ids de orçamentos recebidos ainda não visualizados na aba 'Meus Orçamentos'
     const [unseenQuoteIds, setUnseenQuoteIds] = useState<Set<string>>(() => {
         try {
@@ -736,6 +738,8 @@ const ClientPage: React.FC<ClientPageProps> = ({ currentUser, addServiceRequest,
                     setView={setView} 
                     requests={requests} 
                     user={currentUser}
+                    setSelectedCategory={setSelectedCategory}
+                    setSelectedRequest={setSelectedRequest}
                     onAccept={(id) => {
                         // open modal to collect initial message
                         setPendingAcceptId(id);
@@ -754,8 +758,21 @@ const ClientPage: React.FC<ClientPageProps> = ({ currentUser, addServiceRequest,
                         window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: 'Solicitação cancelada.', type: 'success' } }));
                     }}
                  />;
+      
       case 'service-category':
           return <ServiceCategoryView setView={setView} category={selectedCategory} />;
+      case 'service-detail':
+          return <ServiceDetailView request={selectedRequest} onBack={() => setView('quotes-received')} updateRequestStatus={updateRequestStatus as any} currentUser={currentUser} getStatusDetails={(status) => {
+              switch (status) {
+                  case 'Pendente': return { text: 'Pendente', className: 'bg-yellow-100 text-yellow-800' };
+                  case 'Orçamento Enviado': return { text: 'Orçamento Enviado', className: 'bg-blue-100 text-blue-800' };
+                  case 'Aceito': return { text: 'Aceito', className: 'bg-green-100 text-green-800' };
+                  case 'Finalizado': return { text: 'Finalizado', className: 'bg-gray-200 text-gray-700' };
+                  case 'Recusado': return { text: 'Recusado', className: 'bg-red-100 text-red-700' };
+                  case 'Cancelado': return { text: 'Cancelado', className: 'bg-red-50 text-red-600' };
+                  default: return { text: status, className: 'bg-gray-100 text-gray-700' };
+              }
+          }} />;
       case 'emergency':
         return <EmergencyView setView={setView} onConfirm={handleStartEmergencyRequest} />;
       case 'help':

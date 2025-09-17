@@ -19,6 +19,14 @@ if (IS_PROD && (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'dev_secre
   console.warn('⚠️  JWT_SECRET não definido ou usando valor inseguro (dev_secret) em produção. Defina uma string forte em variáveis de ambiente.');
 }
 
+// Configuração de CORS
+const corsOptions = {
+  origin: 'http://localhost:5173', // Permitir o frontend local
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
+app.use(cors(corsOptions));
+
 // Middlewares
 // Enable Cross-Origin Resource Sharing with safer defaults:
 // - Allow Authorization header in preflight so browsers can send Bearer tokens

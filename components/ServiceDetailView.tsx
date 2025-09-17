@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { ServiceRequest, User } from '../types';
 import * as api from '../services/apiService';
+// Firebase optional helpers (fallback to backend if not configured)
+import { sendMessageFirebase, subscribeMessages, fetchMessagesOnce } from '../services/firebaseMessages';
 // Removidos imports circulares desnecessários para evitar bundles maiores / warnings
 
 interface Props {
@@ -17,6 +19,7 @@ const ServiceDetailView: React.FC<Props> = ({ request, onBack, updateRequestStat
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [messages, setMessages] = useState<Array<any>>([]);
   const [newMessage, setNewMessage] = useState('');
+  const [isSendingMessage, setIsSendingMessage] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const lastRequestIdRef = useRef<string | null>(null);
@@ -40,18 +43,38 @@ const ServiceDetailView: React.FC<Props> = ({ request, onBack, updateRequestStat
   useEffect(() => {
     if (!request) return;
     let mounted = true;
+    let unsub: (() => void) | null = null;
     const load = async () => {
       try {
-        const data = await api.getMessagesForService(request.id);
-        if (!mounted) return;
-        setMessages(data || []);
+        // Try Firebase first
+        try {
+          const once = await fetchMessagesOnce(request.id);
+          if (!mounted) return;
+          setMessages(once || []);
+        } catch (firebaseErr) {
+          // fallback to backend
+          const data = await api.getMessagesForService(request.id);
+          if (!mounted) return;
+          setMessages(data || []);
+        }
         setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
+
+        // subscribe to realtime updates if Firebase available
+        try {
+          unsub = subscribeMessages(request.id, (msgs) => {
+            if (!mounted) return;
+            setMessages(msgs || []);
+            setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
+          });
+        } catch (e) {
+          // ignore subscription errors
+        }
       } catch (err) {
         // ignore
       }
     };
     load();
-    return () => { mounted = false; };
+    return () => { mounted = false; if (unsub) unsub(); };
   }, [request?.id, request?.status]);
 
   // Se status mudou para algo diferente de 'Pendente' enquanto a tela está aberta, cancelar edição e garantir polling retomado
@@ -223,26 +246,41 @@ const ServiceDetailView: React.FC<Props> = ({ request, onBack, updateRequestStat
               <div ref={messagesEndRef} />
             </div>
             <div className="mt-3 flex gap-3">
-              <input value={newMessage} onChange={(e) => setNewMessage(e.target.value)} placeholder="Escreva uma mensagem..." className="flex-1 p-3 border rounded-lg" />
-              <button onClick={async () => {
+              <input value={newMessage} onChange={(e) => setNewMessage(e.target.value)} placeholder="Escreva uma mensagem..." className="flex-1 p-3 border rounded-lg" disabled={isSendingMessage} />
+              <button disabled={isSendingMessage} onClick={async () => {
                 if (!newMessage.trim()) return;
+                setIsSendingMessage(true);
                 try {
                   // Escolher destinatário corretamente: prestador envia para cliente, cliente envia para prestador
                   const recipient = currentUser.role === 'provider' ? (request.clientEmail || '') : (request.providerEmail || '');
                   if (!recipient) {
                     console.warn('ServiceDetailView: recipient ausente ao tentar enviar mensagem para request', request.id, { currentUser: currentUser?.email, providerEmail: request.providerEmail, clientEmail: request.clientEmail });
                     window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: 'Destinatário da mensagem ausente. Não foi possível enviar.', type: 'error' } }));
+                    setIsSendingMessage(false);
                     return;
                   }
-                  const saved = await api.sendMessage(request.id, recipient, newMessage.trim());
-                  setMessages(prev => [...prev, saved]);
+                  // Try Firebase first, fallback to API
+                  try {
+                    await sendMessageFirebase(request.id, currentUser.email, recipient, newMessage.trim());
+                  } catch (fbErr) {
+                    const saved = await api.sendMessage(request.id, recipient, newMessage.trim());
+                    setMessages(prev => [...prev, saved]);
+                  }
                   setNewMessage('');
                   setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
                 } catch (err: any) {
                   console.error('ServiceDetailView: erro ao enviar mensagem', err);
-                  window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: err?.message || 'Erro ao enviar mensagem', type: 'error' } }));
+                  const msg = err?.message || 'Erro ao enviar mensagem';
+                  if (String(msg).toLowerCase().includes('token') || String(msg).toLowerCase().includes('401') || String(msg).toLowerCase().includes('não autorizado') || String(msg).toLowerCase().includes('ausente')) {
+                    try { window.dispatchEvent(new CustomEvent('mdac:logout')); } catch {}
+                    window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: 'Sessão expirada ou token inválido. Faça login novamente.', type: 'error' } }));
+                  } else {
+                    window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: msg, type: 'error' } }));
+                  }
+                } finally {
+                  setIsSendingMessage(false);
                 }
-              }} className="px-4 py-2 bg-brand-blue text-white rounded-lg">Enviar</button>
+              }} className={`px-4 py-2 bg-brand-blue text-white rounded-lg ${isSendingMessage ? 'opacity-60 cursor-not-allowed' : ''}`}>{isSendingMessage ? 'Enviando...' : 'Enviar'}</button>
             </div>
           </div>
         )}
