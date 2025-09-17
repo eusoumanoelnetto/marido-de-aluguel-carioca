@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { ServiceRequest, User } from '../types';
 import * as api from '../services/apiService';
 // Firebase optional helpers (fallback to backend if not configured)
-import { sendMessageFirebase, subscribeMessages, fetchMessagesOnce } from '../services/firebaseMessages';
+import { sendMessageFirebase, subscribeMessages, fetchMessagesOnce, isFirebaseConfigured } from '../services/firebaseMessages';
 // Removidos imports circulares desnecessários para evitar bundles maiores / warnings
 
 interface Props {
@@ -47,27 +47,33 @@ const ServiceDetailView: React.FC<Props> = ({ request, onBack, updateRequestStat
     const load = async () => {
       try {
         // Try Firebase first
-        try {
-          const once = await fetchMessagesOnce(request.id);
-          if (!mounted) return;
-          setMessages(once || []);
-        } catch (firebaseErr) {
-          // fallback to backend
+        if (isFirebaseConfigured) {
+          try {
+            const once = await fetchMessagesOnce(request.id);
+            if (!mounted) return;
+            setMessages(once || []);
+          } catch (firebaseErr) {
+            // fallback to backend
+            const data = await api.getMessagesForService(request.id);
+            if (!mounted) return;
+            setMessages(data || []);
+          }
+          setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
+          // subscribe to realtime updates if Firebase available
+          try {
+            unsub = subscribeMessages(request.id, (msgs) => {
+              if (!mounted) return;
+              setMessages(msgs || []);
+              setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
+            });
+          } catch (e) {
+            // ignore subscription errors
+          }
+        } else {
+          // Firebase não configurado: só usa backend
           const data = await api.getMessagesForService(request.id);
           if (!mounted) return;
           setMessages(data || []);
-        }
-        setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
-
-        // subscribe to realtime updates if Firebase available
-        try {
-          unsub = subscribeMessages(request.id, (msgs) => {
-            if (!mounted) return;
-            setMessages(msgs || []);
-            setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
-          });
-        } catch (e) {
-          // ignore subscription errors
         }
       } catch (err) {
         // ignore
@@ -166,28 +172,21 @@ const ServiceDetailView: React.FC<Props> = ({ request, onBack, updateRequestStat
         return;
       }
 
-      // Try Firebase first with timeout
+      // Try backend API first (more reliable). If API fails and Firebase is configured, try Firebase as fallback.
       try {
-        const fbRes = await withTimeout(sendMessageFirebase(request.id, currentUser.email, recipient, payloadText), 4000);
-        // Append optimistically if we got a result
-        try {
-          if (fbRes && fbRes.content) {
-            setMessages(prev => [...prev, fbRes]);
-          } else if (fbRes && fbRes.id) {
-            setMessages(prev => [...prev, fbRes]);
+        await withTimeout(api.sendMessage(request.id, recipient, payloadText), 5000);
+      } catch (apiErr) {
+        console.warn('sendMessage: API send failed:', apiErr);
+        // If Firebase is configured, try it as fallback
+        if (isFirebaseConfigured) {
+          try {
+            await withTimeout(sendMessageFirebase(request.id, currentUser.email, recipient, payloadText), 4000);
+          } catch (fbErr) {
+            console.error('sendMessage: Firebase fallback also failed:', fbErr);
+            const msg = (fbErr && (fbErr as any).message) || 'Erro ao enviar mensagem.';
+            window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: msg, type: 'error' } }));
           }
-        } catch (e) {
-          // ignore append errors
-        }
-      } catch (fbErr) {
-        // Firebase failed / timed out -> fallback to API
-        console.warn('sendMessage: Firebase failed, falling back to API:', fbErr);
-        try {
-          const saved = await withTimeout(api.sendMessage(request.id, recipient, payloadText), 5000);
-          // saved should be the saved message object from backend
-          try { setMessages(prev => [...prev, saved]); } catch (e) {}
-        } catch (apiErr) {
-          console.error('sendMessage: API fallback also failed:', apiErr);
+        } else {
           const msg = (apiErr && (apiErr as any).message) || 'Erro ao enviar mensagem.';
           window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: msg, type: 'error' } }));
         }
