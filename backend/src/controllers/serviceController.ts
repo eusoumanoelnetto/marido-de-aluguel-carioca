@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import pool, { isDbConnected } from '../db';
 import { ServiceRequest } from '../types';
+import { v4 as uuidv4 } from 'uuid';
 
 export const getServiceRequests = async (req: Request, res: Response) => {
   // Smoke test: retornar lista vazia se não há conexão com o DB em desenvolvimento
@@ -129,12 +130,16 @@ export const updateServiceRequestStatus = async (req: Request, res: Response) =>
     // If client accepted the quote and sent an initialMessage, persist it to messages
     if (status === 'Aceito' && initialMessage && initialMessage.trim().length > 0) {
       try {
-        const msgId = require('uuid').v4();
+        const msgId = uuidv4();
         const createdAt = new Date().toISOString();
         const provider = result.rows[0].providerEmail;
-        await pool.query('INSERT INTO messages (id, "serviceId", "senderEmail", "recipientEmail", content, "createdAt") VALUES ($1,$2,$3,$4,$5,$6)', [msgId, id, userEmail, provider, initialMessage, createdAt]);
+        if (!provider) {
+          console.warn('Aviso: providerEmail ausente ao tentar inserir mensagem inicial para request', id);
+        } else {
+          await pool.query('INSERT INTO messages (id, "serviceId", "senderEmail", "recipientEmail", content, "createdAt") VALUES ($1,$2,$3,$4,$5,$6)', [msgId, id, userEmail, provider, initialMessage, createdAt]);
+        }
       } catch (err) {
-        console.error('Erro ao inserir mensagem inicial:', err);
+        console.error('Erro ao inserir mensagem inicial para request', id, 'providerEmail:', result.rows[0]?.providerEmail, 'error:', err);
       }
     }
 
