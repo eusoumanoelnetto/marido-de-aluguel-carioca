@@ -20,12 +20,18 @@ export const sendMessage = async (req: Request, res: Response) => {
     );
     res.status(201).json(result.rows[0]);
   } catch (error) {
-    console.error('Error inserting message:', error && (error.stack || error));
+    let errorMsg = '';
+    if (error instanceof Error) {
+      errorMsg = error.stack || error.message;
+    } else {
+      errorMsg = String(error);
+    }
+    console.error('Error inserting message:', errorMsg);
     // Return more context in dev environment to help debugging (but keep generic in prod)
-    if (process.env.NODE_ENV === 'production') {
+    if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'production') {
       res.status(500).json({ message: 'Erro ao enviar mensagem.' });
     } else {
-      res.status(500).json({ message: 'Erro ao enviar mensagem.', error: String(error && (error.stack || error)) });
+      res.status(500).json({ message: 'Erro ao enviar mensagem.', error: errorMsg });
     }
   }
 };
