@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { ServiceRequest, User } from '../types';
 import * as api from '../services/apiService';
+// Firebase optional helpers (fallback to backend if not configured)
+import { sendMessageFirebase, subscribeMessages, fetchMessagesOnce } from '../services/firebaseMessages';
 // Removidos imports circulares desnecessários para evitar bundles maiores / warnings
 
 interface Props {
@@ -41,18 +43,38 @@ const ServiceDetailView: React.FC<Props> = ({ request, onBack, updateRequestStat
   useEffect(() => {
     if (!request) return;
     let mounted = true;
+    let unsub: (() => void) | null = null;
     const load = async () => {
       try {
-        const data = await api.getMessagesForService(request.id);
-        if (!mounted) return;
-        setMessages(data || []);
+        // Try Firebase first
+        try {
+          const once = await fetchMessagesOnce(request.id);
+          if (!mounted) return;
+          setMessages(once || []);
+        } catch (firebaseErr) {
+          // fallback to backend
+          const data = await api.getMessagesForService(request.id);
+          if (!mounted) return;
+          setMessages(data || []);
+        }
         setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
+
+        // subscribe to realtime updates if Firebase available
+        try {
+          unsub = subscribeMessages(request.id, (msgs) => {
+            if (!mounted) return;
+            setMessages(msgs || []);
+            setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
+          });
+        } catch (e) {
+          // ignore subscription errors
+        }
       } catch (err) {
         // ignore
       }
     };
     load();
-    return () => { mounted = false; };
+    return () => { mounted = false; if (unsub) unsub(); };
   }, [request?.id, request?.status]);
 
   // Se status mudou para algo diferente de 'Pendente' enquanto a tela está aberta, cancelar edição e garantir polling retomado
@@ -237,8 +259,13 @@ const ServiceDetailView: React.FC<Props> = ({ request, onBack, updateRequestStat
                     setIsSendingMessage(false);
                     return;
                   }
-                  const saved = await api.sendMessage(request.id, recipient, newMessage.trim());
-                  setMessages(prev => [...prev, saved]);
+                  // Try Firebase first, fallback to API
+                  try {
+                    await sendMessageFirebase(request.id, currentUser.email, recipient, newMessage.trim());
+                  } catch (fbErr) {
+                    const saved = await api.sendMessage(request.id, recipient, newMessage.trim());
+                    setMessages(prev => [...prev, saved]);
+                  }
                   setNewMessage('');
                   setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
                 } catch (err: any) {
