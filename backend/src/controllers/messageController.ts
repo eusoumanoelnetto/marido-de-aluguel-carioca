@@ -1,8 +1,14 @@
 import { Request, Response } from 'express';
-import pool from '../db';
+import pool, { isDbConnected } from '../db';
 import { v4 as uuidv4 } from 'uuid';
 
 export const sendMessage = async (req: Request, res: Response) => {
+  // Diagnostic logs
+  try { console.log('sendMessage: NODE_ENV=', process.env.NODE_ENV); } catch {}
+  try { console.log('sendMessage: headers=', JSON.stringify(req.headers)); } catch {}
+  try { console.log('sendMessage: body=', JSON.stringify(req.body)); } catch {}
+  try { console.log('sendMessage: isDbConnected=', Boolean(isDbConnected)); } catch {}
+
   const { serviceId, recipientEmail, content } = req.body as { serviceId: string; recipientEmail: string; content: string };
   const senderEmail = (req as any).userEmail as string | undefined;
   if (!senderEmail) return res.status(401).json({ message: 'Não autenticado.' });
