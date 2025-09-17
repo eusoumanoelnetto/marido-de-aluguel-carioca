@@ -154,6 +154,17 @@ export const updateServiceRequestStatus = async (req: Request, res: Response) =>
       updatedRow = result.rows[0];
     }
 
+    // Log for diagnosis: what the DB returned vs what we expected
+    console.log('DEBUG: updateServiceRequestStatus - db result.rows[0]=', result.rows[0]);
+    console.log('DEBUG: updateServiceRequestStatus - requery updatedRow=', updatedRow);
+
+    // Normalize response: ensure quote and providerEmail present so clients can rely on them
+    const normalized = {
+      ...(updatedRow || result.rows[0] || {}),
+      quote: (updatedRow && updatedRow.quote !== undefined) ? updatedRow.quote : nextQuote,
+      providerEmail: (updatedRow && updatedRow.providerEmail) ? updatedRow.providerEmail : nextProviderEmail,
+    };
+
     // If client accepted the quote and sent an initialMessage, persist it to messages
     if (status === 'Aceito' && initialMessage && initialMessage.trim().length > 0) {
       try {
@@ -170,8 +181,8 @@ export const updateServiceRequestStatus = async (req: Request, res: Response) =>
       }
     }
 
-    console.log(`Service request ${id} updated to status: ${status}`);
-    res.status(200).json(updatedRow || result.rows[0]);
+  console.log(`Service request ${id} updated to status: ${status}`);
+  res.status(200).json(normalized);
   } catch (error) {
     console.error('Error updating service request:', error);
     res.status(500).json({ message: 'Erro ao atualizar solicitação.' });
