@@ -18,6 +18,9 @@ const ServiceDetailView: React.FC<Props> = ({ request, onBack, updateRequestStat
   const [editing, setEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [messages, setMessages] = useState<Array<any>>([]);
+  // Polling control
+  const pollingRef = useRef<NodeJS.Timeout | null>(null);
+  const pausePollingRef = useRef(false);
   const [newMessage, setNewMessage] = useState('');
   const [isSendingMessage, setIsSendingMessage] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
@@ -39,49 +42,80 @@ const ServiceDetailView: React.FC<Props> = ({ request, onBack, updateRequestStat
     }
   }, [request?.id, request?.quote, editing]);
 
-  // Load messages when request is Aceito or provider/client views the service detail
+  // Load messages and setup polling/subscription
   useEffect(() => {
     if (!request) return;
     let mounted = true;
     let unsub: (() => void) | null = null;
-    const load = async () => {
+
+    // Função para buscar mensagens do backend
+    const fetchBackendMessages = async () => {
       try {
-        // Try Firebase first
-        if (isFirebaseConfigured) {
-          try {
-            const once = await fetchMessagesOnce(request.id);
-            if (!mounted) return;
-            setMessages(once || []);
-          } catch (firebaseErr) {
-            // fallback to backend
-            const data = await api.getMessagesForService(request.id);
-            if (!mounted) return;
-            setMessages(data || []);
-          }
-          setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
-          // subscribe to realtime updates if Firebase available
-          try {
-            unsub = subscribeMessages(request.id, (msgs) => {
-              if (!mounted) return;
-              setMessages(msgs || []);
-              setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
-            });
-          } catch (e) {
-            // ignore subscription errors
-          }
-        } else {
-          // Firebase não configurado: só usa backend
-          const data = await api.getMessagesForService(request.id);
+        const data = await api.getMessagesForService(request.id);
+        if (!mounted) return;
+        setMessages(data || []);
+        setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
+      } catch {}
+    };
+
+    // Polling para prestador quando Firebase não está disponível
+    const startPolling = () => {
+      if (pollingRef.current) clearInterval(pollingRef.current);
+      pollingRef.current = setInterval(() => {
+        if (!pausePollingRef.current) fetchBackendMessages();
+      }, 2000);
+    };
+    const stopPolling = () => {
+      if (pollingRef.current) clearInterval(pollingRef.current);
+      pollingRef.current = null;
+    };
+
+    // Eventos globais para pausar/retomar polling (ex: ao editar orçamento)
+    const handlePause = () => { pausePollingRef.current = true; };
+    const handleResume = () => { pausePollingRef.current = false; };
+    window.addEventListener('mdac:pausePolling', handlePause);
+    window.addEventListener('mdac:resumePolling', handleResume);
+
+    const isProvider = currentUser.role === 'provider';
+    const isAceito = request.status === 'Aceito';
+
+    const setup = async () => {
+      if (isFirebaseConfigured) {
+        try {
+          const once = await fetchMessagesOnce(request.id);
           if (!mounted) return;
-          setMessages(data || []);
+          setMessages(once || []);
+        } catch (firebaseErr) {
+          await fetchBackendMessages();
         }
-      } catch (err) {
-        // ignore
+        setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
+        try {
+          unsub = subscribeMessages(request.id, (msgs) => {
+            if (!mounted) return;
+            setMessages(msgs || []);
+            setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
+          });
+        } catch {}
+        stopPolling();
+      } else if (isProvider && isAceito) {
+        // Polling só para prestador e status Aceito
+        await fetchBackendMessages();
+        startPolling();
+      } else {
+        await fetchBackendMessages();
+        stopPolling();
       }
     };
-    load();
-    return () => { mounted = false; if (unsub) unsub(); };
-  }, [request?.id, request?.status]);
+    setup();
+
+    return () => {
+      mounted = false;
+      if (unsub) unsub();
+      stopPolling();
+      window.removeEventListener('mdac:pausePolling', handlePause);
+      window.removeEventListener('mdac:resumePolling', handleResume);
+    };
+  }, [request?.id, request?.status, currentUser.role]);
 
   // Se status mudou para algo diferente de 'Pendente' enquanto a tela está aberta, cancelar edição e garantir polling retomado
   useEffect(() => {
