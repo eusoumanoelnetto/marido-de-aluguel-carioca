@@ -202,6 +202,20 @@ const App: React.FC = () => {
       setServiceRequests(prev => 
         prev.map(req => req.id === id ? updatedRequest : req)
       );
+      // If client accepted with an initial message, try to ensure the message exists by calling sendMessage
+      if (status === 'Aceito' && initialMessage && initialMessage.trim()) {
+        try {
+          const recipient = updatedRequest.providerEmail || '';
+          if (recipient) {
+            await api.sendMessage(updatedRequest.id, recipient, initialMessage);
+          } else {
+            // providerEmail missing — log for debugging
+            console.warn('updateRequestStatus: providerEmail ausente ao enviar mensagem inicial para request', id);
+          }
+        } catch (e) {
+          console.warn('updateRequestStatus: falha ao enviar mensagem inicial via API (fallback):', e);
+        }
+      }
     } catch (error) {
       console.error("Failed to update request status:", error);
   window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: 'Houve um erro ao atualizar a solicitação. Tente novamente.', type: 'error' } }));
