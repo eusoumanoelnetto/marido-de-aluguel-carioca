@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import pool, { isDbConnected } from '../db';
+import pool, { isDbConnected, addInMemoryMessage } from '../db';
 import { v4 as uuidv4 } from 'uuid';
 
 export const sendMessage = async (req: Request, res: Response) => {
@@ -20,11 +20,25 @@ export const sendMessage = async (req: Request, res: Response) => {
     // Debug logging to help diagnose intermittent 500 errors
     try { console.log('sendMessage: incoming', { serviceId, recipientEmail, contentLength: content?.length, senderEmail }); } catch {}
     try { const db = (pool as any); console.log('sendMessage: isDbConnected flag?', db && db.query ? true : 'unknown'); } catch {}
-    const result = await pool.query(
-      'INSERT INTO messages (id, "serviceId", "senderEmail", "recipientEmail", content, "createdAt") VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-      [id, serviceId, senderEmail, recipientEmail, content, createdAt]
-    );
-    res.status(201).json(result.rows[0]);
+    try {
+      const result = await pool.query(
+        'INSERT INTO messages (id, "serviceId", "senderEmail", "recipientEmail", content, "createdAt") VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+        [id, serviceId, senderEmail, recipientEmail, content, createdAt]
+      );
+      return res.status(201).json(result.rows[0]);
+    } catch (insertErr) {
+      // If DB insert fails, fallback to in-memory store to keep API available.
+      console.warn('sendMessage: Postgres insert failed, using in-memory fallback:', insertErr);
+      try {
+        const msg = { id, serviceId, senderEmail, recipientEmail, content, createdAt };
+        const memRes = await addInMemoryMessage(msg as any);
+        return res.status(201).json(memRes.rows[0]);
+      } catch (memErr) {
+        // If fallback also fails, surface original error.
+        console.error('sendMessage: in-memory fallback also failed:', memErr);
+        throw insertErr;
+      }
+    }
   } catch (error) {
     let errorMsg = '';
     if (error instanceof Error) {

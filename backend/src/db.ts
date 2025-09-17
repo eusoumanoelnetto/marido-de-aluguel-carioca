@@ -284,3 +284,11 @@ export const initDb = async () => {
 };
 
 export default dbClient;
+
+// Fallback helper: permite que controladores gravem diretamente na store em memória
+// quando a tentativa de inserir no Postgres falhar. Útil para manter disponibilidade
+// em ambientes onde o Postgres está temporariamente indisponível.
+export const addInMemoryMessage = async (msg: { id: string; serviceId: string; senderEmail: string; recipientEmail: string; content: string; createdAt: string }) => {
+  memMessages.push(msg);
+  return { rowCount: 1, rows: [msg] };
+};
