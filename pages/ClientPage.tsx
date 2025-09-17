@@ -482,10 +482,14 @@ const QuotesReceivedView: React.FC<{ setView: (view: ClientView) => void; reques
                                         <button onClick={() => onCancel(req.id)} className="px-4 py-2 rounded-lg font-semibold border border-red-300 text-red-700 hover:bg-red-50 flex-1 md:flex-none">Cancelar</button>
                                     </>
                                 ) : (
-                                    // Para itens já aceitos, mostrar botão para abrir chat/mensagens
+                                    // Para itens já aceitos, mostrar botão para abrir chat/mensagens (abre ServiceDetailView)
                                     <button
                                         className="px-4 py-2 rounded-lg font-semibold bg-brand-blue text-white opacity-90 flex-1 md:flex-none hover:bg-brand-blue/80"
-                                        onClick={() => setView('service-category') || setSelectedCategory(req.category)}
+                                        onClick={() => {
+                                            setSelectedCategory(req.category);
+                                            setSelectedRequest && setSelectedRequest(req); // se existir função para setar request selecionado
+                                            setView && setView('service-detail'); // se existir view de detalhe
+                                        }}
                                     >Enviar mensagem</button>
                                 )}
                             </div>
