@@ -145,6 +145,65 @@ const ServiceDetailView: React.FC<Props> = ({ request, onBack, updateRequestStat
     }
   };
 
+  // Helper: timeout a promise
+  const withTimeout = <T,>(p: Promise<T>, ms = 5000) => {
+    let timer: ReturnType<typeof setTimeout>;
+    return Promise.race([
+      p.finally(() => clearTimeout(timer)),
+      new Promise<T>((_, rej) => { timer = setTimeout(() => rej(new Error('timeout')), ms); }),
+    ]);
+  };
+
+  const handleSendMessage = async () => {
+    if (!request) return;
+    if (!newMessage.trim()) return;
+    setIsSendingMessage(true);
+    const payloadText = newMessage.trim();
+    try {
+      const recipient = currentUser.role === 'provider' ? (request.clientEmail || '') : (request.providerEmail || '');
+      if (!recipient) {
+        window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: 'Destinatário da mensagem ausente. Não foi possível enviar.', type: 'error' } }));
+        return;
+      }
+
+      // Try Firebase first with timeout
+      try {
+        const fbRes = await withTimeout(sendMessageFirebase(request.id, currentUser.email, recipient, payloadText), 4000);
+        // Append optimistically if we got a result
+        try {
+          if (fbRes && fbRes.content) {
+            setMessages(prev => [...prev, fbRes]);
+          } else if (fbRes && fbRes.id) {
+            setMessages(prev => [...prev, fbRes]);
+          }
+        } catch (e) {
+          // ignore append errors
+        }
+      } catch (fbErr) {
+        // Firebase failed / timed out -> fallback to API
+        console.warn('sendMessage: Firebase failed, falling back to API:', fbErr);
+        try {
+          const saved = await withTimeout(api.sendMessage(request.id, recipient, payloadText), 5000);
+          // saved should be the saved message object from backend
+          try { setMessages(prev => [...prev, saved]); } catch (e) {}
+        } catch (apiErr) {
+          console.error('sendMessage: API fallback also failed:', apiErr);
+          const msg = (apiErr && (apiErr as any).message) || 'Erro ao enviar mensagem.';
+          window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: msg, type: 'error' } }));
+        }
+      }
+
+      setNewMessage('');
+      setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
+    } catch (err: any) {
+      console.error('handleSendMessage: erro inesperado', err);
+      const msg = err?.message || 'Erro ao enviar mensagem';
+      window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: msg, type: 'error' } }));
+    } finally {
+      setIsSendingMessage(false);
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto p-6">
       <button onClick={onBack} className="mb-4 text-sm font-semibold text-brand-navy hover:underline">Voltar</button>
@@ -247,40 +306,7 @@ const ServiceDetailView: React.FC<Props> = ({ request, onBack, updateRequestStat
             </div>
             <div className="mt-3 flex gap-3">
               <input value={newMessage} onChange={(e) => setNewMessage(e.target.value)} placeholder="Escreva uma mensagem..." className="flex-1 p-3 border rounded-lg" disabled={isSendingMessage} />
-              <button disabled={isSendingMessage} onClick={async () => {
-                if (!newMessage.trim()) return;
-                setIsSendingMessage(true);
-                try {
-                  // Escolher destinatário corretamente: prestador envia para cliente, cliente envia para prestador
-                  const recipient = currentUser.role === 'provider' ? (request.clientEmail || '') : (request.providerEmail || '');
-                  if (!recipient) {
-                    console.warn('ServiceDetailView: recipient ausente ao tentar enviar mensagem para request', request.id, { currentUser: currentUser?.email, providerEmail: request.providerEmail, clientEmail: request.clientEmail });
-                    window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: 'Destinatário da mensagem ausente. Não foi possível enviar.', type: 'error' } }));
-                    setIsSendingMessage(false);
-                    return;
-                  }
-                  // Try Firebase first, fallback to API
-                  try {
-                    await sendMessageFirebase(request.id, currentUser.email, recipient, newMessage.trim());
-                  } catch (fbErr) {
-                    const saved = await api.sendMessage(request.id, recipient, newMessage.trim());
-                    setMessages(prev => [...prev, saved]);
-                  }
-                  setNewMessage('');
-                  setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
-                } catch (err: any) {
-                  console.error('ServiceDetailView: erro ao enviar mensagem', err);
-                  const msg = err?.message || 'Erro ao enviar mensagem';
-                  if (String(msg).toLowerCase().includes('token') || String(msg).toLowerCase().includes('401') || String(msg).toLowerCase().includes('não autorizado') || String(msg).toLowerCase().includes('ausente')) {
-                    try { window.dispatchEvent(new CustomEvent('mdac:logout')); } catch {}
-                    window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: 'Sessão expirada ou token inválido. Faça login novamente.', type: 'error' } }));
-                  } else {
-                    window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: msg, type: 'error' } }));
-                  }
-                } finally {
-                  setIsSendingMessage(false);
-                }
-              }} className={`px-4 py-2 bg-brand-blue text-white rounded-lg ${isSendingMessage ? 'opacity-60 cursor-not-allowed' : ''}`}>{isSendingMessage ? 'Enviando...' : 'Enviar'}</button>
+              <button disabled={isSendingMessage} onClick={handleSendMessage} className={`px-4 py-2 bg-brand-blue text-white rounded-lg ${isSendingMessage ? 'opacity-60 cursor-not-allowed' : ''}`}>{isSendingMessage ? 'Enviando...' : 'Enviar'}</button>
             </div>
           </div>
         )}
