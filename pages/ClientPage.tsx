@@ -415,7 +415,8 @@ const RequestQuoteStep2View: React.FC<{
 const QuotesReceivedView: React.FC<{ setView: (view: ClientView) => void; requests: ServiceRequest[]; onAccept: (id: string) => void; onCancel: (id: string) => void; user: User; }> = ({ setView, requests, onAccept, onCancel, user }) => {
     const myRequests = requests.filter(r => r.clientEmail === user.email);
     const pending = myRequests.filter(r => r.status === 'Pendente');
-    const withQuotes = myRequests.filter(r => r.status === 'Orçamento Enviado' && (typeof r.quote === 'number' ? r.quote >= 0 : true));
+    // Considera orçamentos enviados e também os já aceitos (devem aparecer em Recebidos)
+    const withQuotes = myRequests.filter(r => (r.status === 'Orçamento Enviado' || r.status === 'Aceito') && (typeof r.quote === 'number' ? r.quote >= 0 : true));
     const cancelled = myRequests.filter(r => r.status === 'Cancelado');
 
     return (
@@ -468,11 +469,22 @@ const QuotesReceivedView: React.FC<{ setView: (view: ClientView) => void; reques
                             <div className="flex-1 min-w-0">
                                 <div className="text-sm text-gray-500">{new Date(req.requestDate).toLocaleDateString('pt-BR')} • {req.category}</div>
                                 <div className="font-semibold text-brand-navy truncate">{req.description}</div>
-                                <div className="text-sm text-gray-600 mt-1">Orçamento: <span className="font-semibold text-green-600">{typeof req.quote === 'number' ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(req.quote) : '—'}</span></div>
+                                <div className="text-sm text-gray-600 mt-1">Orçamento: <span className="font-semibold text-green-600">{typeof req.quote === 'number' ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(req.quote) : '—'}</span>
+                                {req.status === 'Aceito' && (
+                                    <span className="ml-3 inline-block text-xs px-2 py-1 rounded bg-green-50 text-green-700 border border-green-100">Aceito</span>
+                                )}
+                                </div>
                             </div>
                             <div className="flex gap-2 w-full md:w-auto">
-                                <button onClick={() => onAccept(req.id)} className="px-4 py-2 rounded-lg font-semibold bg-green-600 text-white hover:bg-green-700 flex-1 md:flex-none">Aceitar</button>
-                                <button onClick={() => onCancel(req.id)} className="px-4 py-2 rounded-lg font-semibold border border-red-300 text-red-700 hover:bg-red-50 flex-1 md:flex-none">Cancelar</button>
+                                {req.status === 'Orçamento Enviado' ? (
+                                    <>
+                                        <button onClick={() => onAccept(req.id)} className="px-4 py-2 rounded-lg font-semibold bg-green-600 text-white hover:bg-green-700 flex-1 md:flex-none">Aceitar</button>
+                                        <button onClick={() => onCancel(req.id)} className="px-4 py-2 rounded-lg font-semibold border border-red-300 text-red-700 hover:bg-red-50 flex-1 md:flex-none">Cancelar</button>
+                                    </>
+                                ) : (
+                                    // Para itens já aceitos, apenas indicar estado e permitir ação futura (por enquanto apenas um botão não-primário)
+                                    <button className="px-4 py-2 rounded-lg font-semibold bg-brand-blue text-white opacity-90 flex-1 md:flex-none cursor-default">Aceito</button>
+                                )}
                             </div>
                         </div>
                     </div>

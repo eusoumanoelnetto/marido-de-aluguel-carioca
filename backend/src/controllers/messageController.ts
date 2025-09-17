@@ -11,14 +11,22 @@ export const sendMessage = async (req: Request, res: Response) => {
   const id = uuidv4();
   const createdAt = new Date().toISOString();
   try {
+    // Debug logging to help diagnose intermittent 500 errors
+    try { console.log('sendMessage: incoming', { serviceId, recipientEmail, contentLength: content?.length, senderEmail }); } catch {}
+    try { const db = (pool as any); console.log('sendMessage: isDbConnected flag?', db && db.query ? true : 'unknown'); } catch {}
     const result = await pool.query(
       'INSERT INTO messages (id, "serviceId", "senderEmail", "recipientEmail", content, "createdAt") VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
       [id, serviceId, senderEmail, recipientEmail, content, createdAt]
     );
     res.status(201).json(result.rows[0]);
   } catch (error) {
-    console.error('Error inserting message:', error);
-    res.status(500).json({ message: 'Erro ao enviar mensagem.' });
+    console.error('Error inserting message:', error && (error.stack || error));
+    // Return more context in dev environment to help debugging (but keep generic in prod)
+    if (process.env.NODE_ENV === 'production') {
+      res.status(500).json({ message: 'Erro ao enviar mensagem.' });
+    } else {
+      res.status(500).json({ message: 'Erro ao enviar mensagem.', error: String(error && (error.stack || error)) });
+    }
   }
 };
 

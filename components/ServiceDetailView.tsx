@@ -74,7 +74,22 @@ const ServiceDetailView: React.FC<Props> = ({ request, onBack, updateRequestStat
 
   const handleAccept = async () => {
     if (!request || isSubmitting) return;
-    const value = parseFloat(draftQuote.replace(',', '.'));
+    // Ler valor diretamente do input para evitar condições de corrida com onBlur/estado
+    const rawInput = (inputRef.current && (inputRef.current.value ?? '')) || draftQuote || '';
+    let cleaned = String(rawInput).trim();
+    cleaned = cleaned.replace(/\s+/g, '');
+    // Se contém ambos '.' e ',' assumimos que '.' é separador de milhar e ',' decimal (ex: 1.500,00)
+    if (cleaned.indexOf('.') !== -1 && cleaned.indexOf(',') !== -1) {
+      cleaned = cleaned.replace(/\./g, '');
+      cleaned = cleaned.replace(/,/g, '.');
+    } else {
+      // Normaliza vírgulas para ponto e remove caracteres não numéricos
+      cleaned = cleaned.replace(/,/g, '.');
+      cleaned = cleaned.replace(/[^0-9.]/g, '');
+      // Se houver mais de um ponto, manter apenas o primeiro como decimal
+      cleaned = cleaned.replace(/\.(?=.*\.)/g, '');
+    }
+    const value = parseFloat(cleaned);
     if (isNaN(value) || value <= 0) {
       window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: 'Por favor, insira um valor de orçamento válido.', type: 'error' } }));
       return;
@@ -154,9 +169,24 @@ const ServiceDetailView: React.FC<Props> = ({ request, onBack, updateRequestStat
                 onFocus={() => { setEditing(true); try { window.dispatchEvent(new CustomEvent('mdac:pausePolling')); } catch {} }}
                 onBlur={() => {
                   setEditing(false);
-                  // Normaliza para formato 0.00 se número válido
-                  const num = parseFloat(draftQuote.replace(',', '.'));
-                  if (!isNaN(num) && num > 0) setDraftQuote(num.toFixed(2));
+                  // Normaliza para formato 0.00 se número válido (mesma lógica usada no envio)
+                  try {
+                    let raw = (inputRef.current && (inputRef.current.value ?? '')) || draftQuote || '';
+                    raw = String(raw).trim();
+                    raw = raw.replace(/\s+/g, '');
+                    if (raw.indexOf('.') !== -1 && raw.indexOf(',') !== -1) {
+                      raw = raw.replace(/\./g, '');
+                      raw = raw.replace(/,/g, '.');
+                    } else {
+                      raw = raw.replace(/,/g, '.');
+                      raw = raw.replace(/[^0-9.]/g, '');
+                      raw = raw.replace(/\.(?=.*\.)/g, '');
+                    }
+                    const normalizedNum = parseFloat(raw);
+                    if (!isNaN(normalizedNum) && normalizedNum > 0) setDraftQuote(normalizedNum.toFixed(2));
+                  } catch (e) {
+                    // ignore normalization errors
+                  }
                   try { window.dispatchEvent(new CustomEvent('mdac:resumePolling')); } catch {}
                 }}
                 placeholder="Ex: 150,00"
@@ -197,12 +227,19 @@ const ServiceDetailView: React.FC<Props> = ({ request, onBack, updateRequestStat
               <button onClick={async () => {
                 if (!newMessage.trim()) return;
                 try {
-                  const recipient = request.providerEmail || '';
+                  // Escolher destinatário corretamente: prestador envia para cliente, cliente envia para prestador
+                  const recipient = currentUser.role === 'provider' ? (request.clientEmail || '') : (request.providerEmail || '');
+                  if (!recipient) {
+                    console.warn('ServiceDetailView: recipient ausente ao tentar enviar mensagem para request', request.id, { currentUser: currentUser?.email, providerEmail: request.providerEmail, clientEmail: request.clientEmail });
+                    window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: 'Destinatário da mensagem ausente. Não foi possível enviar.', type: 'error' } }));
+                    return;
+                  }
                   const saved = await api.sendMessage(request.id, recipient, newMessage.trim());
                   setMessages(prev => [...prev, saved]);
                   setNewMessage('');
                   setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
                 } catch (err: any) {
+                  console.error('ServiceDetailView: erro ao enviar mensagem', err);
                   window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: err?.message || 'Erro ao enviar mensagem', type: 'error' } }));
                 }
               }} className="px-4 py-2 bg-brand-blue text-white rounded-lg">Enviar</button>

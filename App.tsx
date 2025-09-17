@@ -199,9 +199,19 @@ const App: React.FC = () => {
   const updateRequestStatus = async (id: string, status: ServiceRequest['status'], quote?: number, initialMessage?: string) => {
     try {
       const updatedRequest = await api.updateServiceRequestStatus(id, status, quote, currentUser?.role === 'provider' ? currentUser.email : undefined, initialMessage);
-      setServiceRequests(prev => 
-        prev.map(req => req.id === id ? updatedRequest : req)
-      );
+      setServiceRequests(prev => {
+        // If API returned a partial object (some adapters can omit unchanged fields), merge with existing
+        const found = prev.find(r => r.id === id);
+        if (found) {
+          const merged = { ...found, ...updatedRequest } as ServiceRequest;
+          // Ensure clientEmail is preserved
+          if (!merged.clientEmail && found.clientEmail) merged.clientEmail = found.clientEmail;
+          if (!merged.requestDate && found.requestDate) merged.requestDate = found.requestDate;
+          return prev.map(req => req.id === id ? merged : req);
+        }
+        // If not found, append the updatedRequest (ensure it has at least id)
+        return [...prev, updatedRequest];
+      });
       // If client accepted with an initial message, try to ensure the message exists by calling sendMessage
       if (status === 'Aceito' && initialMessage && initialMessage.trim()) {
         try {
