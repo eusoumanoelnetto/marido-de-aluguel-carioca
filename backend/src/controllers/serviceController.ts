@@ -29,8 +29,20 @@ export const getServiceRequests = async (req: Request, res: Response) => {
 };
 
 export const createServiceRequest = async (req: Request, res: Response) => {
-  const newRequest: ServiceRequest = req.body;
-  const { id, clientName, clientEmail, address, contact, category, description, photoBase64, status, isEmergency, requestDate } = newRequest;
+  const body = req.body as Partial<ServiceRequest> & { title?: string; location?: string };
+  // Ensure we have an id and minimal fields even if the client sent a lightweight payload
+  const id = (body as any).id || uuidv4();
+  const userEmail = (req as any).userEmail as string | undefined;
+  const clientName = body.clientName || (body as any).name || userEmail || 'Cliente';
+  const clientEmail = body.clientEmail || userEmail || null;
+  const address = body.address || body.location || '';
+  const contact = body.contact || '';
+  const category = body.category || body.title || null;
+  const description = body.description || '';
+  const photoBase64 = body.photoBase64 || null;
+  const status = body.status || 'Pendente';
+  const isEmergency = !!body.isEmergency;
+  const requestDate = body.requestDate || new Date().toISOString();
 
   try {
     const result = await pool.query(
@@ -39,7 +51,7 @@ export const createServiceRequest = async (req: Request, res: Response) => {
        RETURNING *`,
       [id, clientName, clientEmail, address, contact, category, description, photoBase64, status, isEmergency, requestDate]
     );
-    console.log('New service request created:', result.rows[0].id);
+    console.log('DEBUG: createServiceRequest - result.rows[0]:', result.rows[0], 'id param:', id);
 
     // Log event for admin notifications
     try {
@@ -61,7 +73,9 @@ export const createServiceRequest = async (req: Request, res: Response) => {
       console.log('❌ Erro ao registrar evento de solicitação:', eventError.message);
     }
 
-    res.status(201).json(result.rows[0]);
+  // Normalize response: ensure id and clientEmail present even if adapter returned partial object
+  const respObj = { ...(result.rows[0] || {}), id, clientEmail };
+  res.status(201).json(respObj);
   } catch (error) {
     console.error('Error creating service request:', error);
     res.status(500).json({ message: 'Erro ao criar solicitação.' });
