@@ -482,8 +482,11 @@ const QuotesReceivedView: React.FC<{ setView: (view: ClientView) => void; reques
                                         <button onClick={() => onCancel(req.id)} className="px-4 py-2 rounded-lg font-semibold border border-red-300 text-red-700 hover:bg-red-50 flex-1 md:flex-none">Cancelar</button>
                                     </>
                                 ) : (
-                                    // Para itens já aceitos, apenas indicar estado e permitir ação futura (por enquanto apenas um botão não-primário)
-                                    <button className="px-4 py-2 rounded-lg font-semibold bg-brand-blue text-white opacity-90 flex-1 md:flex-none cursor-default">Aceito</button>
+                                    // Para itens já aceitos, mostrar botão para abrir chat/mensagens
+                                    <button
+                                        className="px-4 py-2 rounded-lg font-semibold bg-brand-blue text-white opacity-90 flex-1 md:flex-none hover:bg-brand-blue/80"
+                                        onClick={() => setView('service-category') || setSelectedCategory(req.category)}
+                                    >Enviar mensagem</button>
                                 )}
                             </div>
                         </div>
