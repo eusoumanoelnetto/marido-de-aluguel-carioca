@@ -283,20 +283,4 @@ export const initDb = async () => {
   }
 };
 
-// Ajustar o tipo de erro para garantir tratamento correto
-export const checkDbStatus = async () => {
-  try {
-    const client = await pgPool.connect();
-    const result = await client.query("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'");
-    console.log('Tabelas disponíveis:', result.rows.map(row => row.table_name));
-    client.release();
-  } catch (err) {
-    const errorMessage = err instanceof Error ? err.message : String(err);
-    console.error('Erro ao verificar tabelas do banco:', errorMessage);
-  }
-};
-
-// Chamar a função ao inicializar o banco
-initDb().then(() => checkDbStatus());
-
 export default dbClient;
