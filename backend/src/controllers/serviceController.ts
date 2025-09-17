@@ -118,6 +118,8 @@ export const updateServiceRequestStatus = async (req: Request, res: Response) =>
     const nextProviderEmail = status === 'Orçamento Enviado' ? userEmail : existing.providerEmail;
     const nextQuote = status === 'Orçamento Enviado' ? quote : existing.quote;
 
+    // Debug: log the params we will send to the DB to diagnose missing providerEmail/quote
+    console.log('DEBUG: updateServiceRequestStatus - updating request', id, 'with params:', { status, nextQuote, nextProviderEmail });
     const result = await pool.query(
       'UPDATE service_requests SET status = $1, quote = $2, "providerEmail" = $3 WHERE id = $4 RETURNING *',
       [status, nextQuote, nextProviderEmail, id]
