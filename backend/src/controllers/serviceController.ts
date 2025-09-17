@@ -177,3 +177,16 @@ export const updateServiceRequestStatus = async (req: Request, res: Response) =>
     res.status(500).json({ message: 'Erro ao atualizar solicitação.' });
   }
 };
+
+// Debug: retornar o estado atual de service_requests e messages (apenas em dev)
+export const debugState = async (_req: Request, res: Response) => {
+  if (process.env.NODE_ENV === 'production') return res.status(404).end();
+  try {
+    const services = await pool.query('SELECT * FROM service_requests ORDER BY "requestDate" DESC');
+    const messages = await pool.query('SELECT * FROM messages ORDER BY "createdAt" ASC');
+    res.status(200).json({ services: services.rows, messages: messages.rows });
+  } catch (err) {
+    console.error('Erro debugState:', err);
+    res.status(500).json({ message: 'Erro ao obter estado de debug.' });
+  }
+};
