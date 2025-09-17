@@ -1,5 +1,10 @@
 import { collection, addDoc, query, where, orderBy, onSnapshot, getDocs } from 'firebase/firestore';
-import { db } from './firebaseConfig';
+import { db, isConfigured } from './firebaseConfig';
+
+if (!isConfigured) {
+  // eslint-disable-next-line no-console
+  console.warn('Firebase não configurado. Usando fallback para API.');
+}
 
 export const sendMessageFirebase = async (serviceId: string, senderEmail: string, recipientEmail: string, content: string) => {
   const col = collection(db, 'messages');
