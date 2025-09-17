@@ -1,0 +1,3 @@
+ℹ️  Build front-end não encontrado (dist/index.html ou docs/index.html). Acesse / para health check. Rode `npm run build` na raiz para gerar.
+Could not connect to Postgres, falling back to in-memory stores. Error: getaddrinfo ENOTFOUND dpg-d2l53nv5r7bs73dba6d0-a
+⚠️  Server started without DB connection on http://localhost:3001
