@@ -129,24 +129,35 @@ export const updateServiceRequestStatus = async (req: Request, res: Response) =>
       res.status(404).json({ message: 'Solicitação não encontrada.' });
       return;
     }
+
+    // Re-query the updated row to ensure we have the canonical values (avoids mismatches in some adapters)
+    let updatedRow;
+    try {
+      const q = await pool.query('SELECT * FROM service_requests WHERE id = $1', [id]);
+      updatedRow = q.rows[0];
+    } catch (e) {
+      console.warn('Aviso: falha ao reconsultar service_requests após UPDATE para id', id, e);
+      updatedRow = result.rows[0];
+    }
+
     // If client accepted the quote and sent an initialMessage, persist it to messages
     if (status === 'Aceito' && initialMessage && initialMessage.trim().length > 0) {
       try {
         const msgId = uuidv4();
         const createdAt = new Date().toISOString();
-        const provider = result.rows[0].providerEmail;
+        const provider = updatedRow?.providerEmail;
         if (!provider) {
           console.warn('Aviso: providerEmail ausente ao tentar inserir mensagem inicial para request', id);
         } else {
           await pool.query('INSERT INTO messages (id, "serviceId", "senderEmail", "recipientEmail", content, "createdAt") VALUES ($1,$2,$3,$4,$5,$6)', [msgId, id, userEmail, provider, initialMessage, createdAt]);
         }
       } catch (err) {
-        console.error('Erro ao inserir mensagem inicial para request', id, 'providerEmail:', result.rows[0]?.providerEmail, 'error:', err);
+        console.error('Erro ao inserir mensagem inicial para request', id, 'providerEmail:', updatedRow?.providerEmail, 'error:', err);
       }
     }
 
-  console.log(`Service request ${id} updated to status: ${status}`);
-    res.status(200).json(result.rows[0]);
+    console.log(`Service request ${id} updated to status: ${status}`);
+    res.status(200).json(updatedRow || result.rows[0]);
   } catch (error) {
     console.error('Error updating service request:', error);
     res.status(500).json({ message: 'Erro ao atualizar solicitação.' });
