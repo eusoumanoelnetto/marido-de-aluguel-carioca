@@ -36,27 +36,44 @@ const ensureDb = () => {
 	if (!db) throw new Error('Firebase não configurado. Usando fallback para API.');
 };
 
+// Helper to add a timeout to a promise (rejects after ms)
+const withTimeout = <T>(p: Promise<T>, ms = 4000): Promise<T> => {
+	let timer: ReturnType<typeof setTimeout>;
+	return Promise.race([
+		p.finally(() => clearTimeout(timer)),
+		new Promise<T>((_, rej) => {
+			timer = setTimeout(() => rej(new Error('Firebase timeout')), ms);
+		}),
+	]);
+};
+
 export async function sendMessageFirebase(requestId: string, senderEmail: string, recipientEmail: string, content: string) {
 	ensureDb();
 	if (!requestId || !senderEmail || !recipientEmail || !content) throw new Error('Parâmetros de mensagem inválidos para Firebase.');
-	const ref = collection(db as any, 'serviceRequests', requestId, 'messages');
-	const ts = Date.now();
-	const doc = await addDoc(ref, {
-		senderEmail,
-		recipientEmail,
-		content,
-		createdAt: ts,
-	});
-	return { id: (doc && (doc as any).id) || null, senderEmail, recipientEmail, content, createdAt: ts };
+		const ref = collection(db as any, 'serviceRequests', requestId, 'messages');
+		const ts = Date.now();
+		// addDoc can hang if Firestore config is invalid or network broken — add timeout
+		const addPromise = addDoc(ref, {
+			senderEmail,
+			recipientEmail,
+			content,
+			createdAt: ts,
+		});
+		const doc = await withTimeout(addPromise, 4000);
+		return { id: (doc && (doc as any).id) || null, senderEmail, recipientEmail, content, createdAt: ts };
 }
 
 export async function fetchMessagesOnce(requestId: string) {
 	ensureDb();
 	if (!requestId) return [];
-	const ref = collection(db as any, 'serviceRequests', requestId, 'messages');
-	const q = query(ref, orderBy('createdAt', 'asc'));
-	const snap = await getDocs(q);
-	return snap.docs.map(doc => ({ id: doc.id, ...(doc.data() || {}) }));
+		const ref = collection(db as any, 'serviceRequests', requestId, 'messages');
+		const q = query(ref, orderBy('createdAt', 'asc'));
+		// protect getDocs with timeout so UI can fallback quickly
+		const snap = await withTimeout(getDocs(q), 4000).catch((err) => {
+			// rethrow a clearer error
+			throw new Error('Firebase fetch timeout');
+		});
+		return snap.docs.map(doc => ({ id: doc.id, ...(doc.data() || {}) }));
 }
 
 export function subscribeMessages(requestId: string, callback: (msgs: any[]) => void) {
