@@ -413,7 +413,7 @@ const RequestQuoteStep2View: React.FC<{
     );
 };
 
-const QuotesReceivedView: React.FC<{ setView: (view: ClientView) => void; requests: ServiceRequest[]; onAccept: (id: string) => void; onCancel: (id: string) => void; user: User; setSelectedCategory?: (c: ServiceCategory) => void; setSelectedRequest?: (r: ServiceRequest|null) => void; }> = ({ setView, requests, onAccept, onCancel, user, setSelectedCategory, setSelectedRequest }) => {
+const QuotesReceivedView: React.FC<{ setView: (view: ClientView) => void; requests: ServiceRequest[]; onAccept: (id: string) => void; onCancel: (id: string) => void; user: User; setSelectedCategory: (c: ServiceCategory) => void; setSelectedRequest?: (r: ServiceRequest|null) => void; }> = ({ setView, requests, onAccept, onCancel, user, setSelectedCategory, setSelectedRequest }) => {
     const myRequests = requests.filter(r => r.clientEmail === user.email);
     const pending = myRequests.filter(r => r.status === 'Pendente');
     // Considera orçamentos enviados e também os já aceitos (devem aparecer em Recebidos)
@@ -487,7 +487,7 @@ const QuotesReceivedView: React.FC<{ setView: (view: ClientView) => void; reques
                                         <button
                                         className="px-4 py-2 rounded-lg font-semibold bg-brand-blue text-white opacity-90 flex-1 md:flex-none hover:bg-brand-blue/80"
                                         onClick={() => {
-                                            setSelectedCategory && setSelectedCategory(req.category);
+                                            setSelectedCategory(req.category);
                                             setSelectedRequest && setSelectedRequest(req); // se existir função para setar request selecionado
                                             setView && setView('service-detail'); // se existir view de detalhe
                                         }}
