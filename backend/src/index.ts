@@ -19,42 +19,45 @@ if (IS_PROD && (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'dev_secre
   console.warn('⚠️  JWT_SECRET não definido ou usando valor inseguro (dev_secret) em produção. Defina uma string forte em variáveis de ambiente.');
 }
 
-// Configuração de CORS
-const corsOptions = {
-  origin: 'http://localhost:5173', // Permitir o frontend local
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-};
-app.use(cors(corsOptions));
-
-// Middlewares
-// Enable Cross-Origin Resource Sharing with safer defaults:
-// - Allow Authorization header in preflight so browsers can send Bearer tokens
-// - Allow origin to be configured via FRONTEND_ORIGIN (comma-separated) or fallback to '*'
+// CORS: use a single, explicit middleware
+// Behavior:
+// - In production, if FRONTEND_ORIGIN is set we validate against it (single or comma-separated list)
+// - Otherwise (including local dev) we reflect the request origin so browser receives an exact match
 const frontendOrigin = process.env.FRONTEND_ORIGIN;
-let corsOrigin: boolean | string | string[] = '*';
+let corsOrigin: string | string[] | null = null;
 if (frontendOrigin) {
-  // allow a single origin or a comma-separated list
   corsOrigin = frontendOrigin.includes(',') ? frontendOrigin.split(',').map(s => s.trim()) : frontendOrigin;
 }
-// Em desenvolvimento, sempre permitir localhost
+// In non-prod, allow localhost dev ports in addition to configured origins
 if (!IS_PROD) {
+  if (!corsOrigin) {
+    corsOrigin = [];
+  }
   if (Array.isArray(corsOrigin)) {
-    corsOrigin.push('http://localhost:8000', 'http://127.0.0.1:8000');
-  } else if (corsOrigin !== '*') {
-    corsOrigin = [corsOrigin as string, 'http://localhost:8000', 'http://127.0.0.1:8000'];
+    corsOrigin.push('http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:8000', 'http://127.0.0.1:8000');
+  } else if (typeof corsOrigin === 'string') {
+    corsOrigin = [corsOrigin, 'http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:8000', 'http://127.0.0.1:8000'];
   }
 }
-if (IS_PROD && corsOrigin === '*') {
-  console.warn('⚠️  CORS liberado para todos (*) em produção. Defina FRONTEND_ORIGIN com o domínio(s) do seu front-end para maior segurança.');
-}
+
+const originValidator = (origin: string | undefined | null, cb: (err: Error | null, allow?: boolean) => void) => {
+  // no origin (curl, server-to-server) => allow
+  if (!origin) return cb(null, true);
+  if (!corsOrigin) {
+    // reflect origin (allow any origin) by returning true
+    return cb(null, true);
+  }
+  if (Array.isArray(corsOrigin)) {
+    return cb(null, corsOrigin.includes(origin));
+  }
+  return cb(null, origin === corsOrigin);
+};
+
 app.use(cors({
-  origin: corsOrigin,
+  origin: originValidator,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  // Allow custom admin header used by the static admin panel
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Admin-Key'],
   exposedHeaders: ['Authorization'],
-  // credentials left false by default; if you need cookies set FRONTEND_ORIGIN and enable credentials explicitly
   credentials: false,
 }));
 // Also respond to all OPTIONS preflight requests
