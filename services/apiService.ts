@@ -7,6 +7,11 @@ const BACKEND_URL = (import.meta.env.DEV ? 'http://localhost:3001' : 'https://ma
 // The base URL for our backend API - always ensures a valid value
 let API_BASE_URL = (import.meta.env.VITE_API_BASE as string) || BACKEND_URL;
 
+// In development, force local backend to avoid accidentally calling production
+if (import.meta.env.DEV) {
+  API_BASE_URL = 'http://localhost:3001/api';
+}
+
 // Log para debug
 // Debug logging removed for production; keep only DEV logs when necessary
 
@@ -121,7 +126,7 @@ const handleResponse = async (response: Response) => {
   // Log detalhado apenas em desenvolvimento para evitar poluição de console em produção (polling frequente)
   if (import.meta.env.DEV) {
     // eslint-disable-next-line no-console
-    console.log('handleResponse: status:', response.status, 'ok:', response.ok);
+    console.log('handleResponse: status:', response.status, 'ok:', response.ok, 'API_BASE_URL=', API_BASE_URL);
   }
   
   let data;
