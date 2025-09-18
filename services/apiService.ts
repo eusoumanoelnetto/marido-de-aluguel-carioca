@@ -1,9 +1,10 @@
 import { ServiceRequest, User, SignUpData } from '../types';
 
-// Forçar URL do backend para produção - FALLBACK garantido
-const BACKEND_URL = 'https://marido-de-aluguel-carioca.onrender.com';
+// Backend URL defaults
+// Em desenvolvimento, apontar para o backend local para facilitar testes.
+const BACKEND_URL = (import.meta.env.DEV ? 'http://localhost:3001' : 'https://marido-de-aluguel-carioca.onrender.com');
 
-// The base URL for our backend API - sempre garante um valor válido
+// The base URL for our backend API - always ensures a valid value
 let API_BASE_URL = (import.meta.env.VITE_API_BASE as string) || BACKEND_URL;
 
 // Log para debug

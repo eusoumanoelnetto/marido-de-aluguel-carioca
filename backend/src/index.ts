@@ -64,6 +64,17 @@ app.use(cors({
 app.options('*', cors());
 app.use(express.json({ limit: '10mb' })); // To parse JSON bodies (and increase limit for images)
 
+// DEV-only middleware: log Authorization header for debugging authentication issues
+if (process.env.NODE_ENV !== 'production') {
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    try {
+      // eslint-disable-next-line no-console
+      console.log('DEV-MW auth-header:', { method: req.method, path: req.path, authorization: req.headers.authorization ? String(req.headers.authorization).slice(0, 80) + '...' : 'none' });
+    } catch (e) {}
+    next();
+  });
+}
+
 // Middleware to check for DB connection before handling API requests
 const checkDbConnection = (req: Request, res: Response, next: NextFunction) => {
   const isProd = process.env.NODE_ENV === 'production';
