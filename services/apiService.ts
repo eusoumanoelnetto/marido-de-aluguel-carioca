@@ -90,6 +90,14 @@ const authFetch = async (input: RequestInfo, init: RequestInit = {}) => {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
+  // Debug: log header presence in DEV to help troubleshoot 401 responses
+  if (import.meta.env.DEV) {
+    try {
+      // eslint-disable-next-line no-console
+      console.log('authFetch: tokenPresent=', !!token, 'sending Authorization=', headers['Authorization'] ? headers['Authorization'].slice(0, 40) + '...' : 'none', 'url=', String(input));
+    } catch (e) {}
+  }
+
   const response = await retryFetch(input, { ...init, headers }, 2);
 
   if (response.status === 401) {
