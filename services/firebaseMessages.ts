@@ -1,3 +1,7 @@
+// Expor verifyFirebase para debug no navegador
+if (typeof window !== 'undefined') {
+	(window as any).verifyFirebase = verifyFirebase;
+}
 // Firebase helpers para mensagens em tempo real
 // Certifique-se de instalar firebase: npm install firebase
 import { initializeApp, getApps } from 'firebase/app';
