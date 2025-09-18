@@ -11,7 +11,9 @@ interface JwtPayload {
 export const authenticate = async (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    console.log('❌ Token ausente ou inválido na requisição para:', req.path);
+    // Log method and path to help locate the failing request
+    const received = req.headers.authorization ? String(req.headers.authorization).slice(0, 30) + '...' : 'none';
+    console.log('❌ Token ausente ou inválido na requisição', { method: req.method, path: req.path, authorizationSample: received });
     return res.status(401).json({ message: 'Token ausente ou inválido.' });
   }
 
@@ -32,7 +34,8 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
     (req as any).userRole = payload.role;
     next();
   } catch (err) {
-    console.log('❌ Token inválido:', err);
+    const received = req.headers.authorization ? String(req.headers.authorization).slice(0, 30) + '...' : 'none';
+    console.log('❌ Token inválido ao verificar JWT', { method: req.method, path: req.path, authorizationSample: received, error: (err && (err as any).message) || String(err) });
     return res.status(401).json({ message: 'Token inválido.' });
   }
 };

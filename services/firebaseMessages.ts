@@ -23,11 +23,11 @@ if (isFirebaseConfigured) {
 		if (!getApps().length) {
 			initializeApp(firebaseConfig);
 		}
-		db = getFirestore();
+			db = getFirestore();
 	} catch (e) {
 		// if initialization fails, mark as not configured
 		// eslint-disable-next-line no-console
-		console.error('firebaseMessages: erro ao inicializar Firebase:', e);
+			console.error('firebaseMessages: erro ao inicializar Firebase:', e);
 		db = null;
 	}
 }
@@ -49,7 +49,10 @@ const withTimeout = <T>(p: Promise<T>, ms = 4000): Promise<T> => {
 
 export async function sendMessageFirebase(requestId: string, senderEmail: string, recipientEmail: string, content: string) {
 	ensureDb();
-	if (!requestId || !senderEmail || !recipientEmail || !content) throw new Error('Parâmetros de mensagem inválidos para Firebase.');
+	if (!requestId || !senderEmail || !recipientEmail || !content) {
+		throw new Error('Parâmetros de mensagem inválidos para Firebase. Verifique requestId/sender/recipient/content.');
+	}
+	try {
 		const ref = collection(db as any, 'serviceRequests', requestId, 'messages');
 		const ts = Date.now();
 		// addDoc can hang if Firestore config is invalid or network broken — add timeout
@@ -61,11 +64,17 @@ export async function sendMessageFirebase(requestId: string, senderEmail: string
 		});
 		const doc = await withTimeout(addPromise, 4000);
 		return { id: (doc && (doc as any).id) || null, senderEmail, recipientEmail, content, createdAt: ts };
+	} catch (err) {
+		const errMsg = err && (err as any).message ? (err as any).message : JSON.stringify(err);
+		console.error('sendMessageFirebase: falha ao addDoc -', { requestId, senderEmail, recipientEmail, shortMsg: errMsg });
+		throw new Error(`Firebase error: ${errMsg}`);
+	}
 }
 
 export async function fetchMessagesOnce(requestId: string) {
 	ensureDb();
 	if (!requestId) return [];
+	try {
 		const ref = collection(db as any, 'serviceRequests', requestId, 'messages');
 		const q = query(ref, orderBy('createdAt', 'asc'));
 		// protect getDocs with timeout so UI can fallback quickly
@@ -74,6 +83,11 @@ export async function fetchMessagesOnce(requestId: string) {
 			throw new Error('Firebase fetch timeout');
 		});
 		return snap.docs.map(doc => ({ id: doc.id, ...(doc.data() || {}) }));
+	} catch (err) {
+		const errMsg = err && (err as any).message ? (err as any).message : JSON.stringify(err);
+		console.error('fetchMessagesOnce: erro ao buscar mensagens Firebase:', { requestId, err: errMsg });
+		throw new Error(`Firebase fetch error: ${errMsg}`);
+	}
 }
 
 export function subscribeMessages(requestId: string, callback: (msgs: any[]) => void) {
@@ -87,7 +101,8 @@ export function subscribeMessages(requestId: string, callback: (msgs: any[]) => 
 	}, (err) => {
 		// Log errors and swallow so subscriber can fallback
 		// eslint-disable-next-line no-console
-		console.error('subscribeMessages: erro no snapshot:', err);
+		const errMsg = err && (err as any).message ? (err as any).message : JSON.stringify(err);
+		console.error('subscribeMessages: erro no snapshot:', { requestId, err: errMsg });
 	});
 	return unsub;
 }

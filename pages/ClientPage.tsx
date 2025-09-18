@@ -12,7 +12,7 @@ interface ClientPageProps {
     onLogout: () => void;
     updateUser: (user: User) => void;
     requests: ServiceRequest[];
-    updateRequestStatus: (id: string, status: ServiceRequest['status'], quote?: number) => void;
+    updateRequestStatus: (id: string, status: ServiceRequest['status'], quote?: number, initialMessage?: string) => void;
 
 }
 

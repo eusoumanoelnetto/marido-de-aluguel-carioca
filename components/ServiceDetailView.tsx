@@ -208,6 +208,13 @@ const ServiceDetailView: React.FC<Props> = ({ request, onBack, updateRequestStat
 
       // Try backend API first (more reliable). If API fails and Firebase is configured, try Firebase as fallback.
       try {
+        // Ensure token present before calling backend API to avoid silent 401s
+        const token = (window.localStorage && window.localStorage.getItem && window.localStorage.getItem('mdac_token')) || null;
+        if (!token) {
+          // Emit logout so AuthContext clears user and UI reacts
+          try { window.dispatchEvent(new CustomEvent('mdac:logout')); } catch {}
+          throw new Error('Sessão expirada ou token ausente. Faça login novamente.');
+        }
         await withTimeout(api.sendMessage(request.id, recipient, payloadText), 5000);
       } catch (apiErr) {
         console.warn('sendMessage: API send failed:', apiErr);
@@ -217,7 +224,8 @@ const ServiceDetailView: React.FC<Props> = ({ request, onBack, updateRequestStat
             await withTimeout(sendMessageFirebase(request.id, currentUser.email, recipient, payloadText), 4000);
           } catch (fbErr) {
             console.error('sendMessage: Firebase fallback also failed:', fbErr);
-            const msg = (fbErr && (fbErr as any).message) || 'Erro ao enviar mensagem.';
+            // Prefer server-provided message if available
+            const msg = (fbErr && (fbErr as any).message) || JSON.stringify(fbErr) || 'Erro ao enviar mensagem via Firebase.';
             window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: msg, type: 'error' } }));
           }
         } else {
