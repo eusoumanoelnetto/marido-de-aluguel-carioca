@@ -20,10 +20,15 @@ export const isFirebaseConfigured = Boolean(hasAllVars);
 let db: ReturnType<typeof getFirestore> | null = null;
 if (isFirebaseConfigured) {
 	try {
+		// Additional debug logs for client-side initialization
+		// eslint-disable-next-line no-console
+		console.log('firebaseMessages: attempting initializeApp with config', { projectId: firebaseConfig.projectId, authDomain: firebaseConfig.authDomain });
 		if (!getApps().length) {
 			initializeApp(firebaseConfig);
 		}
-			db = getFirestore();
+		db = getFirestore();
+		// eslint-disable-next-line no-console
+		console.log('firebaseMessages: getFirestore created, db=', !!db);
 	} catch (e) {
 		// if initialization fails, mark as not configured
 		// eslint-disable-next-line no-console
@@ -35,6 +40,23 @@ if (isFirebaseConfigured) {
 const ensureDb = () => {
 	if (!db) throw new Error('Firebase não configurado. Usando fallback para API.');
 };
+
+// DEV helper: try a small read to verify Firestore connectivity and rules
+export async function verifyFirebase(): Promise<{ ok: boolean; error?: string }> {
+	if (!isFirebaseConfigured) return { ok: false, error: 'Firebase não configurado' };
+	try {
+		// quick probe: attempt to read a non-existent doc path with timeout
+		const probeRef = collection((db as any), '__probe', 'probe', 'items');
+		// use getDocs on a tiny query to trigger connectivity
+		const s = await withTimeout(getDocs(query(probeRef, orderBy('createdAt', 'asc')) as any), 5000).catch(err => { throw err; });
+		return { ok: true };
+	} catch (err: any) {
+		const msg = err && err.message ? err.message : String(err);
+		// eslint-disable-next-line no-console
+		console.error('verifyFirebase: probe failed', msg);
+		return { ok: false, error: msg };
+	}
+}
 
 // Helper to add a timeout to a promise (rejects after ms)
 const withTimeout = <T>(p: Promise<T>, ms = 4000): Promise<T> => {
