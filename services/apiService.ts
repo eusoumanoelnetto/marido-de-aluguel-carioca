@@ -35,6 +35,18 @@ export const setToken = (token: string) => localStorage.setItem(TOKEN_KEY, token
 export const getToken = () => localStorage.getItem(TOKEN_KEY);
 export const clearToken = () => localStorage.removeItem(TOKEN_KEY);
 
+// DEV helper: if running locally and no token is set, populate a DEV token
+if (typeof window !== 'undefined' && import.meta.env.DEV) {
+  try {
+    const existing = getToken();
+    if (!existing) {
+      const devToken = 'DEV:tester@example.com';
+      setToken(devToken);
+      // eslint-disable-next-line no-console
+      console.log('DEV: injected token for local testing ->', devToken);
+    }
+  } catch (e) {}
+}
 // Wrapper for fetch that injects Authorization header when token is present
 // Decode JWT payload (naive) to inspect exp claim
 const decodeJwt = (token: string | null) => {
