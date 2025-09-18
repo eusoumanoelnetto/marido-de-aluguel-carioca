@@ -18,6 +18,14 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
   }
 
   const token = authHeader.split(' ')[1];
+  // DEV shortcut: accept tokens like "DEV:email@example.com" without JWT verification
+  if (process.env.NODE_ENV !== 'production' && token.startsWith('DEV:')) {
+    const email = token.slice(4);
+    console.log('ℹ️  DEV token accepted for', email);
+    (req as any).userEmail = email;
+    (req as any).userRole = 'dev';
+    return next();
+  }
   try {
     const secret = process.env.JWT_SECRET || 'dev_secret';
     const payload = jwt.verify(token, secret) as JwtPayload;
