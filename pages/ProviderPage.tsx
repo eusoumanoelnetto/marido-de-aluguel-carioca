@@ -11,7 +11,7 @@ interface ProviderPageProps {
   updateUser: (user: User) => void;
 }
 
-type ProviderView = 'dashboard' | 'quotes' | 'messages' | 'profile' | 'edit-profile' | 'service-detail' | 'public-profile' | 'clients' | 'agenda' | 'today-services' | 'help';
+type ProviderView = 'dashboard' | 'quotes' | 'profile' | 'edit-profile' | 'service-detail' | 'public-profile' | 'clients' | 'agenda' | 'today-services' | 'help';
 
 const profilePageStyles = `
     :root {
@@ -131,32 +131,24 @@ const ProviderHeader = ({ setView }: { setView: (view: ProviderView) => void }) 
           <div className="flex items-center gap-4 cursor-pointer" onClick={() => setView('dashboard')}>
             <img src="https://wngalbve.manus.space/assets/logo_marido_aluguel_3-CqPHQ69B.png" alt="Logo" className="h-12" />
           </div>
-          <nav className="flex items-center gap-4 md:gap-6 text-gray-600 font-medium">
-            <button
-              onClick={() => setView('quotes')}
-              className="flex items-center gap-1.5 hover:text-brand-red transition-colors"
-              aria-label="Meus Orçamentos"
-            >
-              <i className="fa-solid fa-file-invoice text-base md:text-lg"></i>
-              <span className="text-xs md:text-sm whitespace-nowrap">Meus Orçamentos</span>
-            </button>
-            <button
-              onClick={() => setView('messages')}
-              className="flex items-center gap-1.5 hover:text-brand-red transition-colors"
-              aria-label="Mensagens"
-            >
-              <i className="fa-regular fa-comments text-base md:text-lg"></i>
-              <span className="text-xs md:text-sm whitespace-nowrap">Mensagens</span>
-            </button>
-            <button
-              onClick={() => setView('profile')}
-              className="flex items-center gap-1.5 hover:text-brand-red transition-colors"
-              aria-label="Perfil"
-            >
-              <i className="fa-regular fa-user text-base md:text-lg"></i>
-              <span className="text-xs md:text-sm whitespace-nowrap">Perfil</span>
-            </button>
-          </nav>
+                        <nav className="flex items-center gap-4 md:gap-6 text-gray-600 font-medium">
+                        <button
+                            onClick={() => setView('quotes')}
+                            className="flex items-center gap-1.5 hover:text-brand-red transition-colors"
+                            aria-label="Meus Orçamentos"
+                        >
+                            <i className="fa-solid fa-file-invoice text-base md:text-lg"></i>
+                            <span className="text-xs md:text-sm whitespace-nowrap">Meus Orçamentos</span>
+                        </button>
+                        <button
+                            onClick={() => setView('profile')}
+                            className="flex items-center gap-1.5 hover:text-brand-red transition-colors"
+                            aria-label="Perfil"
+                        >
+                            <i className="fa-regular fa-user text-base md:text-lg"></i>
+                            <span className="text-xs md:text-sm whitespace-nowrap">Perfil</span>
+                        </button>
+                    </nav>
         </div>
       </div>
     </header>
@@ -581,9 +573,7 @@ const DashboardView: React.FC<{
                 <StatCard icon="fas fa-calendar-check" title="Serviços para Hoje" color="text-brand-blue" onClick={() => setView('today-services')}>
                      <div className="text-3xl md:text-4xl font-bold text-gray-800">{servicesToday.length}</div>
                 </StatCard>
-                <StatCard icon="fas fa-comment-dots" title="Mensagens" color="text-green-500" onClick={() => setView('messages')}>
-                    <div className="text-3xl md:text-4xl font-bold text-gray-800">0</div>
-                </StatCard>
+                
                 <StatCard icon="fas fa-star" title="Avaliação" color="text-yellow-500" onClick={() => setView('public-profile')}>
                     <div className="text-3xl md:text-4xl font-bold text-gray-800">N/A</div>
                 </StatCard>
@@ -652,7 +642,6 @@ const DashboardView: React.FC<{
                     </div>
                 </a>
                 <ActionCard icon="far fa-calendar-alt" title="Gerenciar Agenda" description="Visualize e organize seus compromissos" onClick={() => setView('agenda')} />
-                <ActionCard icon="far fa-comments" title="Mensagens" description="Responda às mensagens dos clientes" onClick={() => setView('messages')} />
             </div>
         </main>
     );
@@ -680,59 +669,7 @@ const QuotesView: React.FC<{ requests: ServiceRequest[]; setView: (view: Provide
     </div>
 );
 
-const MessagesView: React.FC<{ setView: (view: ProviderView) => void; onOpenConversation?: (serviceId: string) => void; }> = ({ setView, onOpenConversation }) => {
-    const [conversations, setConversations] = React.useState<any[]>([]);
-
-    React.useEffect(() => {
-        let mounted = true;
-        (async () => {
-            try {
-                const data = await (await import('../services/apiService')).getRecentMessagesForMe();
-                if (!mounted) return;
-                // group by serviceId
-                const grouped: Record<string, any[]> = {};
-                (data || []).forEach((m: any) => {
-                    const sid = m.serviceId || '__none__';
-                    grouped[sid] = grouped[sid] || [];
-                    grouped[sid].push(m);
-                });
-                const conv = Object.keys(grouped).map(k => ({ serviceId: k, last: grouped[k].sort((a,b)=> new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0], count: grouped[k].length }));
-                setConversations(conv);
-            } catch (err) {
-                // ignore
-            }
-        })();
-        return () => { mounted = false; };
-    }, []);
-
-    return (
-        <div className="max-w-7xl mx-auto p-6">
-            <div className="flex items-center mb-6">
-                <button onClick={() => setView('dashboard')} className="font-semibold text-brand-navy hover:text-black flex items-center mr-4">
-                    <i className="fa-solid fa-arrow-left mr-2"></i> Voltar
-                </button>
-                <h1 className="text-2xl font-semibold text-brand-navy">Mensagens</h1>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {conversations.length === 0 && (
-                    <div className="text-center py-20 bg-gray-50 rounded-lg border border-gray-200">Nenhuma conversa encontrada.</div>
-                )}
-                {conversations.map(c => (
-                    <div key={c.serviceId} className="bg-white rounded-lg border p-4 cursor-pointer" onClick={() => {
-                        if (c.serviceId && c.serviceId !== '__none__') {
-                            try { window.dispatchEvent(new CustomEvent('mdac:viewRequest', { detail: { id: c.serviceId } })); } catch {}
-                        }
-                        if (onOpenConversation) onOpenConversation(c.serviceId);
-                    }}>
-                        <div className="font-semibold">Conversa: {c.serviceId}</div>
-                        <div className="text-sm text-gray-500">Última: {c.last?.content}</div>
-                        <div className="text-xs text-gray-400 mt-2">Mensagens: {c.count}</div>
-                    </div>
-                ))}
-            </div>
-        </div>
-    );
-};
+// Messages feature removed: placeholder removed to keep UI clean
 
 const allServices = [
     { name: 'Montagem de Móveis', iconClass: 'fas fa-couch' },
@@ -1025,8 +962,7 @@ const ProviderPage: React.FC<ProviderPageProps> = ({ currentUser, requests, onLo
             return (r.status === 'Aceito' || r.status === 'Pendente' || r.status === 'Orçamento Enviado') && isSameDay(requestDate, today);
         });
         return <QuotesView requests={todayRequests} setView={setView} onViewDetails={handleViewDetails} isFilteredView={true} />;
-      case 'messages':
-        return <MessagesView setView={setView} />;
+            // messages view removed
       case 'profile':
         return <ProviderProfileView currentUser={currentUser} setView={setView} onLogout={onLogout} requests={requests} />;
       case 'edit-profile':

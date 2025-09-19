@@ -1,8 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { ServiceRequest, User } from '../types';
 import * as api from '../services/apiService';
-// Firebase optional helpers (fallback to backend if not configured)
-import { sendMessageFirebase, subscribeMessages, fetchMessagesOnce, isFirebaseConfigured } from '../services/firebaseMessages';
 // Removidos imports circulares desnecessários para evitar bundles maiores / warnings
 
 interface Props {
@@ -17,13 +15,6 @@ const ServiceDetailView: React.FC<Props> = ({ request, onBack, updateRequestStat
   const [draftQuote, setDraftQuote] = useState('');
   const [editing, setEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [messages, setMessages] = useState<Array<any>>([]);
-  // Polling control
-  const pollingRef = useRef<NodeJS.Timeout | null>(null);
-  const pausePollingRef = useRef(false);
-  const [newMessage, setNewMessage] = useState('');
-  const [isSendingMessage, setIsSendingMessage] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const lastRequestIdRef = useRef<string | null>(null);
 
@@ -42,80 +33,7 @@ const ServiceDetailView: React.FC<Props> = ({ request, onBack, updateRequestStat
     }
   }, [request?.id, request?.quote, editing]);
 
-  // Load messages and setup polling/subscription
-  useEffect(() => {
-    if (!request) return;
-    let mounted = true;
-    let unsub: (() => void) | null = null;
-
-    // Função para buscar mensagens do backend
-    const fetchBackendMessages = async () => {
-      try {
-        const data = await api.getMessagesForService(request.id);
-        if (!mounted) return;
-        setMessages(data || []);
-        setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
-      } catch {}
-    };
-
-    // Polling para prestador quando Firebase não está disponível
-    const startPolling = () => {
-      if (pollingRef.current) clearInterval(pollingRef.current);
-      pollingRef.current = setInterval(() => {
-        if (!pausePollingRef.current) fetchBackendMessages();
-      }, 2000);
-    };
-    const stopPolling = () => {
-      if (pollingRef.current) clearInterval(pollingRef.current);
-      pollingRef.current = null;
-    };
-
-    // Eventos globais para pausar/retomar polling (ex: ao editar orçamento)
-    const handlePause = () => { pausePollingRef.current = true; };
-    const handleResume = () => { pausePollingRef.current = false; };
-    window.addEventListener('mdac:pausePolling', handlePause);
-    window.addEventListener('mdac:resumePolling', handleResume);
-
-    const isProvider = currentUser.role === 'provider';
-    const isAceito = request.status === 'Aceito';
-
-    const setup = async () => {
-      if (isFirebaseConfigured) {
-        try {
-          const once = await fetchMessagesOnce(request.id);
-          if (!mounted) return;
-          setMessages(once || []);
-        } catch (firebaseErr) {
-          await fetchBackendMessages();
-        }
-        setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
-        try {
-          unsub = subscribeMessages(request.id, (msgs) => {
-            if (!mounted) return;
-            setMessages(msgs || []);
-            setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
-          });
-        } catch {}
-        stopPolling();
-      } else if (isProvider && isAceito) {
-        // Polling só para prestador e status Aceito
-        await fetchBackendMessages();
-        startPolling();
-      } else {
-        await fetchBackendMessages();
-        stopPolling();
-      }
-    };
-    setup();
-
-    return () => {
-      mounted = false;
-      if (unsub) unsub();
-      stopPolling();
-      window.removeEventListener('mdac:pausePolling', handlePause);
-      window.removeEventListener('mdac:resumePolling', handleResume);
-    };
-  }, [request?.id, request?.status, currentUser.role]);
+  // messaging removed: no polling/subscriptions or Firebase usage
 
   // Se status mudou para algo diferente de 'Pendente' enquanto a tela está aberta, cancelar edição e garantir polling retomado
   useEffect(() => {
@@ -185,65 +103,7 @@ const ServiceDetailView: React.FC<Props> = ({ request, onBack, updateRequestStat
     }
   };
 
-  // Helper: timeout a promise
-  const withTimeout = <T,>(p: Promise<T>, ms = 5000) => {
-    let timer: ReturnType<typeof setTimeout>;
-    return Promise.race([
-      p.finally(() => clearTimeout(timer)),
-      new Promise<T>((_, rej) => { timer = setTimeout(() => rej(new Error('timeout')), ms); }),
-    ]);
-  };
-
-  const handleSendMessage = async () => {
-    if (!request) return;
-    if (!newMessage.trim()) return;
-    setIsSendingMessage(true);
-    const payloadText = newMessage.trim();
-    try {
-      const recipient = currentUser.role === 'provider' ? (request.clientEmail || '') : (request.providerEmail || '');
-      if (!recipient) {
-        window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: 'Destinatário da mensagem ausente. Não foi possível enviar.', type: 'error' } }));
-        return;
-      }
-
-      // Try backend API first (more reliable). If API fails and Firebase is configured, try Firebase as fallback.
-      try {
-        // Ensure token present before calling backend API to avoid silent 401s
-        const token = (window.localStorage && window.localStorage.getItem && window.localStorage.getItem('mdac_token')) || null;
-        if (!token) {
-          // Emit logout so AuthContext clears user and UI reacts
-          try { window.dispatchEvent(new CustomEvent('mdac:logout')); } catch {}
-          throw new Error('Sessão expirada ou token ausente. Faça login novamente.');
-        }
-        await withTimeout(api.sendMessage(request.id, recipient, payloadText), 5000);
-      } catch (apiErr) {
-        console.warn('sendMessage: API send failed:', apiErr);
-        // If Firebase is configured, try it as fallback
-        if (isFirebaseConfigured) {
-          try {
-            await withTimeout(sendMessageFirebase(request.id, currentUser.email, recipient, payloadText), 4000);
-          } catch (fbErr) {
-            console.error('sendMessage: Firebase fallback also failed:', fbErr);
-            // Prefer server-provided message if available
-            const msg = (fbErr && (fbErr as any).message) || JSON.stringify(fbErr) || 'Erro ao enviar mensagem via Firebase.';
-            window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: msg, type: 'error' } }));
-          }
-        } else {
-          const msg = (apiErr && (apiErr as any).message) || 'Erro ao enviar mensagem.';
-          window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: msg, type: 'error' } }));
-        }
-      }
-
-      setNewMessage('');
-      setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
-    } catch (err: any) {
-      console.error('handleSendMessage: erro inesperado', err);
-      const msg = err?.message || 'Erro ao enviar mensagem';
-      window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: msg, type: 'error' } }));
-    } finally {
-      setIsSendingMessage(false);
-    }
-  };
+  // messaging removed: sendMessage functionality eliminated
 
   return (
     <div className="max-w-7xl mx-auto p-6">
@@ -332,25 +192,7 @@ const ServiceDetailView: React.FC<Props> = ({ request, onBack, updateRequestStat
           </div>
         )}
 
-        {request.status === 'Aceito' && (
-          <div className="mt-8 border-t pt-8">
-            <h2 className="text-lg font-semibold mb-3 text-brand-navy">Mensagens</h2>
-            <div className="bg-gray-50 rounded-lg p-4 max-h-80 overflow-auto">
-              {messages.length === 0 && <div className="text-gray-500">Nenhuma mensagem ainda.</div>}
-              {messages.map((m, idx) => (
-                <div key={m.id || idx} className={`py-2 ${m.senderEmail === currentUser.email ? 'text-right' : 'text-left'}`}>
-                  <div className={`inline-block px-3 py-2 rounded-lg ${m.senderEmail === currentUser.email ? 'bg-brand-blue text-white' : 'bg-white text-gray-800'} shadow-sm`}>{m.content}</div>
-                  <div className="text-xs text-gray-400 mt-1">{new Date(m.createdAt).toLocaleString()}</div>
-                </div>
-              ))}
-              <div ref={messagesEndRef} />
-            </div>
-            <div className="mt-3 flex gap-3">
-              <input value={newMessage} onChange={(e) => setNewMessage(e.target.value)} placeholder="Escreva uma mensagem..." className="flex-1 p-3 border rounded-lg" disabled={isSendingMessage} />
-              <button disabled={isSendingMessage} onClick={handleSendMessage} className={`px-4 py-2 bg-brand-blue text-white rounded-lg ${isSendingMessage ? 'opacity-60 cursor-not-allowed' : ''}`}>{isSendingMessage ? 'Enviando...' : 'Enviar'}</button>
-            </div>
-          </div>
-        )}
+  {request.status === 'Aceito' && null}
       </div>
     </div>
   );

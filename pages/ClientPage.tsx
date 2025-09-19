@@ -16,7 +16,7 @@ interface ClientPageProps {
 
 }
 
-type ClientView = 'dashboard' | 'profile' | 'edit-profile' | 'messages' | 'quote-step1' | 'quote-step2' | 'quotes-received' | 'service-category' | 'service-detail' | 'emergency' | 'help';
+type ClientView = 'dashboard' | 'profile' | 'edit-profile' | 'quote-step1' | 'quote-step2' | 'quotes-received' | 'service-category' | 'service-detail' | 'emergency' | 'help';
 
 const services: { name: ServiceCategory; icon: React.FC<React.SVGProps<SVGSVGElement>> }[] = [
     { name: 'Montagem de Móveis' as ServiceCategory, icon: HammerIcon },
@@ -108,14 +108,7 @@ const DashboardView: React.FC<{ setView: (view: ClientView) => void, handleServi
                                                             <span className="absolute -top-2 -right-3 bg-green-600 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded-full shadow animate-pulse" aria-label={`Você tem ${unseenQuotes} novos orçamentos`}>{unseenQuotes}</span>
                                                         )}
                                                 </button>
-                        <button
-                            onClick={() => setView('messages')}
-                            className="flex items-center gap-1.5 hover:text-brand-red transition-colors"
-                            aria-label="Mensagens"
-                        >
-                            <i className="fa-regular fa-comments text-base md:text-lg"></i>
-                            <span className="text-xs md:text-sm whitespace-nowrap">Mensagens</span>
-                        </button>
+                        
                         <button
                             onClick={() => setView('profile')}
                             className="flex items-center gap-1.5 hover:text-brand-red transition-colors"
@@ -240,21 +233,7 @@ const ProfileView: React.FC<{ setView: (view: ClientView) => void; onLogout: () 
     );
 };
 
-const MessagesView: React.FC<{ setView: (view: ClientView) => void }> = ({ setView }) => (
-    <main className="max-w-[1200px] mx-auto p-5">
-        <PageHeader onBack={() => setView('dashboard')}>
-            <h1 className="text-xl font-semibold text-brand-navy">Mensagens</h1>
-        </PageHeader>
-        <div className="max-w-3xl mx-auto bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-            <h2 className="text-2xl font-semibold mb-5 text-brand-navy">Suas Conversas</h2>
-            <div className="space-y-3">
-                 <div className="text-center py-10 text-gray-500">
-                    <p>Nenhuma conversa encontrada.</p>
-                </div>
-            </div>
-        </div>
-    </main>
-);
+// Messages feature removed from client page
 
 const RequestQuoteStep1View: React.FC<{ setView: (view: ClientView) => void }> = ({ setView }) => (
     <main className="max-w-[1200px] mx-auto p-5">
@@ -587,9 +566,9 @@ const ServiceCategoryView: React.FC<{ setView: (view: ClientView) => void, categ
             <h1 className="text-4xl font-bold mb-2 text-brand-navy">Qual tipo de serviço de {category.toLowerCase()}?</h1>
             <p className="text-gray-500 mb-8">Selecione o serviço específico que você precisa</p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {currentSubServices.map(item => (
+                        {currentSubServices.map(item => (
                     <div key={item.name} onClick={() => setView('quote-step2')} className="bg-white rounded-xl border-2 border-gray-200 p-5 flex flex-col items-center justify-center gap-2 font-semibold text-center cursor-pointer hover:border-brand-red hover:text-brand-red transition-colors">
-                        <div className="text-brand-red h-8 w-8 flex items-center justify-center">{React.cloneElement(item.icon, { className: 'w-6 h-6' })}</div>
+                        <div className="text-brand-red h-8 w-8 flex items-center justify-center">{item.icon}</div>
                         <span className="text-sm">{item.name}</span>
                     </div>
                 ))}
@@ -727,8 +706,7 @@ const ClientPage: React.FC<ClientPageProps> = ({ currentUser, addServiceRequest,
                   }}
                   onCancel={() => setView('profile')}
               />;
-      case 'messages':
-        return <MessagesView setView={setView} />;
+            // messages view removed
       case 'quote-step1':
         return <RequestQuoteStep1View setView={setView} />;
       case 'quote-step2':
