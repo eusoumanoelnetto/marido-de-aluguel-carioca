@@ -2,6 +2,9 @@ import React, { useState, useEffect, useMemo } from 'react';
 import InlineAnnouncements from '../components/InlineAnnouncements';
 import ServiceDetailView from '../components/ServiceDetailView';
 import { ServiceRequest, User } from '../types';
+import dynamic from 'react-dynamic-import';
+// ...existing code...
+import ChatBox from './_chat/ChatBox';
 
 interface ProviderPageProps {
   currentUser: User;
@@ -396,6 +399,13 @@ const ProviderPublicProfile: React.FC<{
                                                         <button className="load-more-btn" onClick={() => setVisibleReviewsCount(c => c + 3)}>Carregar mais</button>
                                                 </div>
                                         )}
+                                </section>
+                                <section className="card reviews-section">
+                                    <h2 className="section-title">Mensagem (POC)</h2>
+                                    <div style={{ display: 'flex', justifyContent: 'center' }}>
+                                        {/* Substitua pelo email do cliente quando disponível */}
+                                        <ChatBox currentUserId={currentUser.email || 'unknown'} otherUserId={requests && requests.length ? (requests[0].clientEmail || 'other-user-id') : 'other-user-id'} />
+                                    </div>
                                 </section>
                         </main>
                 </div>

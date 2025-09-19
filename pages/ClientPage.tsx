@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import ServiceDetailView from '../components/ServiceDetailView';
 import MessagePrompt from '../components/MessagePrompt';
+import ChatBox from './_chat/ChatBox';
 import { useConfirm } from '../components/ConfirmDialog';
 import { ServiceRequest, ServiceCategory, User } from '../types';
 import { HammerIcon, WrenchIcon, ZapIcon, DropletsIcon, PaintBucketIcon, HouseIcon, MonitorIcon, CctvIcon } from '../components/Icons';
@@ -632,6 +633,7 @@ const HelpView: React.FC<{ setView: (view: ClientView) => void }> = ({ setView }
 const ClientPage: React.FC<ClientPageProps> = ({ currentUser, addServiceRequest, onLogout, updateUser, requests, updateRequestStatus }) => {
         const confirm = useConfirm();
   const [view, setView] = useState<ClientView>('dashboard');
+    const [openChatRequest, setOpenChatRequest] = useState<ServiceRequest | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<ServiceCategory>('Montagem de Móveis');
   const [isEmergencyRequest, setIsEmergencyRequest] = useState(false);
         const [showMessagePrompt, setShowMessagePrompt] = useState(false);
@@ -772,8 +774,20 @@ const ClientPage: React.FC<ClientPageProps> = ({ currentUser, addServiceRequest,
                     window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: 'Orçamento aceito e serviço confirmado!', type: 'success' } }));
                     setView('dashboard');
             }} />
-    </div>
-  );
+            {openChatRequest && (
+                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }} onClick={() => setOpenChatRequest(null)}>
+                    <div style={{ background: '#fff', padding: 16, borderRadius: 8 }} onClick={(e) => e.stopPropagation()}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                            <strong>Chat com o prestador</strong>
+                            <button onClick={() => setOpenChatRequest(null)} style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>Fechar</button>
+                        </div>
+                        <ChatBox currentUserId={currentUser.email} otherUserId={openChatRequest.providerEmail || ''} />
+                    </div>
+                </div>
+            )}
+
+        </div>
+    );
 };
 
 export default ClientPage;
