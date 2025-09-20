@@ -97,7 +97,6 @@ export const createServiceRequest = async (req: Request, res: Response) => {
     res.status(500).json({ message: 'Erro ao criar solicitação.' });
   }
 };
-};
 
 export const updateServiceRequestStatus = async (req: Request, res: Response) => {
   const { id } = req.params;
@@ -217,4 +216,4 @@ export const debugState = async (_req: Request, res: Response) => {
     console.error('Erro debugState:', err);
     res.status(500).json({ message: 'Erro ao obter estado de debug.' });
   }
-};
+  }
