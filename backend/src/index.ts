@@ -23,45 +23,55 @@ if (IS_PROD && (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'dev_secre
 // Behavior:
 // - In production, if FRONTEND_ORIGIN is set we validate against it (single or comma-separated list)
 // - Otherwise (including local dev) we reflect the request origin so browser receives an exact match
-const frontendOrigin = process.env.FRONTEND_ORIGIN;
-let corsOrigin: string | string[] | null = null;
-if (frontendOrigin) {
-  corsOrigin = frontendOrigin.includes(',') ? frontendOrigin.split(',').map(s => s.trim()) : frontendOrigin;
-}
-// In non-prod, allow localhost dev ports in addition to configured origins
-if (!IS_PROD) {
-  if (!corsOrigin) {
-    corsOrigin = [];
-  }
-  if (Array.isArray(corsOrigin)) {
-    corsOrigin.push('http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:8000', 'http://127.0.0.1:8000');
-  } else if (typeof corsOrigin === 'string') {
-    corsOrigin = [corsOrigin, 'http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:8000', 'http://127.0.0.1:8000'];
-  }
-}
+const frontendOrigin = process.env.FRONTEND_ORIGIN || '';
 
-const originValidator = (origin: string | undefined | null, cb: (err: Error | null, allow?: boolean) => void) => {
-  // no origin (curl, server-to-server) => allow
-  if (!origin) return cb(null, true);
-  if (!corsOrigin) {
-    // reflect origin (allow any origin) by returning true
-    return cb(null, true);
-  }
-  if (Array.isArray(corsOrigin)) {
-    return cb(null, corsOrigin.includes(origin));
-  }
-  return cb(null, origin === corsOrigin);
+// Parse FRONTEND_ORIGIN which may be a comma-separated list (or space/newline separated).
+// Normalize entries (trim, remove trailing slash) and filter empties.
+const parseOrigins = (raw: string) => {
+  if (!raw) return null;
+  const parts = raw
+    .split(/[,\s]+/) // split on comma or whitespace
+    .map(p => p.trim().replace(/\/+$/, '')) // trim and remove trailing slashes
+    .filter(Boolean);
+  return parts.length ? parts : null;
 };
 
-app.use(cors({
+let corsOrigin = parseOrigins(frontendOrigin);
+
+// In non-prod, allow localhost dev ports in addition to configured origins
+if (!IS_PROD) {
+  const devOrigins = ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:8000', 'http://127.0.0.1:8000'];
+  if (!corsOrigin) corsOrigin = [...devOrigins];
+  else corsOrigin = [...corsOrigin, ...devOrigins];
+}
+
+const normalize = (origin?: string | null) => (origin ? origin.trim().replace(/\/+$/, '') : origin);
+
+const allowedOriginsSet = Array.isArray(corsOrigin) ? new Set(corsOrigin.map(o => normalize(o) as string)) : null;
+
+const originValidator = (origin: string | undefined | null, cb: (err: Error | null, allow?: boolean | string) => void) => {
+  // no origin (curl, server-to-server) => allow
+  if (!origin) return cb(null, true);
+  const nOrigin = normalize(origin);
+  if (!allowedOriginsSet) {
+    // no configured frontend origins => allow any origin (reflect)
+    return cb(null, true);
+  }
+  if (!nOrigin) return cb(null, false);
+  return cb(null, allowedOriginsSet.has(nOrigin) ? true : false);
+};
+
+const corsOptions = {
   origin: originValidator,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Admin-Key'],
   exposedHeaders: ['Authorization'],
   credentials: false,
-}));
-// Also respond to all OPTIONS preflight requests
-app.options('*', cors());
+};
+
+app.use(cors(corsOptions));
+// Also respond to all OPTIONS preflight requests using the same options
+app.options('*', cors(corsOptions));
 app.use(express.json({ limit: '10mb' })); // To parse JSON bodies (and increase limit for images)
 
 // DEV-only middleware: log Authorization header for debugging authentication issues
