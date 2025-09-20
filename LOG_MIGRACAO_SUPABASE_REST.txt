@@ -1,0 +1,30 @@
+# Log da migração: Supabase para REST (20/09/2025)
+
+## 1. Remoção do Supabase
+- Arquivo `services/supabaseClient.ts` removido.
+- Imports e usos do Supabase removidos de:
+  - `pages/ProviderPage.tsx`
+  - `pages/_chat/ChatBox.tsx`
+- Listener realtime do Supabase removido do ProviderPage (comentado para futura lógica de polling REST).
+
+## 2. Backend já possuía endpoints REST para mensagens
+- POST `/api/messages` (enviar mensagem)
+- GET `/api/messages/service/:serviceId` (listar mensagens de um serviço)
+- GET `/api/messages/me/recent` (listar últimas mensagens do usuário)
+
+## 3. Orientação para adaptação do frontend
+- Exemplo de uso dos endpoints com fetch/axios fornecido.
+- Sugestão de commit:
+  - `refactor: remover Supabase e migrar mensagens para API REST`
+
+## 4. Status
+- Supabase removido do projeto.
+- Frontend pronto para consumir API REST de mensagens.
+- Backend já preparado para autenticação e persistência das mensagens.
+
+---
+
+**Dúvidas ou próximos passos:**
+- Adaptar componentes do frontend para consumir os endpoints REST.
+- Testar envio e recebimento de mensagens.
+- Comitar e subir as alterações.
