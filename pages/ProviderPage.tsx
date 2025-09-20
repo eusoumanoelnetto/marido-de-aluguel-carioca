@@ -579,19 +579,7 @@ const DashboardView: React.FC<{
             }, [currentUser]);
 
             useEffect(() => {
-                // Realtime listener para novas mensagens
-                // const channel = supabase (removido)
-                    .channel('public:messages:provider')
-                    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
-                        const msg = payload.new;
-                        if (!msg || !msg.participants || !msg.to_id) return;
-                        // Se a mensagem for para o prestador logado, marca como não lida
-                        if (msg.to_id === currentUser.email) {
-                            setUnreadMessages((prev) => ({ ...prev, [msg.request_id || msg.id || '']: true }));
-                        }
-                    })
-                    .subscribe();
-                return () => { try { channel.unsubscribe(); } catch {} };
+                // Listener realtime removido. Adapte aqui para polling REST ou outra lógica.
             }, [currentUser]);
 
         // Agenda deve conter apenas serviços aceitos

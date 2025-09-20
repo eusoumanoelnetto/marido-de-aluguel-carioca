@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useRef, useContext } from 'react';
 import * as api from '../../services/apiService';
-// import supabase, { signInWithMagicLink, getUser, signOut } from '../../services/supabaseClient';
 import { AuthContext } from '../../src/context/AuthContext';
 
 type ChatBoxProps = {
