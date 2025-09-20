@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import pool, { isDbConnected } from '../db';
 import { ServiceRequest } from '../types';
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4, validate as validateUUID } from 'uuid';
 
 export const getServiceRequests = async (req: Request, res: Response) => {
   // Smoke test: retornar lista vazia se não há conexão com o DB em desenvolvimento
@@ -28,10 +28,12 @@ export const getServiceRequests = async (req: Request, res: Response) => {
   }
 };
 
-export const createServiceRequest = async (req: Request, res: Response) => {
   const body = req.body as Partial<ServiceRequest> & { title?: string; location?: string };
-  // Ensure we have an id and minimal fields even if the client sent a lightweight payload
-  const id = (body as any).id || uuidv4();
+  // Forçar id como UUID v4
+  let id = (body as any).id;
+  if (!id || !validateUUID(id)) {
+    id = uuidv4();
+  }
   const userEmail = (req as any).userEmail as string | undefined;
   const clientName = body.clientName || (body as any).name || userEmail || 'Cliente';
   const clientEmail = body.clientEmail || userEmail || null;
@@ -43,6 +45,19 @@ export const createServiceRequest = async (req: Request, res: Response) => {
   const status = body.status || 'Pendente';
   const isEmergency = !!body.isEmergency;
   const requestDate = body.requestDate || new Date().toISOString();
+
+  // Validação de emails obrigatórios
+  const isValidEmail = (email: string | null | undefined) => {
+    if (!email) return false;
+    return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
+  };
+  if (!isValidEmail(clientEmail)) {
+    return res.status(400).json({ error: 'clientEmail inválido ou ausente.' });
+  }
+  // Se status "Aceito", providerEmail é obrigatório
+  if (status === 'Aceito' && !isValidEmail(body.providerEmail)) {
+    return res.status(400).json({ error: 'providerEmail inválido ou ausente para status Aceito.' });
+  }
 
   try {
     const result = await pool.query(
