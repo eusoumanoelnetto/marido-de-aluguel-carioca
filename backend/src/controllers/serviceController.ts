@@ -28,6 +28,7 @@ export const getServiceRequests = async (req: Request, res: Response) => {
   }
 };
 
+export const createServiceRequest = async (req: Request, res: Response) => {
   const body = req.body as Partial<ServiceRequest> & { title?: string; location?: string };
   // Forçar id como UUID v4
   let id = (body as any).id;
@@ -88,13 +89,14 @@ export const getServiceRequests = async (req: Request, res: Response) => {
       console.log('❌ Erro ao registrar evento de solicitação:', eventError.message);
     }
 
-  // Normalize response: ensure id and clientEmail present even if adapter returned partial object
-  const respObj = { ...(result.rows[0] || {}), id, clientEmail };
-  res.status(201).json(respObj);
+    // Normalize response: ensure id and clientEmail present even if adapter returned partial object
+    const respObj = { ...(result.rows[0] || {}), id, clientEmail };
+    res.status(201).json(respObj);
   } catch (error) {
     console.error('Error creating service request:', error);
     res.status(500).json({ message: 'Erro ao criar solicitação.' });
   }
+};
 };
 
 export const updateServiceRequestStatus = async (req: Request, res: Response) => {
