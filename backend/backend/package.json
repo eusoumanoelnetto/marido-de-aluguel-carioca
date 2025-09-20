@@ -1,0 +1,9 @@
+{
+  "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.10",
+    "nodemon": "^3.1.10"
+  },
+  "dependencies": {
+    "jsonwebtoken": "^9.0.2"
+  }
+}

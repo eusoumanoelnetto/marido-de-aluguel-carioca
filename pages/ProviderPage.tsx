@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import InlineAnnouncements from '../components/InlineAnnouncements';
 import ServiceDetailView from '../components/ServiceDetailView';
 import { ServiceRequest, User } from '../types';
 import dynamic from 'react-dynamic-import';
 // ...existing code...
 import ChatBox from './_chat/ChatBox';
+import supabase from '../services/supabaseClient';
 
 interface ProviderPageProps {
   currentUser: User;
@@ -404,7 +405,7 @@ const ProviderPublicProfile: React.FC<{
                                     <h2 className="section-title">Mensagem (POC)</h2>
                                     <div style={{ display: 'flex', justifyContent: 'center' }}>
                                         {/* Substitua pelo email do cliente quando disponível */}
-                                        <ChatBox currentUserId={currentUser.email || 'unknown'} otherUserId={requests && requests.length ? (requests[0].clientEmail || 'other-user-id') : 'other-user-id'} />
+                                        <ChatBox currentUserId={currentUser.email || 'unknown'} otherUserId={requests && requests.length ? (requests[0].clientEmail || 'other-user-id') : 'other-user-id'} serviceId={requests && requests.length ? requests[0].id : undefined} />
                                     </div>
                                 </section>
                         </main>
@@ -413,7 +414,7 @@ const ProviderPublicProfile: React.FC<{
 };
 
 // ---- Componentes auxiliares (fora de qualquer retorno JSX para evitar erros de parse) ----
-const AppointmentCard: React.FC<{ request: ServiceRequest; time?: string; onViewDetails: () => void; }> = ({ request, time, onViewDetails }) => {
+const AppointmentCard: React.FC<{ request: ServiceRequest; time?: string; onViewDetails: () => void; hasNewMessage?: boolean }> = ({ request, time, onViewDetails, hasNewMessage }) => {
     const status = getStatusDetails(request.status);
     return (
         <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-shadow hover:shadow-md">
@@ -426,6 +427,9 @@ const AppointmentCard: React.FC<{ request: ServiceRequest; time?: string; onView
             </div>
             <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
                 <span className={`px-3 py-1 text-xs font-medium rounded-full ${status.className}`}>{status.text}</span>
+                {hasNewMessage && (
+                  <span className="ml-2 px-2 py-1 text-xs font-semibold rounded bg-green-600 text-white animate-pulse">Nova mensagem</span>
+                )}
                 <button onClick={onViewDetails} className="bg-gray-100 text-gray-800 border border-gray-200 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-200 transition-colors">Ver Detalhes</button>
             </div>
         </div>
@@ -540,7 +544,8 @@ const DashboardView: React.FC<{
     setView: (view: ProviderView) => void;
     onViewDetails: (request: ServiceRequest) => void;
     updateRequestStatus: (id: string, status: ServiceRequest['status'], quote?: number, providerEmail?: string) => void;
-}> = ({ requests, setView, onViewDetails, updateRequestStatus }) => {
+    currentUser: User;
+}> = ({ requests, setView, onViewDetails, updateRequestStatus, currentUser }) => {
     
     // --- Calculations for Stat Cards ---
     const isSameDay = (d1: Date, d2: Date) => d1.toDateString() === d2.toDateString();
@@ -565,10 +570,35 @@ const DashboardView: React.FC<{
         r.status === 'Finalizado' && new Date(r.requestDate) >= oneMonthAgo && new Date(r.requestDate) <= now
     ).length;
     
-    // Agenda deve conter apenas serviços aceitos
-    const agendaToday = requests
-    .filter(r => r.status === 'Aceito' && isSameDay(new Date(r.requestDate), today))
-        .sort((a,b) => new Date(a.requestDate).getTime() - new Date(b.requestDate).getTime());
+        // Mensagens não lidas por serviço (id do request)
+        const [unreadMessages, setUnreadMessages] = useState<{ [requestId: string]: boolean }>({});
+            useEffect(() => {
+                // Salva o e-mail do prestador para persistência simples
+                if (currentUser?.email && typeof window !== 'undefined' && window.localStorage) {
+                    localStorage.setItem('mdac_provider_email', currentUser.email);
+                }
+            }, [currentUser]);
+
+            useEffect(() => {
+                // Realtime listener para novas mensagens
+                const channel = supabase
+                    .channel('public:messages:provider')
+                    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
+                        const msg = payload.new;
+                        if (!msg || !msg.participants || !msg.to_id) return;
+                        // Se a mensagem for para o prestador logado, marca como não lida
+                        if (msg.to_id === currentUser.email) {
+                            setUnreadMessages((prev) => ({ ...prev, [msg.request_id || msg.id || '']: true }));
+                        }
+                    })
+                    .subscribe();
+                return () => { try { channel.unsubscribe(); } catch {} };
+            }, [currentUser]);
+
+        // Agenda deve conter apenas serviços aceitos
+        const agendaToday = requests
+        .filter(r => r.status === 'Aceito' && isSameDay(new Date(r.requestDate), today))
+                .sort((a,b) => new Date(a.requestDate).getTime() - new Date(b.requestDate).getTime());
 
     // Novos pedidos: todas as solicitações pendentes (não apenas de hoje)
     const pendingRequests = requests
@@ -629,7 +659,7 @@ const DashboardView: React.FC<{
             <h2 className="text-xl font-medium text-brand-navy mt-16 mb-6">Agenda de Hoje ({today.toLocaleDateString('pt-BR')})</h2>
             <div className="flex flex-col gap-4">
                 {agendaToday.length > 0 ? agendaToday.map((req) => (
-                    <AppointmentCard key={req.id} time={new Date(req.requestDate).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})} request={req} onViewDetails={() => onViewDetails(req)} />
+                    <AppointmentCard key={req.id} time={new Date(req.requestDate).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})} request={req} onViewDetails={() => onViewDetails(req)} hasNewMessage={!!unreadMessages[req.id]} />
                 )) : (
                     <div className="text-center py-10 bg-gray-50 rounded-lg border border-gray-200">
                         <p className="text-gray-500">Nenhum compromisso para hoje.</p>
@@ -657,7 +687,7 @@ const DashboardView: React.FC<{
     );
 };
 
-const QuotesView: React.FC<{ requests: ServiceRequest[]; setView: (view: ProviderView) => void; onViewDetails: (request: ServiceRequest) => void; isFilteredView?: boolean; }> = ({ requests, setView, onViewDetails, isFilteredView = false }) => (
+const QuotesView: React.FC<{ requests: ServiceRequest[]; setView: (view: ProviderView) => void; onViewDetails: (request: ServiceRequest) => void; isFilteredView?: boolean; unreadMessages?: { [requestId: string]: boolean }; }> = ({ requests, setView, onViewDetails, isFilteredView = false, unreadMessages = {} }) => (
     <div className="max-w-7xl mx-auto p-6">
         <div className="flex items-center mb-6">
             <button onClick={() => setView('dashboard')} className="font-semibold text-brand-navy hover:text-black flex items-center mr-4">
@@ -668,7 +698,7 @@ const QuotesView: React.FC<{ requests: ServiceRequest[]; setView: (view: Provide
         <div className="flex flex-col gap-4">
             {requests.length > 0 ? (
                 requests.map(req => (
-                    <AppointmentCard key={req.id} request={req} onViewDetails={() => onViewDetails(req)} />
+                    <AppointmentCard key={req.id} request={req} onViewDetails={() => onViewDetails(req)} hasNewMessage={!!unreadMessages[req.id]} />
                 ))
             ) : (
                 <div className="text-center py-10 bg-gray-50 rounded-lg border border-gray-200">
@@ -961,17 +991,17 @@ const ProviderPage: React.FC<ProviderPageProps> = ({ currentUser, requests, onLo
   const renderContent = () => {
     switch (view) {
             case 'dashboard':
-                return <DashboardView requests={requests} setView={setView} onViewDetails={handleViewDetails} updateRequestStatus={updateRequestStatus} />;
-      case 'quotes':
-        return <QuotesView requests={requests} setView={setView} onViewDetails={handleViewDetails} />;
-      case 'today-services':
-        const today = new Date();
-        const isSameDay = (d1: Date, d2: Date) => d1.toDateString() === d2.toDateString();
-        const todayRequests = requests.filter(r => {
-            const requestDate = new Date(r.requestDate);
-            return (r.status === 'Aceito' || r.status === 'Pendente' || r.status === 'Orçamento Enviado') && isSameDay(requestDate, today);
-        });
-        return <QuotesView requests={todayRequests} setView={setView} onViewDetails={handleViewDetails} isFilteredView={true} />;
+                return <DashboardView requests={requests} setView={setView} onViewDetails={handleViewDetails} updateRequestStatus={updateRequestStatus} currentUser={currentUser} />;
+            case 'quotes':
+                return <QuotesView requests={requests} setView={setView} onViewDetails={handleViewDetails} unreadMessages={typeof unreadMessages !== 'undefined' ? unreadMessages : {}} />;
+            case 'today-services':
+                const today = new Date();
+                const isSameDay = (d1: Date, d2: Date) => d1.toDateString() === d2.toDateString();
+                const todayRequests = requests.filter(r => {
+                        const requestDate = new Date(r.requestDate);
+                        return (r.status === 'Aceito' || r.status === 'Pendente' || r.status === 'Orçamento Enviado') && isSameDay(requestDate, today);
+                });
+                return <QuotesView requests={todayRequests} setView={setView} onViewDetails={handleViewDetails} isFilteredView={true} unreadMessages={typeof unreadMessages !== 'undefined' ? unreadMessages : {}} />;
             // messages view removed
       case 'profile':
         return <ProviderProfileView currentUser={currentUser} setView={setView} onLogout={onLogout} requests={requests} />;
@@ -1002,7 +1032,7 @@ const ProviderPage: React.FC<ProviderPageProps> = ({ currentUser, requests, onLo
       case 'help':
         return <HelpView onBack={() => setView('edit-profile')} />;
             default:
-                return <DashboardView requests={requests} setView={setView} onViewDetails={handleViewDetails} updateRequestStatus={updateRequestStatus} />;
+                return <DashboardView requests={requests} setView={setView} onViewDetails={handleViewDetails} updateRequestStatus={updateRequestStatus} currentUser={currentUser} />;
     }
   };
   

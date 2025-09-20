@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import ServiceDetailView from '../components/ServiceDetailView';
+import { v4 as uuidv4 } from 'uuid';
 import MessagePrompt from '../components/MessagePrompt';
 import ChatBox from './_chat/ChatBox';
 import { useConfirm } from '../components/ConfirmDialog';
@@ -288,7 +289,7 @@ const RequestQuoteStep2View: React.FC<{
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         const newRequest: ServiceRequest = {
-            id: new Date().toISOString(),
+            id: uuidv4(),
             clientName: currentUser.name,
             clientEmail: currentUser.email,
             address,
@@ -393,7 +394,7 @@ const RequestQuoteStep2View: React.FC<{
     );
 };
 
-const QuotesReceivedView: React.FC<{ setView: (view: ClientView) => void; requests: ServiceRequest[]; onAccept: (id: string) => void; onCancel: (id: string) => void; user: User; setSelectedCategory: (c: ServiceCategory) => void; setSelectedRequest?: (r: ServiceRequest|null) => void; }> = ({ setView, requests, onAccept, onCancel, user, setSelectedCategory, setSelectedRequest }) => {
+const QuotesReceivedView: React.FC<{ setView: (view: ClientView) => void; requests: ServiceRequest[]; onAccept: (id: string) => void; onCancel: (id: string) => void; user: User; setSelectedCategory: (c: ServiceCategory) => void; setSelectedRequest?: (r: ServiceRequest|null) => void; setOpenChatRequest: (r: ServiceRequest) => void; }> = ({ setView, requests, onAccept, onCancel, user, setSelectedCategory, setSelectedRequest, setOpenChatRequest }) => {
     const myRequests = requests.filter(r => r.clientEmail === user.email);
     const pending = myRequests.filter(r => r.status === 'Pendente');
     // Considera orçamentos enviados e também os já aceitos (devem aparecer em Recebidos)
@@ -467,9 +468,7 @@ const QuotesReceivedView: React.FC<{ setView: (view: ClientView) => void; reques
                                         <button
                                         className="px-4 py-2 rounded-lg font-semibold bg-brand-blue text-white opacity-90 flex-1 md:flex-none hover:bg-brand-blue/80"
                                         onClick={() => {
-                                            setSelectedCategory(req.category);
-                                            setSelectedRequest && setSelectedRequest(req); // se existir função para setar request selecionado
-                                            setView && setView('service-detail'); // se existir view de detalhe
+                                            setOpenChatRequest(req);
                                         }}
                                     >Enviar mensagem</button>
                                 )}
@@ -714,30 +713,31 @@ const ClientPage: React.FC<ClientPageProps> = ({ currentUser, addServiceRequest,
       case 'quote-step2':
         return <RequestQuoteStep2View setView={setView} addServiceRequest={addServiceRequest} currentUser={currentUser} category={selectedCategory} isEmergency={isEmergencyRequest} />;
       case 'quotes-received':
-          return <QuotesReceivedView 
-                    setView={setView} 
-                    requests={requests} 
-                    user={currentUser}
-                    setSelectedCategory={setSelectedCategory}
-                    setSelectedRequest={setSelectedRequest}
-                    onAccept={(id) => {
-                        // open modal to collect initial message
-                        setPendingAcceptId(id);
-                        setShowMessagePrompt(true);
-                    }}
-                    onCancel={async (id) => {
-                        const ok = await confirm({
-                          title: 'Cancelar solicitação',
-                          message: 'Tem certeza que deseja cancelar esta solicitação? Esta ação não pode ser desfeita.',
-                          confirmText: 'Cancelar solicitação',
-                          cancelText: 'Voltar',
-                          type: 'danger'
-                        });
-                        if (!ok) return;
-                        updateRequestStatus(id, 'Cancelado');
-                        window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: 'Solicitação cancelada.', type: 'success' } }));
-                    }}
-                 />;
+                    return <QuotesReceivedView 
+                                        setView={setView} 
+                                        requests={requests} 
+                                        user={currentUser}
+                                        setSelectedCategory={setSelectedCategory}
+                                        setSelectedRequest={setSelectedRequest}
+                                        setOpenChatRequest={setOpenChatRequest}
+                                        onAccept={(id) => {
+                                                // open modal to collect initial message
+                                                setPendingAcceptId(id);
+                                                setShowMessagePrompt(true);
+                                        }}
+                                        onCancel={async (id) => {
+                                                const ok = await confirm({
+                                                    title: 'Cancelar solicitação',
+                                                    message: 'Tem certeza que deseja cancelar esta solicitação? Esta ação não pode ser desfeita.',
+                                                    confirmText: 'Cancelar solicitação',
+                                                    cancelText: 'Voltar',
+                                                    type: 'danger'
+                                                });
+                                                if (!ok) return;
+                                                updateRequestStatus(id, 'Cancelado');
+                                                window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: 'Solicitação cancelada.', type: 'success' } }));
+                                        }}
+                                 />;
       
       case 'service-category':
           return <ServiceCategoryView setView={setView} category={selectedCategory} />;
@@ -781,7 +781,11 @@ const ClientPage: React.FC<ClientPageProps> = ({ currentUser, addServiceRequest,
                             <strong>Chat com o prestador</strong>
                             <button onClick={() => setOpenChatRequest(null)} style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>Fechar</button>
                         </div>
-                        <ChatBox currentUserId={currentUser.email} otherUserId={openChatRequest.providerEmail || ''} />
+                                                {openChatRequest.providerEmail ? (
+                                                            <ChatBox currentUserId={currentUser.email} otherUserId={openChatRequest.providerEmail} serviceId={openChatRequest.id} onClose={() => setOpenChatRequest(null)} />
+                                                        ) : (
+                                                    <div style={{ color: 'red', padding: 16 }}>Não foi possível abrir o chat: e-mail do prestador não encontrado neste pedido.</div>
+                                                )}
                     </div>
                 </div>
             )}

@@ -58,19 +58,36 @@ const ServiceDetailView: React.FC<Props> = ({ request, onBack, updateRequestStat
     // Ler valor diretamente do input para evitar condições de corrida com onBlur/estado
     const rawInput = (inputRef.current && (inputRef.current.value ?? '')) || draftQuote || '';
     let cleaned = String(rawInput).trim();
-    cleaned = cleaned.replace(/\s+/g, '');
-    // Se contém ambos '.' e ',' assumimos que '.' é separador de milhar e ',' decimal (ex: 1.500,00)
-    if (cleaned.indexOf('.') !== -1 && cleaned.indexOf(',') !== -1) {
-      cleaned = cleaned.replace(/\./g, '');
-      cleaned = cleaned.replace(/,/g, '.');
+    cleaned = cleaned.replace(/[^0-9.,]/g, ''); // só dígitos, ponto e vírgula
+    // Se houver mais de um separador, o último é decimal, os anteriores são milhar
+    const lastComma = cleaned.lastIndexOf(',');
+    const lastDot = cleaned.lastIndexOf('.');
+    let normalized = cleaned;
+    if (lastComma > lastDot) {
+      // vírgula é o decimal
+      normalized = cleaned.replace(/\./g, ''); // remove todos os pontos (milhar)
+      normalized = normalized.replace(/,/, '.'); // troca só a última vírgula por ponto
+      // se houver mais de uma vírgula, remove as anteriores
+      const parts = normalized.split('.');
+      if (parts.length > 2) {
+        normalized = parts.slice(0, -1).join('') + '.' + parts[parts.length - 1];
+      }
+    } else if (lastDot > lastComma) {
+      // ponto é o decimal
+      normalized = cleaned.replace(/,/g, ''); // remove todas as vírgulas (milhar)
+      // se houver mais de um ponto, remove os anteriores
+      const parts = normalized.split('.');
+      if (parts.length > 2) {
+        normalized = parts.slice(0, -1).join('') + '.' + parts[parts.length - 1];
+      }
     } else {
-      // Normaliza vírgulas para ponto e remove caracteres não numéricos
-      cleaned = cleaned.replace(/,/g, '.');
-      cleaned = cleaned.replace(/[^0-9.]/g, '');
-      // Se houver mais de um ponto, manter apenas o primeiro como decimal
-      cleaned = cleaned.replace(/\.(?=.*\.)/g, '');
+      // só um tipo de separador ou nenhum
+      normalized = cleaned.replace(/,/g, '.');
     }
-    const value = parseFloat(cleaned);
+    // DEBUG: log temporário para inspecionar normalização
+    // eslint-disable-next-line no-console
+    console.log('Orçamento input:', rawInput, '->', cleaned, '->', normalized);
+    const value = parseFloat(normalized);
     if (isNaN(value) || value <= 0) {
       window.dispatchEvent(new CustomEvent('mdac:notify', { detail: { message: 'Por favor, insira um valor de orçamento válido.', type: 'error' } }));
       return;
@@ -192,7 +209,17 @@ const ServiceDetailView: React.FC<Props> = ({ request, onBack, updateRequestStat
           </div>
         )}
 
-  {request.status === 'Aceito' && null}
+  {request.status === 'Aceito' && (
+    <div className="mt-8 border-t pt-8 flex flex-col items-center">
+      <h2 className="text-lg font-semibold mb-3 text-brand-navy">Orçamento Aceito</h2>
+      <div className="flex flex-col items-center justify-center">
+        <span className="text-3xl font-bold text-green-700 bg-green-100 px-6 py-3 rounded-xl shadow-sm border border-green-200">
+          {typeof request.quote === 'number' ? request.quote.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '—'}
+        </span>
+        <span className="mt-2 text-gray-500 text-sm">Este é o valor do orçamento aceito pelo cliente. Mantenha este registro para seu histórico financeiro.</span>
+      </div>
+    </div>
+  )}
       </div>
     </div>
   );

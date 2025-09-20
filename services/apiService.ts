@@ -4,19 +4,10 @@ import { ServiceRequest, User, SignUpData } from '../types';
 // Em desenvolvimento, apontar para o backend local para facilitar testes.
 const BACKEND_URL = (import.meta.env.DEV ? 'http://localhost:3001' : 'https://marido-de-aluguel-carioca.onrender.com');
 
-// The base URL for our backend API - always ensures a valid value
-let API_BASE_URL = (import.meta.env.VITE_API_BASE as string) || BACKEND_URL;
-
-// In development, force local backend to avoid accidentally calling production
-if (import.meta.env.DEV) {
-  API_BASE_URL = 'http://localhost:3001/api';
-}
-
-// Log para debug
-// Debug logging removed for production; keep only DEV logs when necessary
 
 // Sempre garante um valor válido, priorizando variáveis de ambiente mas com fallback
-API_BASE_URL = (import.meta.env.VITE_API_BASE as string) || BACKEND_URL;
+// Permite usar VITE_API_BASE mesmo em desenvolvimento
+let API_BASE_URL: string = (import.meta.env.VITE_API_BASE as string) || BACKEND_URL;
 
 
 // Normaliza e garante que contenha /api como prefixo base das rotas do backend
