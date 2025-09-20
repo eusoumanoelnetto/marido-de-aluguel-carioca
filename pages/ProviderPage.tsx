@@ -5,7 +5,6 @@ import { ServiceRequest, User } from '../types';
 import dynamic from 'react-dynamic-import';
 // ...existing code...
 import ChatBox from './_chat/ChatBox';
-import supabase from '../services/supabaseClient';
 
 interface ProviderPageProps {
   currentUser: User;
@@ -581,7 +580,7 @@ const DashboardView: React.FC<{
 
             useEffect(() => {
                 // Realtime listener para novas mensagens
-                const channel = supabase
+                // const channel = supabase (removido)
                     .channel('public:messages:provider')
                     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
                         const msg = payload.new;
